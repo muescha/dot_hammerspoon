@@ -47,5 +47,8 @@ function debugFunction(fun)
     -- debugInfo(info)
     local sourcePath = info.source:match("@?(.*)") -- remove @ from beginning
     local sourceText = ReadSource(sourcePath, info.linedefined-1, info.lastlinedefined)
-    print("Source: " .. info.source .. ":" .. info.linedefined .. "-" .. info.lastlinedefined .. "\n\n" .. table.concat(sourceText,"\n"))
+
+    local sourcePathAndLocation = info.source .. ":" .. info.linedefined .. "-" .. info.lastlinedefined
+
+    print("Source: " .. sourcePathAndLocation .. "\n\n" .. table.concat(sourceText,"\n"))
 end
