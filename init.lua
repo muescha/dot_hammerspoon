@@ -72,4 +72,11 @@ local showHotkeys = hs.hotkey.showHotkeys(hyper,'k')
 hs.loadSpoon('FadeLogo'):start()
 
 
+-- Disable window animation = 0
+-- normal is = 0.3
+
+hs.window.animationDuration = 0.1
+
+
+
 
