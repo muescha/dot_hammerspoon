@@ -19,6 +19,44 @@ i have IINA Controls - i lake to attach dem also to a Chrome Youtube Tab as a re
 many times i close a tab and then think: i would read it - so i reopen it.
 close with a delay which i can cancel
 
+### Display with starters
+
+-- https://nethumlamahewage.medium.com/setting-up-a-global-leader-key-for-macos-using-hammerspoon-f0330f8a7a4a
+
+```lua
+hs.loadSpoon("RecursiveBinder")
+
+spoon.RecursiveBinder.escapeKey = {{}, 'escape'}  -- Press escape to abort
+
+local singleKey = spoon.RecursiveBinder.singleKey
+
+local keyMap = {
+  [singleKey('c', 'chrome')] = function() hs.application.launchOrFocus("Chrome") end,
+  [singleKey('t', 'terminal')] = function() hs.application.launchOrFocus("Terminal") end,
+  [singleKey('d', 'domain+')] = {
+    [singleKey('g', 'github')] = function() hs.urlevent.openURL("github.com") end,
+    [singleKey('y', 'youtube')] = function() hs.urlevent.openURL("youtube.com") end
+  }
+}
+
+spoon.RecursiveBinder.helperFormat = {
+  atScreenEdge = 0,  -- 0-center, 1-top, 3-btm
+  textStyle = {  -- An hs.styledtext object
+      font = {
+          name = "Courier",
+          size = 40
+      }
+  }
+}
+
+ hs.hotkey.bind({'option'}, 'space', spoon.RecursiveBinder.recursiveBind(keyMap))
+```
+
+### Keyboard shortcut to open a context menu
+
+Some trials here:
+[ContextMenu.lua](/Functions/ContextMenu.lua)
+
 ### Menu Chooser
 
 https://github.com/brokensandals/MenuChooser.spoon
