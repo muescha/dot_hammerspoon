@@ -60,3 +60,29 @@ bindHotkey(exclude("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", nil, myFuncti
 ### DebugFunction
 
 - [debugFunction](/Helpers/DebugFunction.lua) show source code of a function in console
+
+for example:
+```lua
+debugFunction(hs.hotkey.getHotkeys)
+```
+
+console output:
+
+```text
+2022-11-19 11:28:29: Source: @/Applications/Hammerspoon.app/Contents/Resources/extensions/hs/hotkey.lua:357-370
+
+function hotkey.getHotkeys()
+  local t={}
+  for _,hks in pairs(hotkeys) do
+    for i=#hks,1,-1 do
+      if hks[i].enabled and hks[i]~=helpHotkey then
+        t[#t+1] = hks[i]
+        break
+      end
+    end
+  end
+  tsort(t,function(a,b)if#a.idx==#b.idx then return a.idx<b.idx else return #a.idx<#b.idx end end)
+  if helpHotkey then tinsert(t,1,helpHotkey) end
+  return t
+end
+```
