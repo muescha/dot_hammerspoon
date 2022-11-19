@@ -4,7 +4,17 @@ This are my collection of my Hammerspoon Scripts
 
 ### Umlauts
 
-- Mapping german umlauts to `opt`+`key` are in [Umlauts.lua](/Functions/Umlauts.lua).
+- Mapping german umlauts to `opt`+`key` are in [Umlauts.lua](/Functions/Umlauts.lua):
+```lua
+local umlauts = {
+    -- note: leave the space before ä Ä - otherwise it not work
+    { 'a', ' ä', ' Ä' },
+    { 'o', 'ö', 'Ö' },
+    { 'u', 'ü', 'Ü' },
+    { 'e', '€', '€' },
+}
+
+```
 
 ### EmmyLua.spoon
 

@@ -6,32 +6,18 @@
 
 print("Init Umlauts")
 
-hs.hotkey.bind({'alt'}, 'u', function ()
-    hs.eventtap.keyStrokes('ü')
-end)
+local umlauts = {
+    -- note: leave the space before ä Ä - otherwise it not work
+    { 'a', ' ä', ' Ä' },
+    { 'o', 'ö', 'Ö' },
+    { 'u', 'ü', 'Ü' },
+    { 'e', '€', '€' },
+}
 
-hs.hotkey.bind({'shift', 'alt'}, 'u', function ()
-    hs.eventtap.keyStrokes('Ü')
-end)
+hs.fnutils.each(umlauts, function(umlaut)
 
-hs.hotkey.bind({'alt'}, 'a', function ()
-    hs.eventtap.keyStrokes(' ä')
-end)
+    local key,small,big = table.unpack(umlaut)
 
-hs.hotkey.bind({'shift', 'alt'}, 'a', function ()
-    hs.eventtap.keyStrokes(' Ä')
-end)
-
-hs.hotkey.bind({'alt'}, 'o', function ()
-    hs.eventtap.keyStrokes('ö')
-end)
-
-hs.hotkey.bind({'shift', 'alt'}, 'o', function ()
-    hs.eventtap.keyStrokes('Ö')
-end)
-
--- Euro
-
-hs.hotkey.bind({'alt'}, 'e', function ()
-    hs.eventtap.keyStrokes('€')
+    hs.hotkey.bind({'alt'}, key, function () hs.eventtap.keyStrokes(small) end)
+    hs.hotkey.bind({'alt','shift'}, key, function () hs.eventtap.keyStrokes(big) end)
 end)
