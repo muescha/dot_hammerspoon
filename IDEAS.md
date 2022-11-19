@@ -291,3 +291,16 @@ other Spoons:
 - check Camera and Mic with an icon in menubar
   - https://github.com/von/WatcherWatcher.spoon
 
+
+add debug helper:
+
+- https://github.com/von/homestuff/blob/main/home/dot_hammerspoon/config/console.lua
+
+more settings examples:
+
+- https://github.com/megalithic/dotfiles/tree/main/config/hammerspoon
+- https://github.com/von/homestuff/tree/main/home/dot_hammerspoon
+- spoons: 
+
+KI :)
+- https://github.com/andweeb/Ki/blob/master/docs/markdown/index.md
