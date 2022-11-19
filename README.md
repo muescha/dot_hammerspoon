@@ -2,9 +2,13 @@
 
 This are my collection of my Hammerspoon Scripts
 
-### Umlauts
+### [ChromeNewWindow](/Functions/ChromeNewWindow.lua)
 
-- Mapping german umlauts to `opt`+`key` are in [Umlauts.lua](/Functions/Umlauts.lua):
+Opens a New Chrome Window with the same size. You need to adjust the menu command to your current language. (PR is welcome for a language independent solution - maybe search the all the menu for shortcut `cmd`+`N` like in [KSheet](/Spoons/KSheet.spoon/init.lua)?)
+
+### [Umlauts.lua](/Functions/Umlauts.lua)
+
+- Mapping german umlauts to `opt`+`key` are in:
 ```lua
 local umlauts = {
     -- note: leave the space before ä Ä - otherwise it not work

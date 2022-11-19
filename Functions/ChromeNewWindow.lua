@@ -3,32 +3,9 @@
 --- Created by muescha.
 --- DateTime: 05.08.22 12:02
 ---
+--- Open New Chrome Window with the same size
 
 print("init ChromeNewWindow")
-
---chromeNewWindowHandler = hs.hotkey.bind({"cmd"}, "n", function()
---    local app = hs.application.frontmostApplication()
---    print(app:name())
---    if app:name() == "Google Chrome" then
---        local menuItemName = "Neues Fenster"
---
---        local currentFrame = hs.window.focusedWindow():frame()
---        app:selectMenuItem(menuItemName)
---        hs.window.focusedWindow():setFrame(currentFrame)
---
---        hs.alert.show("new window")
---
---    else
---
---        hs.alert.show("new window: not in Chrome - whe are in ".. app:name())
---        chromeNewWindowHandler:disable()
---        hs.eventtap.keyStroke({"cmd"}, "n")
---        chromeNewWindowHandler:enable()
---
---    end
---end )
---
---chromeNewWindowHandler:disable()
 
 bindHotkey(to("Google Chrome"), { "cmd"}, "n", function()
 
