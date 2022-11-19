@@ -2,6 +2,10 @@
 
 This are my collection of my Hammerspoon Scripts
 
+### [AppBorders](/Functions/AppBorders.lua)
+
+Draw a red border around the current active app.
+
 ### [ChromeNewWindow](/Functions/ChromeNewWindow.lua)
 
 Opens a New Chrome Window with the same size. You need to adjust the menu command to your current language. (PR is welcome for a language independent solution - maybe search the all the menu for shortcut `cmd`+`N` like in [KSheet](/Spoons/KSheet.spoon/init.lua)?)
