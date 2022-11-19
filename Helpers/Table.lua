@@ -4,11 +4,6 @@
 --- DateTime: 12.07.22 02:07
 --- https://github.com/fuelingtheweb/fuelingzsh/blob/200de21c40ea9a2a09731a6cffa00775c577dc67/dotfiles/.hammerspoon/Helpers/Table.lua
 
-table.sorted = function(tab, func)
-    local tab = {table.unpack(tab)}
-    table.sort(tab, func)
-    return tab
-end
 
 local Table = {}
 Table.__index = Table
