@@ -8,9 +8,9 @@ print("init IinaGlobalControl")
 local bundleIdIINA = "com.colliderli.iina"
 local bundleIdChrome = "com.google.Chrome"
 
-local action = enumString {
+local actions = enumString {
     "pause",
-    "speedZero",
+    "speedReset",
     "speedInc",
     "speedDec",
     "moveForward",
@@ -18,26 +18,42 @@ local action = enumString {
 }
 
 local currentBundleId = bundleIdIINA
-local currentApp = nil
 local currentWindow = nil
 
 local ControlKeys = {
     [bundleIdIINA] = {
         pause = { {}, "p" },
-        speedZero = { {}, "0"},
-        speedInc = { {}, "="}, -- +
-        speedDec = { {}, "-"},
-        moveForward = { {}, "right"},
-        moveBackward = { {}, "left"}
+        speedReset = { {}, "0" },
+        speedInc = { {}, "=" }, -- +
+        speedDec = { {}, "-" },
+        moveForward = { {}, "right" },
+        moveBackward = { {}, "left" }
     },
     [bundleIdChrome] = {
         pause = { {}, "k" },
         -- https://github.com/igrigorik/videospeed/blob/master/inject.js
-        speedZero = nil,
-        speedInc = { {"shift"}, "."}, -- '>'
-        speedDec = { {"shift"}, ","}, -- '<'
-        moveForward = { {}, "right"},
-        moveBackward = { {}, "left"}
+        speedReset = {
+            -- stop playing
+            {}, "k",
+            -- set to speed 0.25
+            actions.speedDec,
+            actions.speedDec,
+            actions.speedDec,
+            actions.speedDec,
+            actions.speedDec,
+            actions.speedDec,
+            actions.speedDec,
+
+            -- set to speed 1
+            actions.speedInc,
+            actions.speedInc,
+            actions.speedInc,
+
+        },
+        speedInc = { { "shift" }, "." }, -- '>'
+        speedDec = { { "shift" }, "," }, -- '<'
+        moveForward = { {}, "right" },
+        moveBackward = { {}, "left" }
     }
 }
 
@@ -48,72 +64,118 @@ local ControlKeys = {
 --   spiegel
 --   netflix
 --  etc
+local function doKey(modifier, key)
+    debugInfo("--> doKey(", modifier, ',"', key, '")')
 
-local function doCommand(sourcekey, action)
+    local receiverApp
+    -- use saved window
+    if currentWindow then
+        receiverApp = currentWindow:application()
+        -- TODO: activate the window - place over others - but go back to current app
+    else
+        local receiverApp = hs.application.applicationsForBundleID(currentBundleId)[1]
+    end
+
+    if receiverApp then
+        hs.eventtap.keyStroke(modifier, key, 0, receiverApp)
+    end
+end
+
+local function doCommand(appActions, action, actionQueue)
+    debugInfo("--> doCommand(", "appActions", ",", action, ",", actionQueue, ")")
+    --debugInfo("actionQueue: ", actionQueue)
+    --debugInfo("appActions: ", appActions)
+    --debugInfo("action: ", action)
+    local actionCommands
+    if action == nil then
+        actionCommands = actionQueue
+        actionQueue = nil
+    else
+        actionCommands = { table.unpack(appActions[action]) }
+    end
+    --debugInfo('#actionCommands: ', #actionCommands)
+    if #actionCommands == 0 then
+        debugInfo('exit')
+        return
+    end
+
+    local peek = actionCommands[1]
+
+    if type(peek) == 'string' then
+        local nextAction = table.remove(actionCommands, 1)
+        doCommand(appActions, nextAction, actionCommands)
+    else
+        local modifier = table.remove(actionCommands, 1)
+        local key = table.remove(actionCommands, 1)
+
+        doKey(modifier, key)
+
+        -- check if more in queue
+        if #actionCommands > 0 then
+            local nextAction = table.remove(actionCommands, 1)
+            doCommand(appActions, nextAction, actionCommands)
+        end
+    end
+
+    -- check remaining queue
+    if actionQueue ~= nil and #actionQueue > 0 then
+        local nextAction = table.remove(actionQueue, 1)
+        doCommand(appActions, nextAction, actionQueue)
+    end
+end
+
+local function createHotkey(sourcekey, action)
 
 
     hs.hotkey.bind(hyper, sourcekey, function()
 
-        debugInfo("action: " .. action)
-        debugInfo("currentBundleId: " .. currentBundleId)
 
-        if currentBundleId == nil then
-            currentBundleId = bundleIdIINA
+        --debugInfo(ControlKeys)
+        --debugTable(ControlKeys)
+        --debugTable(actions)
+
+        local appActions = ControlKeys[currentBundleId]
+
+        if appActions == nil then
+            return
         end
 
-        system = currentBundleId
-        --system = bundleIdChrome
-        debugInfo("system: " .. system)
+        --debugInfo("action: ", action)
+        --debugInfo("currentBundleId: ", currentBundleId)
+        --debugInfo("current window: ", currentWindow)
 
-        mods = ControlKeys[system][action]
+        doCommand(appActions, action)
 
-        if mods == nil then return end
-
-        modifier, key = table.unpack(ControlKeys[system][action])
-
-        debugInfo("modifier: "..hs.inspect(modifier))
-        debugInfo("key: "..key)
-
-        local myApp = hs.application.applicationsForBundleID(currentBundleId)[1]
-
-        if currentWindow then
-            debugInfo("current window:")
-            debugInfo(currentWindow)
-            app = currentWindow:application()
-            debugInfo(app)
-            hs.eventtap.keyStroke(modifier, key, 0, app)
-        else
-
-            if myApp then
-                hs.eventtap.keyStroke(modifier, key, 0, myApp)
-                --hs.eventtap.keyStroke(modifier, key, 200, myApp)
-            end
-
-        end
     end)
 
 end
 
 local function setCurrentWindow()
-    win = hs.window.focusedWindow()
-    debugInfo(win)
-    debugInfo(win:application():bundleID())
+    local win = hs.window.focusedWindow()
+    local bundleID = win:application():bundleID()
+
+    if ControlKeys[bundleID] == nil then
+        return
+    end
+
     currentWindow = win
-    currentBundleId = win:application():bundleID()
+    currentBundleId = bundleID
+
+    debugInfo("changed currentBundleId to " .. currentBundleId)
 end
 
 -- Play / Pause
-doCommand("p", action.pause)
+createHotkey("p", actions.pause)
 
 -- normal Speed 0
-doCommand("0", action.speedZero)
+createHotkey("0", actions.speedReset)
 --speed with +/-
-doCommand("-", action.speedDec)
-doCommand("=", action.speedInc)
+createHotkey("-", actions.speedDec)
+createHotkey("=", actions.speedInc)
 
 -- Rewind / Forward
-doCommand("'", action.moveBackward)
-doCommand("\\", action.moveForward)
+createHotkey("'", actions.moveBackward)
+createHotkey("\\", actions.moveForward)
 
 hs.hotkey.bind(hyper, "o", setCurrentWindow)
 
