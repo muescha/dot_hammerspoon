@@ -31,10 +31,15 @@ local ControlKeys = {
     },
     [bundleIdChrome] = {
         pause = { {}, "k" },
-        -- https://github.com/igrigorik/videospeed/blob/master/inject.js
+
+        -- maybe direct solution via javascript is here:
+        --   https://github.com/igrigorik/videospeed/blob/master/inject.js
+        -- since i don't know the current speed:
+        -- just tune down to minimum (7 keyStrokes from max 2x speed)
+        -- and then up to 1
         speedReset = {
             -- stop playing
-            {}, "k",
+            -- {}, "k",
             -- set to speed 0.25
             actions.speedDec,
             actions.speedDec,
@@ -48,6 +53,7 @@ local ControlKeys = {
             actions.speedInc,
             actions.speedInc,
             actions.speedInc,
+            --{}, "k",
 
         },
         speedInc = { { "shift" }, "." }, -- '>'
@@ -73,7 +79,7 @@ local function doKey(modifier, key)
         receiverApp = currentWindow:application()
         -- TODO: activate the window - place over others - but go back to current app
     else
-        local receiverApp = hs.application.applicationsForBundleID(currentBundleId)[1]
+        receiverApp = hs.application.applicationsForBundleID(currentBundleId)[1]
     end
 
     if receiverApp then
@@ -81,58 +87,50 @@ local function doKey(modifier, key)
     end
 end
 
-local function doCommand(appActions, action, actionQueue)
-    debugInfo("--> doCommand(", "appActions", ",", action, ",", actionQueue, ")")
-    --debugInfo("actionQueue: ", actionQueue)
-    --debugInfo("appActions: ", appActions)
-    --debugInfo("action: ", action)
-    local actionCommands
-    if action == nil then
-        actionCommands = actionQueue
-        actionQueue = nil
-    else
-        actionCommands = { table.unpack(appActions[action]) }
-    end
-    --debugInfo('#actionCommands: ', #actionCommands)
-    if #actionCommands == 0 then
-        debugInfo('exit')
+
+---@param appActions table @available actions for all apps
+---@param actionQueue table @queue of actions
+---@return void
+---
+local function doCommand(appActions, actionQueue)
+    if #actionQueue == 0 then
         return
     end
 
-    local peek = actionCommands[1]
+    debugInfo("--> doCommand(", "appActions", ",", actionQueue, ")")
+
+    local peek = actionQueue[1]
 
     if type(peek) == 'string' then
-        local nextAction = table.remove(actionCommands, 1)
-        doCommand(appActions, nextAction, actionCommands)
+
+        -- unpack reference
+        local action = table.remove(actionQueue, 1)
+        local actionCommands = { table.unpack(appActions[action]) }
+        doCommand(appActions, actionCommands)
+
     else
-        local modifier = table.remove(actionCommands, 1)
-        local key = table.remove(actionCommands, 1)
+
+        local modifier = table.remove(actionQueue, 1)
+        local key = table.remove(actionQueue, 1)
 
         doKey(modifier, key)
 
-        -- check if more in queue
-        if #actionCommands > 0 then
-            local nextAction = table.remove(actionCommands, 1)
-            doCommand(appActions, nextAction, actionCommands)
-        end
     end
 
+    --debugInfo("again? actionQueue",actionQueue)
+    --if actionQueue ~= nil and #actionQueue > 0 then
+    --local nextAction = table.remove(actionQueue, 1)
     -- check remaining queue
-    if actionQueue ~= nil and #actionQueue > 0 then
-        local nextAction = table.remove(actionQueue, 1)
-        doCommand(appActions, nextAction, actionQueue)
-    end
+    doCommand(appActions, actionQueue)
+    --end
 end
 
-local function createHotkey(sourcekey, action)
+-- types
+---@param sourceKey string
+---@param action string
+local function createHotkey(sourceKey, action)
 
-
-    hs.hotkey.bind(hyper, sourcekey, function()
-
-
-        --debugInfo(ControlKeys)
-        --debugTable(ControlKeys)
-        --debugTable(actions)
+    hs.hotkey.bind(hyper, sourceKey, function()
 
         local appActions = ControlKeys[currentBundleId]
 
@@ -140,11 +138,7 @@ local function createHotkey(sourcekey, action)
             return
         end
 
-        --debugInfo("action: ", action)
-        --debugInfo("currentBundleId: ", currentBundleId)
-        --debugInfo("current window: ", currentWindow)
-
-        doCommand(appActions, action)
+        doCommand(appActions, { action })
 
     end)
 
