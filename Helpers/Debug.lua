@@ -13,8 +13,26 @@ function debugElement(element)
     end
 end
 
-function debugInfo(obj)
-    print(hs.inspect(obj))
+function debugInfo(...)
+    local info = ""
+
+    -- not work for args :( breaks on nil value
+    -- for index, value in ipairs({...}) do
+
+    local arg = { ... }
+    for index = 1, #arg do
+        local value = arg[index]
+        if value == nil then
+            info = info .. '<nil>'
+        else
+            if type(value) == 'string' then
+                info = info .. value
+            else
+                info = info .. hs.inspect(value)
+            end
+        end
+    end
+    print(info)
 end
 
 function debugTable(obj)
