@@ -18,17 +18,39 @@ function debugInfo(obj)
 end
 
 function debugTable(obj)
-   print(dumpTableToString(obj))
+    print(dumpTableToString(obj))
 end
 
-function dumpTableToString(o)
+function dumpTableToString(o, level)
+    if level == nil then
+        level = 1
+    end
+    local showCounter = false
+    local intend = string.rep('  ', level)
     if type(o) == 'table' then
-        local s = '\n\n{ '
-        for k,v in pairs(o) do
-            if type(k) ~= 'number' then k = '"'..k..'"' end
-            s = s .. '\n['..k..'] = ' .. dumpTableToString(v) .. ','
+        local info = {}
+        for k, v in pairs(o) do
+            if type(k) ~= 'number' then
+                --k = '  ["'..k..'"] = '
+                k = '  ' .. k .. ' = '
+            else
+                k = '  '
+            end
+            table.insert(info, intend .. k .. dumpTableToString(v, level + 1))
+
+            --if type(k) ~= 'number' then k = '"'..k..'"' end
+            --table.insert(info, intend.. '  ['..k..'] = ' .. dumpTableToString(v, level+1))
         end
-        return s .. '\n} \n\n'
+
+        local s
+        if #info > 0 then
+            local counter = (showCounter and ('<' .. #info .. '>') or '')
+            s = counter .. '{\n' .. table.concat(info, ',\n') .. '\n' .. intend .. '}'
+        else
+            s = '{}'
+        end
+
+        return s
     else
         --return tostring(o)
         return hs.inspect(o)
