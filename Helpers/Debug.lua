@@ -7,9 +7,9 @@
 -- Helper Functions
 
 function debugElement(element)
-    for i,v in pairs(element:attributeNames()) do
+    for i, v in pairs(element:attributeNames()) do
         local o = element:attributeValue(v)
-        print(i ..". ".. v .. ": " .. hs.inspect(o))
+        print(i .. ". " .. v .. ": " .. hs.inspect(o))
     end
 end
 
@@ -57,25 +57,24 @@ function dumpTableToString(o, level)
     end
 end
 
-
-
 function debugTraceback ()
     local level = 1
     while true do
         local info = debug.getinfo(level, "Sl")
-        if not info then break end
-        if info.what == "C" then   -- is a C function?
+        if not info then
+            break
+        end
+        if info.what == "C" then
+            -- is a C function?
             print(level, "C function")
-        else   -- a Lua function
+        else
+            -- a Lua function
             print(string.format("[%s]:%d",
                     info.short_src, info.currentline))
         end
         level = level + 1
     end
 end
-
-
-
 
 function ReadLine(src, line)
     return ReadSource(src:match("@?(.*)"), line)
@@ -94,7 +93,9 @@ end
 function debugTracePrint (event, line)
     local info = debug.getinfo(2)
     local s = info.short_src
-    if info.source:startswith("@/Application") then return end
+    if info.source:startswith("@/Application") then
+        return
+    end
 
     local source = ReadLine(info.source, line)
     --local source = "x"
