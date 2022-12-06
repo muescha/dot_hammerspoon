@@ -3,7 +3,7 @@
 --- DateTime: 24.08.22 10:00
 ---
 
-print("init IinaGlobalControl")
+fileInfo()
 
 local bundleIdIINA = "com.colliderli.iina"
 local bundleIdChrome = "com.google.Chrome"
@@ -162,19 +162,19 @@ local function setCurrentWindow()
 end
 
 -- Play / Pause
-createHotkey("p", actions.pause, "Player: Pause Video")
+createHotkey("p", actions.pause, keyInfo("Pause Video"))
 
 -- normal Speed 0
-createHotkey("k", actions.speedReset, "Player: Reset Speed") -- ?
+createHotkey("k", actions.speedReset, keyInfo("Reset Speed")) -- ?
 --speed with +/-
-createHotkey("l", actions.speedDec, "Player: Decrease Speed") -- like yotube <
-createHotkey(";", actions.speedInc, "Player: Increase Speed") -- like yotube >
+createHotkey("l", actions.speedDec, keyInfo("Decrease Speed")) -- like yotube <
+createHotkey(";", actions.speedInc, keyInfo("Increase Speed")) -- like yotube >
 
 -- Rewind / Forward
-createHotkey("'", actions.moveBackward, "Player: Jump Backward")
-createHotkey("\\", actions.moveForward, "Player: Jump Forward")
+createHotkey("'", actions.moveBackward, keyInfo("Jump Backward"))
+createHotkey("\\", actions.moveForward, keyInfo("Jump Forward"))
 
-hs.hotkey.bind(hyper, "o", "Player: Set active App", setCurrentWindow)
+hs.hotkey.bind(hyper, "o", keyInfo("Set active App"), setCurrentWindow)
 
 
 --local function activateOrHide(bundleID)

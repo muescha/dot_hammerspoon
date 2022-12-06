@@ -4,7 +4,7 @@
 --- DateTime: 05.08.22 12:00
 ---
 
-print("Init Umlauts")
+fileInfo()
 
 local umlauts = {
     -- note: leave the space before ä Ä - otherwise it not work
@@ -18,6 +18,6 @@ hs.fnutils.each(umlauts, function(umlaut)
 
     local key,small,big = table.unpack(umlaut)
 
-    hs.hotkey.bind({'alt'}, key, "Umlauts ".. small, function () hs.eventtap.keyStrokes(small) end)
-    hs.hotkey.bind({'alt','shift'}, key, "Umlauts ".. big, function () hs.eventtap.keyStrokes(big) end)
+    hs.hotkey.bind({'alt'}, key, keyInfo(small), function () hs.eventtap.keyStrokes(small) end)
+    hs.hotkey.bind({'alt','shift'}, key, keyInfo(big), function () hs.eventtap.keyStrokes(big) end)
 end)
