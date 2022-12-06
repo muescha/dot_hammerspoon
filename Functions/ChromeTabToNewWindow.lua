@@ -6,31 +6,27 @@
 
 fileInfo()
 
-hs.hotkey.bind(hyper, "t", keyInfo("Open Tab in new Window"),function()
+bindHotkey(to("Google Chrome"), hyper, "t", keyInfo("Open Tab in new Window"),function()
     local app = hs.application.frontmostApplication()
-    print(app:name())
-    if app:name() == "Google Chrome" then
-        local menuItemName = "Tab in ein neues Fenster verschieben"
-        -- local menuItem = app:findMenuItem(menuItemName)
-        -- print(menuItem)
-        -- if menuItem.isEnabled then
 
-        --print(hs.inspect.inspect(app:getMenuItems()))
+    local menuItemName = "Tab in ein neues Fenster verschieben"
+    -- local menuItem = app:findMenuItem(menuItemName)
+    -- print(menuItem)
+    -- if menuItem.isEnabled then
 
-        --hs.application.frontmostApplication():getMenuItems(function(result)
-        --  print(string.format("result: %s", hs.inspect(result)))
-        --end)
+    --print(hs.inspect.inspect(app:getMenuItems()))
 
-        --hs.application.get("Safari"):selectMenuItem({"Safari", "About Safari"})
-        --hs.application.get("Safari"):selectMenuItem({"Safari", "Über Safari"})
+    --hs.application.frontmostApplication():getMenuItems(function(result)
+    --  print(string.format("result: %s", hs.inspect(result)))
+    --end)
 
-        local currentFrame = hs.window.focusedWindow():frame()
-        app:selectMenuItem(menuItemName)
-        hs.window.focusedWindow():setFrame(currentFrame)
+    --hs.application.get("Safari"):selectMenuItem({"Safari", "About Safari"})
+    --hs.application.get("Safari"):selectMenuItem({"Safari", "Über Safari"})
+    local currentFrame = hs.window.focusedWindow():frame()
 
-        hs.alert.show("Move tab to new window")
+    app:selectMenuItem(menuItemName)
+    hs.window.focusedWindow():setFrame(currentFrame)
 
-    else
-        hs.alert.show("Move tab to new window: not in Chrome - whe are in ".. app:name())
-    end
+    hs.alert.show("Move tab to new window")
+
 end )
