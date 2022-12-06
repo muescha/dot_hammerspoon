@@ -17,7 +17,10 @@ local actions = enumString {
     "moveBackward"
 }
 
-local currentBundleId = bundleIdIINA
+--local currentBundleId = bundleIdIINA
+local currentBundleId = bundleIdChrome
+
+---@type hs.Application
 local currentWindow = nil
 
 local ControlKeys = {
@@ -128,9 +131,9 @@ end
 -- types
 ---@param sourceKey string
 ---@param action string
-local function createHotkey(sourceKey, action)
+local function createHotkey(sourceKey, action, description)
 
-    hs.hotkey.bind(hyper, sourceKey, function()
+    hs.hotkey.bind(hyper, sourceKey, description, function()
 
         local appActions = ControlKeys[currentBundleId]
 
@@ -159,19 +162,19 @@ local function setCurrentWindow()
 end
 
 -- Play / Pause
-createHotkey("p", actions.pause)
+createHotkey("p", actions.pause, "Player: Pause Video")
 
 -- normal Speed 0
-createHotkey("0", actions.speedReset)
+createHotkey("k", actions.speedReset, "Player: Reset Speed") -- ?
 --speed with +/-
-createHotkey("-", actions.speedDec)
-createHotkey("=", actions.speedInc)
+createHotkey("l", actions.speedDec, "Player: Decrease Speed") -- like yotube <
+createHotkey(";", actions.speedInc, "Player: Increase Speed") -- like yotube >
 
 -- Rewind / Forward
-createHotkey("'", actions.moveBackward)
-createHotkey("\\", actions.moveForward)
+createHotkey("'", actions.moveBackward, "Player: Jump Backward")
+createHotkey("\\", actions.moveForward, "Player: Jump Forward")
 
-hs.hotkey.bind(hyper, "o", setCurrentWindow)
+hs.hotkey.bind(hyper, "o", "Player: Set active App", setCurrentWindow)
 
 
 --local function activateOrHide(bundleID)

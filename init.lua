@@ -1,8 +1,13 @@
-hs.notify.show("Hammerspoon", "Starting Hammerspoon: ",hs.screen.mainScreen():name())
+hs.notify.show("Hammerspoon", "Starting Hammerspoon: ", hs.screen.mainScreen():name())
 
 -- Note: Setup this hyper Key with Karabiner ELements
-hyper = {"shift","ctrl", "alt", "cmd"}
+hyper = { "shift", "ctrl", "alt", "cmd" }
 
+-- disable hotkey info
+hs.hotkey.alertDuration = 0
+
+
+require('Functions.Reload')
 require("Functions.ConfigConsole")
 require("Helpers.Extensions.String")
 require("Helpers.Extensions.Table")
@@ -15,26 +20,21 @@ require("Helpers.Enum")
 
 require("Helpers.SendKeysOnlyInApp")
 
-
-
 hs.logger.defaultLogLevel = "info"
 --hs.logger.defaultLogLevel = "verbose"
 
-print("hs.logger.defaultLogLevel: ".. hs.logger.defaultLogLevel)
+print("hs.logger.defaultLogLevel: " .. hs.logger.defaultLogLevel)
 
 helper = {
-  table = require('Helpers.Table'),
-  window = require('Helpers.Window'),
+    table = require('Helpers.Table'),
+    window = require('Helpers.Window'),
 }
-
 
 hs.loadSpoon("EmmyLua")
 hs.loadSpoon("hs_select_window")
 
 
--- ## Init Functions
 
-require('Functions.Reload')
 require('Functions.ReloadWatcher')
 
 require('Functions.AppBorders')
@@ -65,7 +65,7 @@ require('Functions.FuzzyWindowSearch')
 -- Test Spoons :)
 --hs.loadSpoon("DrawRect")
 
-local showHotkeys = hs.hotkey.showHotkeys(hyper,'k')
+local showHotkeys = hs.hotkey.showHotkeys(hyper, 'a')
 
 
 -- Setup Complete
