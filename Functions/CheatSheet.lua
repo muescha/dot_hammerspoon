@@ -4,7 +4,7 @@
 --- DateTime: 06.08.22 14:47
 ---
 
-print("Init CheatSheet")
+fileInfo()
 
 KSheet = hs.loadSpoon('KSheet');
 
@@ -12,7 +12,7 @@ hs.hotkey.bind(
 --{"option",'shift'},
         hyper,
         "C",
-        "KSheet",
+        keyInfo("KSheet"),
         function()
             KSheet:toggle();
         end
