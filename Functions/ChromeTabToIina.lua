@@ -3,8 +3,9 @@
 --- DateTime: 05.08.22 12:02
 ---
 
-print("init ChromeTabToIina")
-hs.hotkey.bind(hyper, "i", function()
+fileInfo()
+
+hs.hotkey.bind(hyper, "i", keyInfo("Open youtube in IINA"), function()
 
     local _,url = hs.osascript.applescript('tell application "Google Chrome" to return URL of active tab of front window')
 

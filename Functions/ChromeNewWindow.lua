@@ -5,9 +5,9 @@
 ---
 --- Open New Chrome Window with the same size
 
-print("init ChromeNewWindow")
+fileInfo()
 
-bindHotkey(to("Google Chrome"), { "cmd"}, "n", function()
+bindHotkey(to("Google Chrome"), { "cmd"}, "n", keyInfo("New Window"), function()
 
     local menuItemName = "Neues Fenster"
 

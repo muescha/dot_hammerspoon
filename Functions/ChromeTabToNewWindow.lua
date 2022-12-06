@@ -4,8 +4,9 @@
 --- DateTime: 05.08.22 12:02
 ---
 
-print("init ChromeTabToNewWindow")
-hs.hotkey.bind(hyper, "t", function()
+fileInfo()
+
+hs.hotkey.bind(hyper, "t", keyInfo("Open Tab in new Window"),function()
     local app = hs.application.frontmostApplication()
     print(app:name())
     if app:name() == "Google Chrome" then

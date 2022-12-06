@@ -5,7 +5,7 @@
 ---
 --- based on https://github.com/jwkvam/hammerspoon-config/blob/master/init.lua#L183
 
-print("Init AppBorders")
+fileInfo()
 
 -- see check for some apps
 -- https://github.com/folke/dot/blob/master/hammerspoon/border.lua
