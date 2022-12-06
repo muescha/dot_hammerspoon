@@ -1,6 +1,6 @@
 -- Copyright (c) 2018 Miro Mannino
--- Permission is hereby granted, free of charge, to any person obtaining a copy of this
--- software and associated documentation files (the "Software"), to deal in the Software
+-- Permission is hereby granted, free of charge, to any person obtaining a copy of this 
+-- software and associated documentation files (the "Software"), to deal in the Software 
 -- without restriction, including without limitation the rights to use, copy, modify, merge,
 -- publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons
 -- to whom the Software is furnished to do so, subject to the following conditions:
@@ -8,57 +8,21 @@
 -- The above copyright notice and this permission notice shall be included in all copies
 -- or substantial portions of the Software.
 --
--- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
--- INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+-- INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
 -- PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
--- FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
--- OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+-- FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+-- OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 -- DEALINGS IN THE SOFTWARE.
 
 --- === MiroWindowsManager ===
 ---
 --- With this script you will be able to move the window in halves and in corners using your keyboard and mainly using arrows. You would also be able to resize them by thirds, quarters, or halves.
----
+--- 
 --- Official homepage for more info and documentation: [https://github.com/miromannino/miro-windows-manager](https://github.com/miromannino/miro-windows-manager)
 ---
 --- Download: [https://github.com/miromannino/miro-windows-manager/raw/master/MiroWindowsManager.spoon.zip](https://github.com/miromannino/miro-windows-manager/raw/master/MiroWindowsManager.spoon.zip)
 ---
-
-local currentAlert = nil
-
-local modalKey = hs.hotkey.modal.new({'ctrl', 'alt', 'cmd','shift'}, 'return', 'WM mode enter')
-modalKey:bind({}, 'escape', function() modalKey:exit() end)
-modalKey:bind({}, 'q', function() modalKey:exit() end)
-
-local exitTimer = hs.timer.delayed.new(5, function()
-	modalKey:exit()
-end)
-
-function modalKey:entered()
-    --hs.alert.show('WM mode entered', 0.5)
-    currentAlert = hs.alert.show('WM mode entered', 'do-not-close')
-  debugInfo(currentAlert)
-    exitTimer:start()
-end
-
-function modalKey:exited()
-    exitTimer:stop()
-    if currentAlert then
-      hs.alert.closeSpecific(currentAlert)
-      currentAlert = nil
-    end
-    hs.alert.show('WM mode quit', 0.5)
-end
-
--- Move a window between monitors
-modalKey:bind({}, '[', function()
-    exitTimer:start()
-    hs.window.focusedWindow():moveOneScreenWest()
-end)
-modalKey:bind({}, ']', function()
-    exitTimer:start()
-    hs.window.focusedWindow():moveOneScreenEast()
-end)
 
 local obj={}
 obj.__index = obj
@@ -72,14 +36,14 @@ obj.license = "MIT - https://opensource.org/licenses/MIT"
 
 --- MiroWindowsManager.sizes
 --- Variable
---- The sizes that the window can have.
+--- The sizes that the window can have. 
 --- The sizes are expressed as dividend of the entire screen's size.
 --- For example `{2, 3, 3/2}` means that it can be 1/2, 1/3 and 2/3 of the total screen's size
 obj.sizes = {2, 3, 3/2}
 
 --- MiroWindowsManager.fullScreenSizes
 --- Variable
---- The sizes that the window can have in full-screen.
+--- The sizes that the window can have in full-screen. 
 --- The sizes are expressed as dividend of the entire screen's size.
 --- For example `{1, 4/3, 2}` means that it can be 1/1 (hence full screen), 3/4 and 1/2 of the total screen's size
 obj.fullScreenSizes = {1, 4/3, 2}
@@ -138,7 +102,7 @@ function obj:_nextFullScreenStep()
 
     local nextSize = self.fullScreenSizes[1]
     for i=1,#self.fullScreenSizes do
-      if cell.w == self.GRID.w / self.fullScreenSizes[i] and
+      if cell.w == self.GRID.w / self.fullScreenSizes[i] and 
          cell.h == self.GRID.h / self.fullScreenSizes[i] and
          cell.x == (self.GRID.w - self.GRID.w / self.fullScreenSizes[i]) / 2 and
          cell.y == (self.GRID.h - self.GRID.h / self.fullScreenSizes[i]) / 2 then
@@ -156,6 +120,16 @@ function obj:_nextFullScreenStep()
   end
 end
 
+function obj:_moveNextScreenStep()
+  if hs.window.focusedWindow() then
+    local win = hs.window.frontmostWindow()
+    local id = win:id()
+    local screen = win:screen()
+
+    win:move(win:frame():toUnitRect(screen:frame()), screen:next(), true, 0)
+  end
+end
+
 function obj:_fullDimension(dim)
   if hs.window.focusedWindow() then
     local win = hs.window.frontmostWindow()
@@ -165,30 +139,13 @@ function obj:_fullDimension(dim)
 
     if (dim == 'x') then
       cell = '0,0 ' .. self.GRID.w .. 'x' .. self.GRID.h
-    else
+    else  
       cell[dim] = self.GRID[dim]
       cell[dim == 'w' and 'x' or 'y'] = 0
     end
 
     hs.grid.set(win, cell, screen)
   end
-end
-
--- Resize window for chunk of screen.
--- For x and y: use 0 to expand fully in that dimension, 0.5 to expand halfway
--- For w and h: use 1 for full, 0.5 for half
-function obj:_push(x, y, w, h)
-	local win = hs.window.focusedWindow()
-	local f = win:frame()
-	local screen = win:screen()
-	local max = screen:frame()
-
-	f.x = max.x + (max.w*x)
-	f.y = max.y + (max.h*y)
-	f.w = max.w*w
-	f.h = max.h*h
-	-- http://www.hammerspoon.org/docs/hs.window.html#setFrame
-	win:setFrame(f)
 end
 
 --- MiroWindowsManager:bindHotkeys()
@@ -201,6 +158,7 @@ end
 ---   * down: for the down action (usually {hyper, "down"})
 ---   * left: for the left action (usually {hyper, "left"})
 ---   * fullscreen: for the full-screen action (e.g. {hyper, "f"})
+---   * nextscreen: for the multi monitor next screen action (e.g. {hyper, "n"})
 ---
 --- A configuration example can be:
 --- ```
@@ -211,16 +169,59 @@ end
 ---   down = {hyper, "down"},
 ---   left = {hyper, "left"},
 ---   fullscreen = {hyper, "f"}
+---   nextscreen = {hyper, "n"}
 --- })
 --- ```
+---
+---deal
+debugInfo("hs.spoons.bindHotkeysToSpec")
+debugInfo(hs.spoons)
+debugInfo(hs.spoons.bindHotkeysToSpec)
+
+function obj:bindHotkeys(mapping)
+  local actions = {
+    toggle = hs.fnutils.partial(self.toggle, self),
+    show = hs.fnutils.partial(self.show, self),
+    hide = hs.fnutils.partial(self.hide, self)
+  }
+  hs.spoons.bindHotkeysToSpec(actions, mapping)
+end
+
+debugFunction(hs.spoons.bindHotkeysToSpec)
+
+local oldbindHotkeysToSpec = hs.spoons.bindHotkeysToSpec
+
+function newbindHotkeysToSpec(actions, map)
+  debugInfo("inside newbindHotkeysToSpec")
+  oldbindHotkeysToSpec(actions,mpa)
+end
+
+debugFunction(oldbindHotkeysToSpec)
+debugFunction(newbindHotkeysToSpec)
+hs.spoons.bindHotkeysToSpec = newbindHotkeysToSpec
+debugFunction(hs.spoons.bindHotkeysToSpec)
+
+debugFunction(hs.spoons.bindHotkeysToSpec)
+debugFunction(oldbindHotkeysToSpec)
+debugFunction(hs.hotkey.getHotkeys)
+
+--local hks = hs.hotkey.getHotkeys()
+--debugInfo(hks)
+--
+--for i,hk in pairs(hks) do
+--  debugInfo(i)
+--  debugInfo(hk)
+--  debugInfo(hk._hk)
+--  debugInfo(hk._hk.pressedfn)
+--end
+
 function obj:bindHotkeys(mapping)
   hs.inspect(mapping)
   print("Bind Hotkeys for Miro's Windows Manager")
 
-  modalKey:bind(mapping.down[1], mapping.down[2], function ()
-    exitTimer:start()
+  hs.hotkey.bind(mapping.down[1], mapping.down[2], function ()
     self._pressed.down = true
-    if self._pressed.up then
+    if self._pressed.up then 
       self:_fullDimension('h')
     else
       self:_nextStep('h', true, function (cell, nextSize)
@@ -228,14 +229,13 @@ function obj:bindHotkeys(mapping)
         cell.h = self.GRID.h / nextSize
       end)
     end
-  end, function ()
+  end, function () 
     self._pressed.down = false
   end)
 
-  modalKey:bind(mapping.right[1], mapping.right[2], function ()
-    exitTimer:start()
+  hs.hotkey.bind(mapping.right[1], mapping.right[2], function ()
     self._pressed.right = true
-    if self._pressed.left then
+    if self._pressed.left then 
       self:_fullDimension('w')
     else
       self:_nextStep('w', true, function (cell, nextSize)
@@ -243,14 +243,13 @@ function obj:bindHotkeys(mapping)
         cell.w = self.GRID.w / nextSize
       end)
     end
-  end, function ()
+  end, function () 
     self._pressed.right = false
   end)
 
-  modalKey:bind(mapping.left[1], mapping.left[2], function ()
-    exitTimer:start()
+  hs.hotkey.bind(mapping.left[1], mapping.left[2], function ()
     self._pressed.left = true
-    if self._pressed.right then
+    if self._pressed.right then 
       self:_fullDimension('w')
     else
       self:_nextStep('w', false, function (cell, nextSize)
@@ -258,14 +257,13 @@ function obj:bindHotkeys(mapping)
         cell.w = self.GRID.w / nextSize
       end)
     end
-  end, function ()
+  end, function () 
     self._pressed.left = false
   end)
 
-  modalKey:bind(mapping.up[1], mapping.up[2], function ()
-    exitTimer:start()
+  hs.hotkey.bind(mapping.up[1], mapping.up[2], function ()
     self._pressed.up = true
-    if self._pressed.down then
+    if self._pressed.down then 
         self:_fullDimension('h')
     else
       self:_nextStep('h', false, function (cell, nextSize)
@@ -273,18 +271,16 @@ function obj:bindHotkeys(mapping)
         cell.h = self.GRID.h / nextSize
       end)
     end
-  end, function ()
+  end, function () 
     self._pressed.up = false
   end)
 
-  modalKey:bind(mapping.fullscreen[1], mapping.fullscreen[2], function ()
-    exitTimer:start()
+  hs.hotkey.bind(mapping.fullscreen[1], mapping.fullscreen[2], function ()
     self:_nextFullScreenStep()
   end)
 
-  modalKey:bind(mapping.middle[1], mapping.middle[2], function ()
-    exitTimer:start()
-    self:_push(0.05, 0, 0.9, 1)
+  hs.hotkey.bind(mapping.nextscreen[1], mapping.nextscreen[2], function ()
+    self:_moveNextScreenStep()
   end)
 
 end

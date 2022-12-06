@@ -9,7 +9,13 @@ print("Init WindowManager")
 
 hs.loadSpoon("MiroWindowsManager")
 debugInfo(hyper)
-hs.window.animationDuration = 0.3
+
+
+--spoon.MiroWindowsManager.sizes = { 6/5, 4/3, 3/2, 2/1, 3/1, 4/1, 6/1 }
+--spoon.MiroWindowsManager.fullScreenSizes = {1, 6/5, 4/3, 2}
+
+-- duration already set in main init
+--hs.window.animationDuration = 0.3
 spoon.MiroWindowsManager:bindHotkeys({
     up = {hyper, "up"},
     right = {hyper, "right"},
@@ -19,8 +25,9 @@ spoon.MiroWindowsManager:bindHotkeys({
     -- disable this keys because other screenshots already do this
     --fullscreen = nil,
     --nextscreen = nil
-    fullscreen = {hyper, "."},
-    nextscreen = {hyper, "/"}
+    fullscreen = {hyper, "f"},
+    nextscreen = {hyper, "1"},
+    middle = {hyper, "2"}
 })
 
 
