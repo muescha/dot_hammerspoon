@@ -9,6 +9,12 @@ hs.hotkey.alertDuration = 0
 
 require('Functions.Reload')
 require("Functions.ConfigConsole")
+
+require('Functions.SetupLuaRocks')
+
+-- need to start after LuaRocks path setup
+require('Functions.StartDebug')
+
 require("Helpers.Extensions.String")
 require("Helpers.Extensions.Table")
 require("Helpers.Extensions.WindowFilterEvents")
