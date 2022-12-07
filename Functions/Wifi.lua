@@ -5,8 +5,7 @@
 ---
 
 
-print("Init Wifi")
-
+fileInfo()
 
 --local allNetworks = table.concat(hs.wifi.availableNetworks(), ',')
 --debugInfo(allNetworks)

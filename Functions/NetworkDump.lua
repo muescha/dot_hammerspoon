@@ -1,4 +1,7 @@
 -- wifi/network watching
+
+fileInfo()
+
 function wifiwatcher(watcher, message, interface, rssi, rate)
 
     print("message: " .. (message or "??"))

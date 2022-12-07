@@ -1,4 +1,4 @@
-print("Init StartDebug")
+fileInfo()
 
 -- require("external/mobdebug").start()
 

@@ -4,10 +4,9 @@
 --- DateTime: 06.08.22 14:48
 ---
 
-print("Init ResizeChildWindows")
+fileInfo()
 
-
-hs.hotkey.bind(hyper, "r", "Resize all child windows", function()
+hs.hotkey.bind(hyper, "r", keyInfo("Resize all child windows"), function()
     local win = hs.window.focusedWindow()
     local app = win:application()
     local currentFrame = win:frame()

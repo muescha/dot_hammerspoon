@@ -4,5 +4,7 @@
 --- DateTime: 20.07.22 08:34
 ---
 
-hs.hotkey.bind({"alt","shift"}, "h", "Vimperator", function() hs.hints.windowHints() end)
+fileInfo()
+
+hs.hotkey.bind({"alt","shift"}, "h", keyInfo("Vimperator"), function() hs.hints.windowHints() end)
 hs.hints.style = "vimperator"

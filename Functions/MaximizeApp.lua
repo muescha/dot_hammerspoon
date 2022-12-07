@@ -4,7 +4,7 @@
 --- DateTime: 05.08.22 11:54
 ---
 
-print("Init Maximize App")
+fileInfo()
 
 local maximizeApp = function()
                       local win = hs.window.focusedWindow()
@@ -12,6 +12,6 @@ local maximizeApp = function()
                       win:maximize()
                       hs.alert.show("maximized app ".. app:name() )
                     end
-hs.hotkey.bind({"cmd"}, "m", "Maximize App", maximizeApp )
-hs.hotkey.bind(hyper, "m", "Maximize App",  maximizeApp )
+hs.hotkey.bind({"cmd"}, "m", keyInfo("Maximize App"), maximizeApp )
+hs.hotkey.bind(hyper, "m", keyInfo("Maximize App"),  maximizeApp )
 

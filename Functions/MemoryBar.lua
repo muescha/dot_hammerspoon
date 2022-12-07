@@ -1,5 +1,7 @@
 -- https://github.com/luismayta/hammerspoon/blob/develop/mod/memory.lua
 
+fileInfo()
+
 -- luacheck: globals hs spoon
 local memoryIcon = {
     icon = hs.image.imageFromPath('assets/memorybar/icon.png'):setSize({ w = 20, h = 20 }),

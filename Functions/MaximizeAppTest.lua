@@ -4,10 +4,11 @@
 --- DateTime: 06.08.22 14:42
 ---
 
+fileInfo()
 
 -- Recursive Binder: https://apple.stackexchange.com/questions/416588/create-emacs-style-keychains-keybindings-in-hammerspoon
 
-maximizeshortcut = hs.hotkey.bind({"cmd"}, "x", "Maximize", function()
+maximizeshortcut = hs.hotkey.bind({"cmd"}, "x", keyInfo("Maximize"), function()
     local win = hs.window.focusedWindow()
     local app = win:application()
 

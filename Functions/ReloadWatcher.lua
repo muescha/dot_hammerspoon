@@ -4,7 +4,7 @@
 --- DateTime: 20.07.22 08:45
 ---
 
-print("Init ReloadWatcher")
+fileInfo()
 
 --PATH = "/dotfiles/hammerspoon/.hammerspoon/"
 PATH = "/.hammerspoon/"

@@ -4,8 +4,7 @@
 --- DateTime: 05.08.22 12:08
 ---
 
-print("Init PopupNotes")
-
+fileInfo()
 
 -- https://gist.github.com/luckman212/77493804de8e504490dfbc2835eef09c
 -- popper.lua
@@ -98,5 +97,5 @@ function popper_toggle(bool)
     end
 end
 
-local hk_popper = hs.hotkey.bind(nil, "f3", popper_toggle, nil, nil)
+local hk_popper = hs.hotkey.bind(nil, "f3", keyInfo("Popup Notepad"), popper_toggle, nil, nil)
 -- popper_toggle(true)

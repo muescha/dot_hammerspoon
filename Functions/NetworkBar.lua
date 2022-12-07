@@ -1,5 +1,7 @@
 -- https://github.com/KURANADO2/hammerspoon-kuranado/blob/main/modules/network.lua
 
+fileInfo()
+
 local menubar = hs.menubar.new()
 local menuData = {}
 

@@ -1,5 +1,4 @@
-print("Init SetupLuaRocks")
-
+fileInfo()
 
 local lVer = _VERSION:match("Lua (.+)$")
 

@@ -7,7 +7,9 @@
     then simulate a right mouse click at this place
 --]]
 
-hs.hotkey.bind({"shift"}, "F10", function()
+fileInfo()
+
+hs.hotkey.bind({"shift"}, "F10", keyInfo("Test AX-Functions"),function()
   local ax = hs.axuielement
   local systemElement = ax.systemWideElement()
   local currentElement = systemElement:attributeValue("AXFocusedUIElement")
