@@ -17,3 +17,17 @@ hs.hotkey.bind(
             KSheet:toggle();
         end
 );
+
+
+
+HKSheet = hs.loadSpoon('HotKeySheet');
+
+hs.hotkey.bind(
+--{"option",'shift'},
+        hyper,
+        "X",
+        keyInfo("HotKeySheet"),
+        function()
+            HKSheet:toggle();
+        end
+);
