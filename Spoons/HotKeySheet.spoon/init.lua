@@ -2,7 +2,7 @@
 ---
 --- HotKey Bindings cheatsheet for current application
 ---
---- Download: [https://github.com/Hammerspoon/Spoons/raw/master/Spoons/KSheet.spoon.zip](https://github.com/Hammerspoon/Spoons/raw/master/Spoons/KSheet.spoon.zip)
+--- Download: https://github.com/muescha/dot_hammerspoon/tree/master/Spoons/HotKeySheet.spoon
 
 local obj={}
 obj.__index = obj
@@ -31,7 +31,7 @@ obj.commandEnumOrder = {
     'shift',
 }
 
---- KSheet:init()
+--- HotKeySheet:init()
 --- Method
 --- Initialize the spoon
 function obj:init()
@@ -256,7 +256,7 @@ local function generateHtml()
     return html
 end
 
---- KSheet:show()
+--- HotKeySheet:show()
 --- Method
 --- Show current application's keybindings in a view.
 function obj:show()
@@ -265,14 +265,14 @@ function obj:show()
     self.sheetView:show()
 end
 
---- KSheet:hide()
+--- HotKeySheet:hide()
 --- Method
 --- Hide the cheatsheet view.
 function obj:hide()
     self.sheetView:hide()
 end
 
---- KSheet:toggle()
+--- HotKeySheet:toggle()
 --- Method
 --- Alternatively show/hide the cheatsheet view.
 function obj:toggle()
@@ -283,9 +283,9 @@ function obj:toggle()
   end
 end
 
---- KSheet:bindHotkeys(mapping)
+--- HotKeySheet:bindHotkeys(mapping)
 --- Method
---- Binds hotkeys for KSheet
+--- Binds hotkeys for HotKeySheet
 ---
 --- Parameters:
 ---  * mapping - A table containing hotkey modifier/key details for the following items:
