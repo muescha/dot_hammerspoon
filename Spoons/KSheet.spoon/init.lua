@@ -153,7 +153,7 @@ local function generateHtml(application)
               margin-top: 46px;
             }
             .content > .col{
-              width: 23%;
+              width: 31%;
               padding:20px 0 20px 20px;
             }
 

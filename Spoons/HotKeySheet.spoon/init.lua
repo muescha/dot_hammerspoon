@@ -187,7 +187,7 @@ local function generateHtml()
               margin-top: 46px;
             }
             .content > .col{
-              width: 23%;
+              width: 31%;
               padding:20px 0 20px 20px;
             }
 
@@ -205,14 +205,11 @@ local function generateHtml()
               text-align: left;
               float: left;
               font-family: monospace;
-              xborder-style: solid;
             }
             .cmdtext{
               float: left;
               overflow: hidden;
-              xwidth: 100%;
               font-family: "Verdana";
-              xborder-style: solid;
             }
             footer > .content{
               width: 100% !important;
