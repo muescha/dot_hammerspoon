@@ -90,7 +90,7 @@ function bindHotkey(runWithAppCondition, modifier, key, message, callback)
         callback = message
         message = nil
     end
-
+    local hotkeyHandler
     hotkeyHandler = hs.hotkey.bind(modifier, key, message, function()
         local currentApp = hs.application.frontmostApplication():name()
         if runWithAppCondition(currentApp) then
@@ -111,6 +111,7 @@ end
 -- Bind Hotkey only to one app
 
 function bindHotkeyOnlyTo(appname, modifier, key, message, callback, ...)
+    local hotkeyHandler
     hotkeyHandler = hs.hotkey.bind(modifier, key, message, function()
 
         local currentApp = hs.application.frontmostApplication():name()
