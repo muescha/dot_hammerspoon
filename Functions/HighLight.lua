@@ -4,9 +4,9 @@
 --- DateTime: 06.08.22 14:46
 ---
 
-print("Init HighLight")
+fileInfo()
 
-hs.hotkey.bind(hyper, "h", "Highlight Current App", function()
+hs.hotkey.bind(hyper, "h", keyInfo("Highlight Current App"), function()
 
     local app = hs.application.frontmostApplication()
     local window = app:mainWindow()
@@ -30,7 +30,7 @@ function mouseHighlight()
     drawCircle(mousepoint, 40)
 
 end
-hs.hotkey.bind(hyper, "d", mouseHighlight)
+hs.hotkey.bind(hyper, "d", keyInfo("Highlight mouse position"),mouseHighlight)
 
 
 function showTimed(object, seconds, callevent)

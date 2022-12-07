@@ -1,6 +1,8 @@
 -- found here:
 -- https://github.com/clavery/dotfiles/blob/master/.hammerspoon/init.lua#L227-L320
 
+fileInfo()
+
 _fuzzyChoices = nil
 _fuzzyChooser = nil
 _fuzzyLastWindow = nil
@@ -93,6 +95,6 @@ function windowFuzzySearch()
   _fuzzyChooser:show()
 end
 
-hs.hotkey.bind(hyper, "e", function()
+hs.hotkey.bind(hyper, "e", keyInfo("Search Windows"),function()
   windowFuzzySearch()
 end)

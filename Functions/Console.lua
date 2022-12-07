@@ -4,6 +4,8 @@
 --- DateTime: 06.08.22 16:11
 ---
 
+fileInfo()
+
 function isConsoleOpen()
     local hspoon = hs.application.applicationsForBundleID(hs.processInfo.bundleID)[1]
     local conswin = hspoon:mainWindow()
@@ -11,7 +13,7 @@ function isConsoleOpen()
 end
 
 local windowHolder
-hs.hotkey.bind({ "cmd", "alt", "ctrl" }, "r", function()
+hs.hotkey.bind({ "cmd", "alt", "ctrl" }, "r", keyInfo("Reload Config"), function()
     local hspoon = hs.application.applicationsForBundleID(hs.processInfo.bundleID)[1]
     local conswin = hspoon:mainWindow()
     if conswin and hspoon:isFrontmost() then

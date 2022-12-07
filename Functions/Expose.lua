@@ -4,8 +4,7 @@
 --- DateTime: 06.08.22 14:50
 ---
 
-print("Init Expose")
-
+fileInfo()
 
 -- Expose
 

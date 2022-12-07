@@ -1,5 +1,7 @@
 -- Configure console
 
+fileInfo()
+
 hs.console.darkMode(false)
 hs.console.consoleFont({ name = "Fira Code", size = 18 })
 -- Alpha == transparency. 0 = fully transparent, 1 = fully opaque

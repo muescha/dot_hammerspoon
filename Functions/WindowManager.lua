@@ -4,12 +4,9 @@
 --- DateTime: 06.08.22 14:49
 ---
 
-print("Init WindowManager")
-
+fileInfo()
 
 hs.loadSpoon("MiroWindowsManager")
-debugInfo(hyper)
-
 
 --spoon.MiroWindowsManager.sizes = { 6/5, 4/3, 3/2, 2/1, 3/1, 4/1, 6/1 }
 --spoon.MiroWindowsManager.fullScreenSizes = {1, 6/5, 4/3, 2}
@@ -31,5 +28,5 @@ spoon.MiroWindowsManager:bindHotkeys({
 })
 
 
-hs.hotkey.bind(hyper, '[', function() hs.window.focusedWindow():moveOneScreenWest(true, true) end)
-hs.hotkey.bind(hyper, ']', function() hs.window.focusedWindow():moveOneScreenEast(true, true) end)
+hs.hotkey.bind(hyper, '[', keyInfo("move to left Screen"), function() hs.window.focusedWindow():moveOneScreenWest(true, true) end)
+hs.hotkey.bind(hyper, ']', keyInfo("move to right Screen"), function() hs.window.focusedWindow():moveOneScreenEast(true, true) end)
