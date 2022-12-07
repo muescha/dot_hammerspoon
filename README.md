@@ -49,7 +49,7 @@ bindHotkey(to("Google Chrome","code"), modifier, key, function)
 bindHotkey(to({"Google Chrome","code"}), modifier, key, function)
 
 bindHotkey(exclude("Google Chrome"), modifier, key, function)
-bindHotkey(exclude("Google Chrome","whatsapp"), modifier, key, function)
+bindHotkey(exclude("Google Chrome","WhatsApp"), modifier, key, function)
 
 bindHotkey(to("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", nil, myFunction)
 bindHotkey(exclude("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", nil, myFunction)
