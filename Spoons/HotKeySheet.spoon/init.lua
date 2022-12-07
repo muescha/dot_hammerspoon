@@ -65,7 +65,7 @@ local function groupedHotKeys()
     local result = {};
 
     local activeHotkeys = hs.hotkey.getHotkeys()
-    debugTable(activeHotkeys)
+
     for key, value in ipairs(activeHotkeys) do
 
         local index, fullDescription = split_on_first_colon(value.msg)
@@ -94,7 +94,6 @@ end
 
 local function processHotKeys()
     local groupedKeys = groupedHotKeys()
-    debugTable(groupedKeys)
 
     local menu = ""
     local col = 1
@@ -103,9 +102,7 @@ local function processHotKeys()
     for scriptName, _ in pairs(groupedKeys) do
         table.insert(tableOrder, scriptName)
     end
-    debugTable(tableOrder)
     table.sort(tableOrder, function(a,b) return a < b end)
-    debugTable(tableOrder)
 
 
     for pos,scriptName in pairs(tableOrder) do
