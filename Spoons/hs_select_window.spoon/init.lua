@@ -101,7 +101,7 @@ local function callback_window_created(w, appName, event)
         --      print("inserting into windows.........", w)
         table.insert(obj.currentWindows, 1, w)
         --debugInfo(obj.currentWindows)
-        debugTable(obj.currentWindows)
+        --debugTable(obj.currentWindows)
         return
     end
     if event == "windowFocused" then
