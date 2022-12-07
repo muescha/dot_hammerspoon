@@ -57,6 +57,15 @@ bindHotkey(exclude("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", nil, myFuncti
 
 ```
 
+### HotKeySheet
+
+replacement for `hs.hotkey.showHotkeys`
+
+if you add a scriptname to the description then it is grouped by scriptname. Example: `MaximizeApp: Maximize App`
+
+![ScreenShot HotKeySheet](./assets/readme/HotKeySheet.png)
+
+
 ### DebugFunction
 
 - [debugFunction](/Helpers/DebugFunction.lua) show source code of a function in console
