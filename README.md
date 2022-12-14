@@ -10,6 +10,12 @@ Draw a red border around the current active app.
 
 Opens a New Chrome Window with the same size. You need to adjust the menu command to your current language. (PR is welcome for a language independent solution - maybe search the all the menu for shortcut `cmd`+`N` like in [KSheet](/Spoons/KSheet.spoon/init.lua)?)
 
+### [MacZoom](/Functions/MacZoom.lua)
+
+Map the shortkeys of accessibility features to zoom all or part of your screen from `{ "cmd", "alt" }` + `0` `-` `=` to `hyper` + `0` `-` `=` 
+
+
+
 ### [Umlauts.lua](/Functions/Umlauts.lua)
 
 - Mapping german umlauts to `opt`+`key` are in:
