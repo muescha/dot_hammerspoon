@@ -25,9 +25,12 @@ HKSheet = hs.loadSpoon('HotKeySheet');
 hs.hotkey.bind(
 --{"option",'shift'},
         hyper,
-        "X",
+        "a",
         keyInfo("HotKeySheet"),
         function()
             HKSheet:toggle();
         end
 );
+
+
+local showHotkeys = hs.hotkey.showHotkeys(hyper, 'x')

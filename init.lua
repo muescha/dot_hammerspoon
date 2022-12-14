@@ -50,6 +50,7 @@ require('Functions.ChromeTabToNewWindow')
 require('Functions.CheatSheet')
 require('Functions.HighLight')
 require('Functions.IinaGlobalControl')
+require('Functions.MacZoom')
 require('Functions.MaximizeApp')
 require('Functions.ResizeChildWindows')
 require('Functions.Umlauts')
@@ -70,9 +71,6 @@ require('Functions.FuzzyWindowSearch')
 
 -- Test Spoons :)
 --hs.loadSpoon("DrawRect")
-
-local showHotkeys = hs.hotkey.showHotkeys(hyper, 'a')
-
 
 -- Setup Complete
 
