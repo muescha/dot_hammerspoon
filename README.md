@@ -57,7 +57,7 @@ bindHotkey(exclude("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", nil, myFuncti
 
 ```
 
-### HotKeySheet
+### HotKeySheet.spoon
 
 replacement for `hs.hotkey.showHotkeys`
 
