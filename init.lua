@@ -25,6 +25,7 @@ require("Helpers.DebugFunction")
 require("Helpers.Enum")
 
 require("Helpers.SendKeysOnlyInApp")
+require("Helpers.HotkeyBindModal")
 
 hs.logger.defaultLogLevel = "info"
 --hs.logger.defaultLogLevel = "verbose"
