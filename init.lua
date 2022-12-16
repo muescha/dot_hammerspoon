@@ -59,6 +59,8 @@ require('Functions.Wifi')
 require('Functions.WindowManager')
 require('Functions.FuzzyWindowSearch')
 
+require('Functions.AudioSwitcher')
+
 -- only for tests
 --require('Functions.ContextMenu')
 --require('Functions.Experimental')
@@ -76,6 +78,25 @@ require('Functions.FuzzyWindowSearch')
 
 -- Test Spoons :)
 --hs.loadSpoon("DrawRect")
+--hs.window.highlight.ui.isolateColor = {0.1, 0.1, 0.1, 0.85}
+
+--hs.window.highlight.start()
+--local highlight = require "hs.window.highlight"
+--highlight.ui.overlay = true
+--highlight.ui.overlayColor = {0, 0, 0, 0}
+--highlight.ui.isolateColor = {0.1, 0.1, 0.1, 0.85}
+-- highlight.ui.windowShownFlashColor = {1, 0.6, 0, 0.5}
+-- highlight.ui.flashDuration = 0.3
+-- highlight.ui.frameWidth = 10
+-- highlight.ui.frameColor = {1, 0.6, 0, 0.5}
+--highlight.start()
+--highlight.toggleIsolate()
+
+
+--local tabs = require "hs.tabs"
+
+--hs.tabs.enableForApp("com.google.Chrome")
+
 
 -- Setup Complete
 
