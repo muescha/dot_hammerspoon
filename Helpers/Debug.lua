@@ -6,11 +6,49 @@
 
 -- Helper Functions
 
-function debugElement(element)
+function debugElement(element, description)
+    if description then
+        print("Check element: ".. description)
+    end
+    if not element then
+        print("  Error: no element exists")
+        return
+    end
+
+    if not element['attributeNames'] then
+        print("  Error: element:attributeNames() not exists")
+        return
+    end
+
+
     for i, v in pairs(element:attributeNames()) do
         local o = element:attributeValue(v)
-        print(i .. ". " .. v .. ": " .. hs.inspect(o))
+        print("attributeValue " .. i .. ". " .. v .. ": " .. hs.inspect(o))
     end
+
+    --     logger.i(inspect(currentElement:parameterizedAttributeNames()))
+    for i, name in ipairs(element:parameterizedAttributeNames()) do
+        print("parameterizedAttributeNames " .. i .. ". " .. name .. ': ' .. hs.inspect(element:parameterizedAttributeValue(name, {})))
+    end
+
+    -- see more: https://github.com/dbalatero/dotfiles/blob/88db55576616a697e81cbc7478eecbec5672a22e/hammerspoon/experimental.lua#L267
+
+    print('--------------------')
+    print('action names:')
+    local names = element:actionNames()
+    print(hs.inspect(names))
+    print('--------------------')
+    print('action descriptions:')
+
+    for i, name in ipairs(names) do
+        print("actionDescription " .. i .. '.  ' .. name .. ': ' .. element:actionDescription(name))
+    end
+
+    print('Children:' .. hs.inspect(element:attributeValue('AXChildren')))
+
+    -- more debugging in https://github.com/dbalatero/dotfiles/blob/master/hammerspoon/experimental.lua#L424
+
+
 end
 
 function debugInfo(...)
