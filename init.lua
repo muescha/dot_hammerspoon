@@ -58,6 +58,10 @@ require('Functions.Wifi')
 require('Functions.WindowManager')
 require('Functions.FuzzyWindowSearch')
 
+-- only for tests
+--require('Functions.ContextMenu')
+--require('Functions.Experimental')
+
 -- Unused Scripts
 -- require('Functions.PopupNotes') -- F3
 -- require('Functions.Vimperator')
