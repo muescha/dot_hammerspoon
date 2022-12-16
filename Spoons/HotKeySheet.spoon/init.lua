@@ -85,8 +85,9 @@ local function groupedHotKeys()
             hotkey = index:gsub('RETURN','↩'),
             description = description
         }
-
-        table.insert(result[scriptName], newValue);
+        if description ~= "~~~~~hide~~~~~" then
+            table.insert(result[scriptName], newValue);
+        end
     end
 
     return result;
