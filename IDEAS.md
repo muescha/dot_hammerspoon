@@ -9,6 +9,24 @@ i have IINA Controls - i lake to attach dem also to a Chrome Youtube Tab as a re
   - QuickTime
   - VLC
 
+
+### Use Hyperkey to start some apps
+
+https://github.com/dbalatero/HyperKey.spoon
+
+### Try out VimMode.spoon
+
+https://github.com/dbalatero/VimMode.spoon
+
+### Read Later
+
+https://github.com/dbalatero/dotfiles/blob/master/hammerspoon/read-later/init.lua
+
+### Text Expander
+
+https://github.com/dbalatero/dotfiles/blob/master/hammerspoon/text-expander.lua
+
+
 ### Code Style Seperate my spoons into separate gh repos
 
 ### Use MemoryBar sctipt for WatchDog for GPU
@@ -57,6 +75,8 @@ spoon.RecursiveBinder.helperFormat = {
 Some trials here:
 [ContextMenu.lua](/Functions/ContextMenu.lua)
 
+
+
 ### Menu Chooser
 
 https://github.com/brokensandals/MenuChooser.spoon
@@ -69,9 +89,109 @@ https://github.com/boomker/spacehammer/blob/main/Spoons/MenuChooserMod.spoon/ini
 https://github.com/midnightblue69/hammerspoon-config/blob/main/launcher.lua
 
 
-###
+### Check if menuitem is enabled
 
-Network Chooser
+```lua
+bindings:insert(hotkey.bind({"ctrl","cmd"}, "m", function() toggle_application_nolaunch("com.webex.meetingmanager") end))
+mute_toggle = function()
+  app = hs.window.find("Webex Meetings"):application()
+  -- i found also markierung_aktiv["ticked"]
+  if app:findMenuItem("Mute Me")['enabled'] then  -- <-- here is the check 
+    print("mute me enabled, so mute")
+    app:selectMenuItem("Mute Me")
+  else
+    print("mute me disabled, so unmute")
+    app:selectMenuItem("Unmute Me")
+  end
+end
+-- bindings:insert(hotkey.bind(mash, "m", mute_toggle))
+```
+
+source: https://github.com/trws/dotfiles/blob/master/hammerspoon/init.lua
+
+
+### Remember KeyBindings
+
+```lua
+
+local bindings = {}
+setmetatable(bindings, { __index = table })
+
+bindings:insert(hotkey.bind(mash, "g", function() hs.hints.windowHints() end))
+
+local enable_bindings = function()
+  for k,v in pairs(bindings) do
+    v:enable()
+  end
+end
+
+local disable_bindings = function()
+  for k,v in pairs(bindings) do
+    v:disable()
+  end
+end
+
+local screen_sharing_watcher = application.watcher.new(function(name, event, app)
+  if(name == "Screen Sharing") then
+    if(event == application.watcher.activated) then
+      disable_bindings()
+    elseif(event == application.watcher.deactivated) then
+      enable_bindings()
+    end
+  end
+end)
+
+screen_sharing_watcher:start()
+```
+
+### Simple Event pub-sub
+
+```lua
+--
+-- Simple global event pub-sub hub.
+--
+
+local registry = {}
+
+return {
+  emit = (function(eventName)
+    local callbacks = registry[eventName]
+    if callbacks == nil then
+      return
+    end
+    for _, callback in ipairs(callbacks) do
+      callback()
+    end
+  end),
+
+  subscribe = (function(eventName, callback)
+    local callbacks = registry[eventName]
+    if callbacks == nil then
+      callbacks = {}
+      registry[eventName] = callbacks
+    end
+    callbacks[#callbacks + 1] = callback
+  end),
+}
+```
+
+https://github.com/mikejakobsen/2017/blob/master/roles/dotfiles/files/.hammerspoon/events.lua
+
+
+### MailMate related
+
+
+```lua
+isMailMateMailViewer = (function(window)
+  local title = window:title()
+  
+  return title == 'No mailbox selected' or
+     -- mailmate includes this text when a mailbox is selected (not when a mail is open
+     string.find(title, '%(%d+ messages?%)')
+end)
+```
+
+### Network Chooser
 
 
 ```lua
