@@ -7,7 +7,7 @@
 
 fileInfo()
 
-bindHotkey(to("Google Chrome"), { "cmd"}, "n", keyInfo("New Window"), function()
+bindHotkey(to("Google Chrome"), { "cmd"}, "n", keyInfo("New Window (only in Chrome)"), function()
 
     local menuItemName = "Neues Fenster"
 
