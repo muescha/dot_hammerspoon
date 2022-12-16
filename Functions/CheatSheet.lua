@@ -8,28 +8,31 @@ fileInfo()
 
 KSheet = hs.loadSpoon('KSheet');
 
-hs.hotkey.bind(
---{"option",'shift'},
+--hs.hotkey.bind(
+--        hyper,
+--        "C",
+--        keyInfo("KSheet"),
+--        function()
+--            KSheet:toggle();
+--        end
+--);
+
+hotkeybindmodal(
         hyper,
-        "C",
+        "c",
         keyInfo("KSheet"),
-        function()
-            KSheet:toggle();
-        end
+        function()  KSheet:show() end,
+        function() KSheet:hide() end
 );
-
-
 
 HKSheet = hs.loadSpoon('HotKeySheet');
 
-hs.hotkey.bind(
---{"option",'shift'},
+hotkeybindmodal(
         hyper,
         "a",
         keyInfo("HotKeySheet"),
-        function()
-            HKSheet:toggle();
-        end
+        function() HKSheet:show() end,
+        function() HKSheet:hide() end
 );
 
 
