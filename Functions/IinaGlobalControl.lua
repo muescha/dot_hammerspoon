@@ -2,6 +2,13 @@
 --- Created by muescha.
 --- DateTime: 24.08.22 10:00
 ---
+--- Current Apps / Sites
+---   -> IINA
+---   -> Chrome
+---      -> YouTube
+---      -> RTL+
+---      -> https://podcasts.google.com/ (TODO)
+
 
 fileInfo()
 
@@ -42,7 +49,8 @@ local ControlKeys = {
         -- and then up to 1
         speedReset = {
             -- stop playing
-            -- {}, "k",
+            actions.pause,
+
             -- set to speed 0.25
             actions.speedDec,
             actions.speedDec,
@@ -56,7 +64,9 @@ local ControlKeys = {
             actions.speedInc,
             actions.speedInc,
             actions.speedInc,
-            --{}, "k",
+
+            -- continue playing
+            actions.pause,
 
         },
         speedInc = { { "shift" }, "." }, -- '>'
