@@ -19,7 +19,7 @@ KSheet = hs.loadSpoon('KSheet');
 
 hotkeybindmodal(
         hyper,
-        "c",
+        "x",
         keyInfo("KSheet"),
         function()  KSheet:show() end,
         function() KSheet:hide() end
@@ -36,4 +36,45 @@ hotkeybindmodal(
 );
 
 
-local showHotkeys = hs.hotkey.showHotkeys(hyper, 'x')
+--local showHotkeys = hs.hotkey.showHotkeys(hyper, 'x')
+
+local FuzzyMatcher = require("Helpers.FuzzyMatcher")
+
+hs.hotkey.bind(hyper, "s", keyInfo("Show help"),
+        function()
+            local last_win = hs.window.focusedWindow()
+            local keys     = hs.hotkey.getHotkeys()
+
+            local chooser_cbk = function(selection)
+                if last_win ~= nil then
+                    last_win:focus() -- focus last window
+                end
+            end
+
+            local help = { }
+            for i = 1,#keys do
+                table.insert(help, {
+                    --text = keys[i].msg,
+                    text = hs.styledtext.new(keys[i].msg),
+                    --subText = hs.styledtext.new('a little text')
+                    subText = 'a little text'
+                })
+            end
+
+            chooser = hs.chooser.new(chooser_cbk)
+            --chooser:choices(help)
+
+            FuzzyMatcher.setChoices(help, chooser, false, nil)
+
+            chooser:queryChangedCallback(function()
+                FuzzyMatcher.setChoices(help, chooser, false, nil)
+            end)
+
+            --chooser:rows(#help)
+            chooser:rows(15)
+            chooser:width(40)
+            --chooser:bgDark(true)
+            --chooser:fgColor(hs.drawing.color.x11.orange)
+            --chooser:subTextColor(hs.drawing.color.x11.chocolate)
+            chooser:show()
+        end)
