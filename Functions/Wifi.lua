@@ -30,7 +30,9 @@ local wifiwatcher = hs.wifi.watcher.new(function()
     end
 end)
 
-wifiMenu:setTitle("ᯤ " .. hs.wifi.currentNetwork())
+currentNetwork = hs.wifi.currentNetwork()
+
+wifiMenu:setTitle("ᯤ " .. ((currentNetwork ~= nil) and currentNetwork or '<none>'))
 wifiwatcher:start()
 
 
