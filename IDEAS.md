@@ -26,6 +26,11 @@ https://github.com/dbalatero/dotfiles/blob/master/hammerspoon/read-later/init.lu
 
 https://github.com/dbalatero/dotfiles/blob/master/hammerspoon/text-expander.lua
 
+### IPC
+
+```lua
+require('hs.ipc') -- commandline 'hs' -- if CLI is not working, try `hs.ipc.cliInstall('/opt/homebrew')`
+```
 
 ### Code Style Seperate my spoons into separate gh repos
 
@@ -424,3 +429,29 @@ more settings examples:
 
 KI :)
 - https://github.com/andweeb/Ki/blob/master/docs/markdown/index.md
+
+### Use ASCII Icons
+
+https://web.archive.org/web/20161114153605/http://xqt2.com/asciiIcons.html
+
+```lua
+ampOffIcon = [[ASCII:
+.....1a.....x....AC.y.......zE
+..............................
+......4.......................
+1..........aA..........CE.....
+e.2......4.3...........h......
+..............................
+..............................
+.......................h......
+e.2......6.3..........t..q....
+5..........c..........s.......
+......6..................q....
+......................s..t....
+...x.5c....y.......z..........
+]]
+
+local caffeine = hs.menubar.new()
+caffeine:setIcon(ampOnIcon)
+
+```
