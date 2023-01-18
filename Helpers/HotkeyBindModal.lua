@@ -9,8 +9,14 @@ function hotkeybindmodal(mod, key, description, pressedFn, releasedFn)
             key,
             description);
 
-    function ks:entered() pressedFn() end
-    function ks:exited() releasedFn()  end
+    function ks:entered()
+        debugInfo("Start Modal Mode for ".. description)
+        pressedFn()
+    end
+    function ks:exited()
+        releasedFn()
+        debugInfo("Exit Modal Mode for ".. description)
+    end
 
     ks:bind('', 'escape', "~~~~~hide~~~~~", function() ks:exit() end)
     ks:bind(mod, key, description, function() ks:exit() end)
