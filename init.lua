@@ -53,6 +53,7 @@ require('Functions.HighLight')
 require('Functions.IinaGlobalControl')
 require('Functions.MacZoom')
 require('Functions.MaximizeApp')
+require('Functions.Notifications')
 require('Functions.ResizeChildWindows')
 require('Functions.Umlauts')
 require('Functions.Wifi')
@@ -60,6 +61,10 @@ require('Functions.WindowManager')
 require('Functions.FuzzyWindowSearch')
 
 require('Functions.AudioSwitcher')
+require('Functions.Caffeine')
+require('Functions.MultiDisplayBlack')
+    -- This shortcut can be changed
+
 
 -- only for tests
 --require('Functions.ContextMenu')
@@ -97,11 +102,22 @@ require('Functions.AudioSwitcher')
 
 --hs.tabs.enableForApp("com.google.Chrome")
 
+function karabinerCallback(eventName, params)
+    print("Event: "..eventName)
+    print(hs.inspect(params))
+end
 
+hs.urlevent.bind("karabiner", karabinerCallback)
 -- Setup Complete
 
 hs.loadSpoon('FadeLogo'):start()
 
+--hs.spoons.use('SDCPasteboard', {
+--    hotkeys = {
+--        toggleChooser = {hyper, 'V'}
+--    },
+--    start = true
+--})
 
 -- Disable window animation = 0
 -- normal is = 0.3
