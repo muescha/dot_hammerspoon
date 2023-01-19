@@ -4,10 +4,14 @@
 ---
 --- Current Apps / Sites
 ---   -> IINA
----   -> Chrome
+---   -> Chrome for Player in:
 ---      -> YouTube
 ---      -> RTL+
+---      -> WDR
+---      -> Spiegel
+---      -> Netflix
 ---      -> https://podcasts.google.com/ (TODO)
+--- reduce Chromoim like apps to Chrome - and Safari like to WebKit
 
 
 fileInfo()
@@ -76,18 +80,11 @@ local ControlKeys = {
     }
 }
 
--- reduce Chromoim like apps to Chrome - and Safari like to WebKit
--- Chrome Drivers:
---   youtube
---   wdr
---   spiegel
---   netflix
---  etc
 local function doKey(modifier, key)
     debugInfo("--> doKey(", modifier, ',"', key, '")')
 
     local receiverApp
-    -- use saved window
+
     if currentWindow then
         receiverApp = currentWindow:application()
         -- TODO: activate the window - place over others - but go back to current app
@@ -106,6 +103,7 @@ end
 ---@return void
 ---
 local function doCommand(appActions, actionQueue)
+
     if #actionQueue == 0 then
         return
     end
@@ -130,12 +128,8 @@ local function doCommand(appActions, actionQueue)
 
     end
 
-    --debugInfo("again? actionQueue",actionQueue)
-    --if actionQueue ~= nil and #actionQueue > 0 then
-    --local nextAction = table.remove(actionQueue, 1)
-    -- check remaining queue
     doCommand(appActions, actionQueue)
-    --end
+
 end
 
 -- fix for Chrome when current app is also Chrome
@@ -218,41 +212,3 @@ createHotkey("'", actions.moveBackward, keyInfo("Jump Backward"))
 createHotkey("\\", actions.moveForward, keyInfo("Jump Forward"))
 
 hs.hotkey.bind(hyper, "o", keyInfo("Set active App"), setCurrentWindow)
-
-
---local function activateOrHide(bundleID)
---    return function()
---        local app = hs.application.get(bundleID)
---        if not app then
---            -- app hasn't yet running
---            return hs.application.open(bundleID)
---        end
---        -- if hs.window.focusedWindow():application():bundleID() == bundleID then
---        if app:isFrontmost() then
---            -- hs.alert.show("hide")
---            app:hide()
---        else
---            -- hs.alert.show("activate")
---            app:activate()
---        end
---    end
---end
-
--- activate tab in Brave - i think in Chrome would be the same
--- https://github.com/evantravers/hammerspoon-config/blob/master/brave.lua
---module.jump = function(url)
---    hs.osascript.javascript([[
---  (function() {
---    var brave = Application('Brave');
---    brave.activate();
---    for (win of brave.windows()) {
---      var tabIndex =
---        win.tabs().findIndex(tab => tab.url().match(/]] .. url .. [[/));
---      if (tabIndex != -1) {
---        win.activeTabIndex = (tabIndex + 1);
---        win.index = 1;
---      }
---    }
---  })();
---  ]])
---end
