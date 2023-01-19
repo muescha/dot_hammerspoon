@@ -171,7 +171,7 @@ local function createHotkey(sourceKey, action, description)
 
     hs.hotkey.bind(hyper, sourceKey, description, function()
 
-        local switchBackToWin = checkSwitch()
+        local switchBackToWindow = checkSwitch()
 
         local appActions = ControlKeys[currentBundleId]
 
@@ -181,9 +181,9 @@ local function createHotkey(sourceKey, action, description)
 
         doCommand(appActions, { action })
 
-        if switchBackToWin then
-            debugInfo("checkSwitch: switch back to", switchBackToWin)
-            switchBackToWin:focus()
+        if switchBackToWindow then
+            debugInfo("checkSwitch: switch back to", switchBackToWindow)
+            switchBackToWindow:focus()
         end
 
     end)
