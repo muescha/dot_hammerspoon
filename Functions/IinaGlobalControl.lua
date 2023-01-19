@@ -138,12 +138,40 @@ local function doCommand(appActions, actionQueue)
     --end
 end
 
+-- fix for Chrome when current app is also Chrome
+-- remember current window - activate player window to receive the actionCommands
+
+-- when in same maybe use the current tab ---> first test: not work on Chrome :(
+-- currentWindow:focusTab(1)
+-- local _,tabIndex = hs.osascript.applescript('tell application "Google Chrome" to return active tab index of front window')
+
+local function checkSwitch()
+
+    local win = hs.window.focusedWindow()
+    local bundleID = win:application():bundleID()
+
+    if bundleIdChrome ~= bundleID then debugInfo("checkSwitch: no Chrome") return end
+    if bundleIdChrome ~= currentBundleId then debugInfo("checkSwitch: saved no chrome") return end
+    if currentWindow==nil then debugInfo("checkSwitch: no window saved") return end
+    if win == currentWindow then debugInfo("checkSwitch: same window") return end
+
+    debugInfo("checkSwitch: switch to", currentWindow)
+    currentWindow:focus()
+    hs.timer.usleep(10000)
+    --currentWindow:raise()
+
+    return win
+end
+
+
 -- types
 ---@param sourceKey string
 ---@param action string
 local function createHotkey(sourceKey, action, description)
 
     hs.hotkey.bind(hyper, sourceKey, description, function()
+
+        local switchBackToWin = checkSwitch()
 
         local appActions = ControlKeys[currentBundleId]
 
@@ -152,6 +180,11 @@ local function createHotkey(sourceKey, action, description)
         end
 
         doCommand(appActions, { action })
+
+        if switchBackToWin then
+            debugInfo("checkSwitch: switch back to", switchBackToWin)
+            switchBackToWin:focus()
+        end
 
     end)
 
