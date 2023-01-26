@@ -58,11 +58,12 @@ require('Functions.ResizeChildWindows')
 require('Functions.Umlauts')
 require('Functions.Wifi')
 require('Functions.WindowManager')
+require('Functions.WindowPlacer')
 require('Functions.FuzzyWindowSearch')
 
-require('Functions.AudioSwitcher')
+--require('Functions.AudioSwitcher') -- need other keys - used hyper-1
 require('Functions.Caffeine')
-require('Functions.MultiDisplayBlack')
+--require('Functions.MultiDisplayBlack') -- need other keys - used heper-2 and hyper-3
     -- This shortcut can be changed
 
 
@@ -121,6 +122,14 @@ hs.loadSpoon('FadeLogo'):start()
 
 -- Disable window animation = 0
 -- normal is = 0.3
+
+function sleep()
+    --hs.caffeinate.systemSleep()
+    testTimer = hs.timer.doAfter(2, function() hs.caffeinate.systemSleep() end)
+
+end
+
+hs.hotkey.bind({"shift", "alt", "command"}, "DELETE", keyInfo("goto sleep"), sleep)
 
 hs.window.animationDuration = 0.1
 
