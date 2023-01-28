@@ -4,10 +4,7 @@
 --- DateTime: 28.01.23 23:50
 ---
 
-fileInfo()
-
--- Create a variable to keep track of the last focused app
-local lastFocusedAppBundleID = nil
+local scriptInfo = fileInfo()
 
 -- Define a variable to store the MailMate bundle ID
 local mailmateBundleID = "com.freron.MailMate"
@@ -15,40 +12,28 @@ local mailmateBundleID = "com.freron.MailMate"
 -- Define a variable to store the Chrome bundle ID
 local chromeBundleID = "com.google.Chrome"
 
--- Define a function to store the current focused app bundle ID
-local function storeFocusedAppBundleID()
-    if hs.application.frontmostApplication():bundleID() ~= chromeBundleID then
-        lastFocusedAppBundleID = hs.application.frontmostApplication():bundleID()
-    end
-    --lastFocusedAppBundleID = hs.application.frontmostApplication():bundleID()
-    debugInfo("lastFocusedAppBundleID ",lastFocusedAppBundleID)
-end
+-- Define a function to check if the current app is MailMate and the cmd key was pressed while clicking a link
+local function checkCmdClickInMailmateAndActivateMailmate()
 
--- Define a function to check if the last focused app was MailMate and the current app is Chrome
-local function checkAppsAndActivateMailMate()
-    debugInfo("lets check")
-    debugInfo("lastFocusedAppBundleID ",lastFocusedAppBundleID)
-    debugInfo("hs.application.frontmostApplication():bundleID() ",hs.application.frontmostApplication():bundleID())
-    debugInfo("mailmateBundleID ", mailmateBundleID)
-    debugInfo("chromeBundleID ", chromeBundleID)
-    if lastFocusedAppBundleID
-            and lastFocusedAppBundleID == mailmateBundleID
-            and hs.application.frontmostApplication():bundleID() == chromeBundleID then
-        debugInfo("go back")
-        hs.application.get(mailmateBundleID):activate()
+    if hs.application.frontmostApplication():bundleID() ~= mailmateBundleID then
+        debugInfo(scriptInfo, 'not in mailmate --> exit')
+        return false
     end
+    if not hs.eventtap.checkKeyboardModifiers()['cmd'] then
+        debugInfo(scriptInfo, 'no modifier `cmd` --> exit')
+        return false
+    end
+
+    hs.timer.doAfter(0.5, function()
+        if hs.application.frontmostApplication():bundleID() == chromeBundleID then
+            debugInfo(scriptInfo, 'we are now in Chrome --> switch back')
+            hs.application.get(mailmateBundleID):activate()
+        else
+            debugInfo(scriptInfo, 'no app change --> exit')
+        end
+    end)
+    return false
 end
 
 -- Set up a mouse event watcher to activate MailMate if the cmd key was pressed while clicking a link
-hs.eventtap.new({hs.eventtap.event.types.leftMouseDown}, function(event)
-    debugInfo("event:getFlags() ",event:getFlags())
-    if event:getFlags()["cmd"] then
-        debugInfo("cmd is hold")
-        --checkAppsAndActivateMailMate()
-        hs.timer.doAfter(0.5, checkAppsAndActivateMailMate)
-    end
-    return false
-end):start()
-
--- Set up an event watcher to store the focused app bundle ID when it changes
-hs.application.watcher.new(storeFocusedAppBundleID):start()
+hs.eventtap.new({hs.eventtap.event.types.leftMouseDown}, checkCmdClickInMailmateAndActivateMailmate):start()
