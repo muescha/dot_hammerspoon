@@ -13,6 +13,8 @@
 --- self if a monitor external, and if it is in portrait mode it should place
 --- on top or bottom and if it is in landscape mode it should be placed on left and right
 
+fileInfo()
+
 hs.hotkey.bind(hyper, "3", keyInfo("place on main screen"), function()
     --local mainScreen = hs.screen.mainScreen()
     local mainScreen = hs.screen.allScreens()[1]
