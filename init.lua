@@ -62,9 +62,9 @@ require('Functions.WindowManager')
 require('Functions.WindowPlacer')
 require('Functions.FuzzyWindowSearch')
 
---require('Functions.AudioSwitcher') -- need other keys - used hyper-1
+require('Functions.AudioSwitcher') -- hyper-6
 require('Functions.Caffeine')
---require('Functions.MultiDisplayBlack') -- need other keys - used heper-2 and hyper-3
+require('Functions.MultiDisplayBlack') -- heper-4 and hyper-5
     -- This shortcut can be changed
 
 
