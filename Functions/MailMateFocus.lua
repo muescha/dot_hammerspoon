@@ -16,7 +16,7 @@ local chromeBundleID = "com.google.Chrome"
 local function checkCmdClickInMailmateAndActivateMailmate()
 
     if hs.application.frontmostApplication():bundleID() ~= mailmateBundleID then
-        debugInfo(scriptInfo, 'not in mailmate --> exit')
+        --debugInfo(scriptInfo, 'not in mailmate --> exit')
         return false
     end
     if not hs.eventtap.checkKeyboardModifiers()['cmd'] then
@@ -35,5 +35,5 @@ local function checkCmdClickInMailmateAndActivateMailmate()
     return false
 end
 
--- Set up a mouse event watcher to activate MailMate if the cmd key was pressed while clicking a link
+-- it need to be a global variable so this is not garbage collected
 MailMateFocus_EventTap = hs.eventtap.new({hs.eventtap.event.types.leftMouseDown}, checkCmdClickInMailmateAndActivateMailmate):start()
