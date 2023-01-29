@@ -13,8 +13,11 @@ function superfilename()
 end
 
 function fileInfo()
-    print("Init ".. superfilename())
+    local file = superfilename()
+    print("Init ".. file)
+    return file  .. ': '
 end
+
 function keyInfo(description)
     return superfilename() .. ": " .. description
 end
