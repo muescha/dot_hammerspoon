@@ -36,4 +36,4 @@ local function checkCmdClickInMailmateAndActivateMailmate()
 end
 
 -- Set up a mouse event watcher to activate MailMate if the cmd key was pressed while clicking a link
-hs.eventtap.new({hs.eventtap.event.types.leftMouseDown}, checkCmdClickInMailmateAndActivateMailmate):start()
+MailMateFocus_EventTap = hs.eventtap.new({hs.eventtap.event.types.leftMouseDown}, checkCmdClickInMailmateAndActivateMailmate):start()
