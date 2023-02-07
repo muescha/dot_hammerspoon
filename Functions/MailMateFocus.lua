@@ -18,7 +18,7 @@ local function checkCmdClickInMailmateAndActivateMailmate()
     -- Setup the click behaviour:
     -- -> use normal click to come back: false
     -- -> use cmd+click to come back: true
-    local enable_cmdClick = true
+    local enable_cmdClick = false
 
     if hs.application.frontmostApplication():bundleID() ~= mailmateBundleID then
         --debugInfo(scriptInfo, 'not in MailMate --> exit')
