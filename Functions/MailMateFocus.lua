@@ -31,7 +31,7 @@ local function checkCmdClickInMailmateAndActivateMailmate()
             return false
         end
     else
-        local mousePos = hs.mouse.getAbsolutePosition()
+        local mousePos = hs.mouse.absolutePosition()
         --debugInfo(scriptInfo,'mousePos ',mousePos)
         local focusedWindow = hs.window.focusedWindow()
         --debugInfo(scriptInfo,'focusedWindow ',focusedWindow)
