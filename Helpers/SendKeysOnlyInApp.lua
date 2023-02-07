@@ -62,6 +62,22 @@ function exclude(...)
     return curryCondition(conditionExclude, ...)
 end
 
+-- for patterns see https://www.lua.org/manual/5.1/manual.html#5.4.1
+function toAppAndTab(appName,tabPattern)
+    local function condition(currentAppName, currentTab)
+        return currentAppName == appName and string.match(currentTab,tabPattern)
+    end
+    return condition
+end
+
+-- for patterns see https://www.lua.org/manual/5.1/manual.html#5.4.1
+function excludeAppAndTab(appName,tabPattern)
+    local function condition(currentAppName, currentTab)
+        return not (currentAppName == appName and string.match(currentTab,tabPattern))
+    end
+    return condition
+end
+
 -- bindHotkey(AppCondition, modifier, key, function)
 
 -- AppCondition := to(apps) | exclude(apps)
@@ -76,6 +92,9 @@ end
 
 -- bindHotkey(to("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", nil, myFunction)
 -- bindHotkey(exclude("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", nil, myFunction)
+
+-- bindHotkey(toAppAndTab("MailMate","pattern"), {"cmd"}, "n", nil, myFunction)
+-- bindHotkey(excludeAppAndTab("MailMate","pattern"), {"cmd"}, "n", nil, myFunction)
 
 -- local apps = {"Google Chrome","IntelliJ IDEA"}
 -- bindHotkey(to(apps), {"cmd"}, "n", nil, myFunction)
@@ -93,7 +112,8 @@ function bindHotkey(runWithAppCondition, modifier, key, message, callback)
     local hotkeyHandler
     hotkeyHandler = hs.hotkey.bind(modifier, key, message, function()
         local currentApp = hs.application.frontmostApplication():name()
-        if runWithAppCondition(currentApp) then
+        local currentTab = hs.window.focusedWindow():title()
+        if runWithAppCondition(currentApp, currentTab) then
             --hs.alert.show("execute on: " .. currentApp)
             --logger.i("execute on: " .. currentApp)
             callback()

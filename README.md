@@ -60,8 +60,13 @@ bindHotkey(exclude("Google Chrome","WhatsApp"), modifier, key, function)
 bindHotkey(to("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", nil, myFunction)
 bindHotkey(exclude("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", nil, myFunction)
 
+bindHotkey(toAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", nil, myFunction)
+bindHotkey(excludeAppAndTab("MailMate","^%d Tabs"), {"cmd"}, "n", nil, myFunction)
 
 ```
+
+for patterns see:
+https://www.lua.org/manual/5.1/manual.html#5.4.1
 
 ### HotKeySheet.spoon
 
