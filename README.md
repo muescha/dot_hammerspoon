@@ -6,6 +6,10 @@ This are my collection of my Hammerspoon Scripts
 
 I don't like it when MailMate switches the focus to Chrome when I click on a link. This script changes the focus back to MailMate if it detects a click in MailMate before the focus switches to Chrome. You can modify the behavior of the script by enabling "enable_cmdClick" to only observe cmd+click events.
 
+### [MailMateDisableCmdW](/Functions/MailMateDisableCmdW.lua)
+
+This disable the shortcut `cmd+w` at the main screen of MailMate so it not closes the MailMate main window.This disables the shortcut cmd+w on the main screen of MailMate so that it does not close the MailMate main window.
+
 ### [MacZoom](/Functions/MacZoom.lua)
 
 Enable the original MacZoom to my hyper key it's an better shortcut for my hand. i have set my hyper key to the `fn` key and to the `cmd_right` key.Enabling the original MacZoom to my Hyper key would be a better shortcut for my hand. I have set my Hyper key to the fn key and the cmd_right key.   
