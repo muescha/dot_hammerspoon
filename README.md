@@ -34,6 +34,10 @@ Draw a red border around the current active app.
 
 This feature enables users to open a new Chrome window with the same size as an existing window. However, it is important to note that users may need to customize the menu command to match their current language settings. If anyone is interested in contributing to a language-independent solution, they are welcome to submit a pull request. One potential solution could be to search all menus for the keyboard shortcut `cmd+N` (as is done in [KSheet](/Spoons/KSheet.spoon/init.lua)).
 
+### [ChromeTabToNewWindow](/Functions/ChromeTabToNewWindow.lua)
+
+This feature allows the user to detach the current tab from a browser window and move it into a new window. Please note that users may need to customize the menu command to match their current language settings. For those interested in contributing to a language-independent solution, pull requests are welcome. One possible solution could be to search all menus for specific keywords (similar to the approach used in [KSheet](/Spoons/KSheet.spoon/init.lua), although the exact keywords would need to be determined).
+
 ### [MacZoom](/Functions/MacZoom.lua)
 
 Map the shortkeys of accessibility features to zoom all or part of your screen from `{ "cmd", "alt" }` + `0` `-` `=` to `hyper` + `0` `-` `=` 
