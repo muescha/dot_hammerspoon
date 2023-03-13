@@ -18,7 +18,7 @@ fileInfo()
 
 
 -- Show Wi-Fi notifications
-wifiMenu = hs.menubar.newWithPriority(2147483645)
+wifiMenu = hs.menubar.new()
 local wifiwatcher = hs.wifi.watcher.new(function()
     local wifiName = hs.wifi.currentNetwork()
     if wifiName then
