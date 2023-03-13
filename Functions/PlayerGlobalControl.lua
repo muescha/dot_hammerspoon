@@ -5,13 +5,14 @@
 --- Current Apps / Sites
 ---   -> IINA
 ---   -> Chrome for Player in:
----      -> YouTube
----      -> RTL+
+---      -> [x] YouTube
+---      -> [x] RTL+
 ---      -> WDR
 ---      -> Spiegel
 ---      -> Netflix
 ---      -> https://podcasts.google.com/ (TODO)
 --- reduce Chromoim like apps to Chrome - and Safari like to WebKit
+--- add fullscreen shortcut
 
 
 fileInfo()
@@ -44,41 +45,81 @@ local ControlKeys = {
         moveBackward = { {}, "left" }
     },
     [bundleIdChrome] = {
-        pause = { {}, "k" },
+        ["youtube.com"] = {
+            pause = { {}, "k" },
 
-        -- maybe direct solution via javascript is here:
-        --   https://github.com/igrigorik/videospeed/blob/master/inject.js
-        -- since i don't know the current speed:
-        -- just tune down to minimum (7 keyStrokes from max 2x speed)
-        -- and then up to 1
-        speedReset = {
-            -- stop playing
-            actions.pause,
+            -- maybe direct solution via javascript is here:
+            --   https://github.com/igrigorik/videospeed/blob/master/inject.js
+            -- since i don't know the current speed:
+            -- just tune down to minimum (7 keyStrokes from max 2x speed)
+            -- and then up to 1
+            speedReset = {
+                -- stop playing
+                actions.pause,
 
-            -- set to speed 0.25
-            actions.speedDec,
-            actions.speedDec,
-            actions.speedDec,
-            actions.speedDec,
-            actions.speedDec,
-            actions.speedDec,
-            actions.speedDec,
+                -- set to speed 0.25
+                actions.speedDec,
+                actions.speedDec,
+                actions.speedDec,
+                actions.speedDec,
+                actions.speedDec,
+                actions.speedDec,
+                actions.speedDec,
 
-            -- set to speed 1
-            actions.speedInc,
-            actions.speedInc,
-            actions.speedInc,
+                -- set to speed 1
+                actions.speedInc,
+                actions.speedInc,
+                actions.speedInc,
 
-            -- continue playing
-            actions.pause,
+                -- continue playing
+                actions.pause,
+
+            },
+            speedInc = { { "shift" }, "." }, -- '>'
+            speedDec = { { "shift" }, "," }, -- '<'
+            moveForward = { {}, "right" },
+            moveBackward = { {}, "left" }
+        },
+        ["tvnow.de"] = {
+            pause = { {}, "SPACE" },
+            speedReset = {},
+            speedInc = {},
+            speedDec = {},
+            moveForward = { {}, "right" },
+            moveBackward = { {}, "left" }
 
         },
-        speedInc = { { "shift" }, "." }, -- '>'
-        speedDec = { { "shift" }, "," }, -- '<'
-        moveForward = { {}, "right" },
-        moveBackward = { {}, "left" }
+        ["spiegel.de"] = {
+            pause = { {}, "SPACE" },
+            speedReset = {},
+            speedInc = {},
+            speedDec = {},
+            moveForward = { {}, "right" },
+            moveBackward = { {}, "left" }
+        },
+        ["joyn.de"] = {
+            pause = { {}, "SPACE" },
+            speedReset = {},
+            speedInc = {},
+            speedDec = {},
+            moveForward = { {}, "right" },
+            moveBackward = { {}, "left" }
+
+        },
     }
 }
+
+function getChromeUrl()
+    local _,url = hs.osascript.applescript('tell application "Google Chrome" to return URL of active tab of front window')
+    return url
+end
+
+function getChromeUrlDomain()
+    local url = getChromeUrl()
+    local domain = url:match("[%w%.]*%.(%w+%.%w+)")
+    debugInfo("current domain: ", domain)
+    return domain
+end
 
 local function doKey(modifier, key)
     debugInfo("--> doKey(", modifier, ',"', key, '")')
@@ -132,6 +173,9 @@ local function doCommand(appActions, actionQueue)
 
 end
 
+-- TODO: when Chrome is not the current App, then also i need to switch to
+--       the right tab to get the keyStrokes send to the right tab
+
 -- fix for Chrome when current app is also Chrome
 -- remember current window - activate player window to receive the actionCommands
 
@@ -167,9 +211,17 @@ local function createHotkey(sourceKey, action, description)
 
         local switchBackToWindow = checkSwitch()
 
-        local appActions = ControlKeys[currentBundleId]
+        local appActions = nil
+
+        if currentBundleId == bundleIdChrome then
+            local domain = getChromeUrlDomain()
+            appActions = ControlKeys[currentBundleId][domain]
+        else
+            appActions = ControlKeys[currentBundleId]
+        end
 
         if appActions == nil then
+            debugInfo("exit - no commands found")
             return
         end
 

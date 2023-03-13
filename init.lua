@@ -50,7 +50,7 @@ require('Functions.ChromeTabToIina')
 require('Functions.ChromeTabToNewWindow')
 require('Functions.CheatSheet')
 require('Functions.HighLight')
-require('Functions.IinaGlobalControl')
+require('Functions.PlayerGlobalControl')
 require('Functions.MacZoom')
 require('Functions.MailMateFocus')
 require('Functions.MailMateDisableCmdW')
@@ -66,6 +66,9 @@ require('Functions.FuzzyWindowSearch')
 require('Functions.AudioSwitcher') -- hyper-6
 require('Functions.Caffeine')
 require('Functions.MultiDisplayBlack') -- heper-4 and hyper-5
+
+--require('Functions.WindowTimer') -- cmd+ctrl+E
+
     -- This shortcut can be changed
 
 
