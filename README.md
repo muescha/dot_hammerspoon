@@ -14,6 +14,10 @@ This disable the shortcut `cmd+w` at the main screen of MailMate so it not close
 
 Enable the original MacZoom to my hyper key it's an better shortcut for my hand. i have set my hyper key to the `fn` key and to the `cmd_right` key.Enabling the original MacZoom to my Hyper key would be a better shortcut for my hand. I have set my Hyper key to the fn key and the cmd_right key.   
 
+### [ResizeChildWindows](/Functions/ResizeChildWindows.lua)
+
+Resize all child windows of an app to the current shild's window size.This command will adjust the size of all child windows within an application to match the dimensions of the active child window.   
+
 ### [AppBorders](/Functions/AppBorders.lua)
 
 Draw a red border around the current active app.
