@@ -14,6 +14,10 @@ This disable the shortcut `cmd+w` at the main screen of MailMate so it not close
 
 Enable the original MacZoom to my hyper key it's an better shortcut for my hand. i have set my hyper key to the `fn` key and to the `cmd_right` key.Enabling the original MacZoom to my Hyper key would be a better shortcut for my hand. I have set my Hyper key to the fn key and the cmd_right key.   
 
+### [PlayerGlobalControl](/Functions/PlayerGlobalControl.lua)
+
+This feature enables the user to control a media player with a standardized set of keyboard shortcuts, regardless of whether the player is the currently active application or not. This is particularly useful when working on a tutorial or coding in an IDE, where the user may need to switch between the player and the IDE frequently. This feature currently supports controlling the IINA and Chrome media players, as well as providing special shortcuts for certain websites.      
+
 ### [ResizeChildWindows](/Functions/ResizeChildWindows.lua)
 
 Resize all child windows of an app to the current shild's window size.This command will adjust the size of all child windows within an application to match the dimensions of the active child window.   
