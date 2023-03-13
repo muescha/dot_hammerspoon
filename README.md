@@ -22,6 +22,10 @@ This feature enables the user to control a media player with a standardized set 
 
 Resize all child windows of an app to the current shild's window size.This command will adjust the size of all child windows within an application to match the dimensions of the active child window.   
 
+### [WindowPlacer](/Functions/WindowPlacer.lua)
+
+This functionality allows the user to move windows to pre-defined locations on either their MacBook or an external monitor in portrait orientation. Specifically, there are three designated locations: the upper half of the monitor (designated as hyper+1), the lower half of the monitor (designated as hyper+2), and the MacBook itself (designated as hyper+3). By using this feature, users can more quickly and easily arrange their windows to best suit their workflow and preferences.    
+
 ### [AppBorders](/Functions/AppBorders.lua)
 
 Draw a red border around the current active app.
