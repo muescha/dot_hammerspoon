@@ -29,6 +29,12 @@ local actions = enumString {
     "moveBackward"
 }
 
+
+-- maybe direct solution via javascript is here:
+--   https://github.com/igrigorik/videospeed/blob/master/inject.js
+-- since i don't know the current speed:
+-- just tune down to minimum (7 keyStrokes from max 2x speed)
+-- and then up to 1
 local actionSpeedReset = {
     -- stop playing
     actions.pause,
@@ -70,12 +76,6 @@ local ControlKeys = {
     [bundleIdChrome] = {
         ["youtube.com"] = {
             pause = { {}, "k" },
-
-            -- maybe direct solution via javascript is here:
-            --   https://github.com/igrigorik/videospeed/blob/master/inject.js
-            -- since i don't know the current speed:
-            -- just tune down to minimum (7 keyStrokes from max 2x speed)
-            -- and then up to 1
             speedReset = actionSpeedReset,
             speedInc = { { "shift" }, "." }, -- '>'
             speedDec = { { "shift" }, "," }, -- '<'
@@ -84,12 +84,6 @@ local ControlKeys = {
         },
         ["udemy.com"] = {
             pause = { {}, "SPACE" },
-
-            -- maybe direct solution via javascript is here:
-            --   https://github.com/igrigorik/videospeed/blob/master/inject.js
-            -- since i don't know the current speed:
-            -- just tune down to minimum (7 keyStrokes from max 2x speed)
-            -- and then up to 1
             speedReset = actionSpeedReset,
             speedInc = { { "shift" }, "right" },
             speedDec = { { "shift" }, "left" },
