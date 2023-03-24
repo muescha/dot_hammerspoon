@@ -29,6 +29,29 @@ local actions = enumString {
     "moveBackward"
 }
 
+local actionSpeedReset = {
+    -- stop playing
+    actions.pause,
+
+    -- set to speed 0.25
+    actions.speedDec,
+    actions.speedDec,
+    actions.speedDec,
+    actions.speedDec,
+    actions.speedDec,
+    actions.speedDec,
+    actions.speedDec,
+
+    -- set to speed 1
+    actions.speedInc,
+    actions.speedInc,
+    actions.speedInc,
+
+    -- continue playing
+    actions.pause,
+
+}
+
 --local currentBundleId = bundleIdIINA
 local currentBundleId = bundleIdChrome
 
@@ -53,28 +76,7 @@ local ControlKeys = {
             -- since i don't know the current speed:
             -- just tune down to minimum (7 keyStrokes from max 2x speed)
             -- and then up to 1
-            speedReset = {
-                -- stop playing
-                actions.pause,
-
-                -- set to speed 0.25
-                actions.speedDec,
-                actions.speedDec,
-                actions.speedDec,
-                actions.speedDec,
-                actions.speedDec,
-                actions.speedDec,
-                actions.speedDec,
-
-                -- set to speed 1
-                actions.speedInc,
-                actions.speedInc,
-                actions.speedInc,
-
-                -- continue playing
-                actions.pause,
-
-            },
+            speedReset = actionSpeedReset,
             speedInc = { { "shift" }, "." }, -- '>'
             speedDec = { { "shift" }, "," }, -- '<'
             moveForward = { {}, "right" },
@@ -88,28 +90,7 @@ local ControlKeys = {
             -- since i don't know the current speed:
             -- just tune down to minimum (7 keyStrokes from max 2x speed)
             -- and then up to 1
-            speedReset = {
-                -- stop playing
-                actions.pause,
-
-                -- set to speed 0.25
-                actions.speedDec,
-                actions.speedDec,
-                actions.speedDec,
-                actions.speedDec,
-                actions.speedDec,
-                actions.speedDec,
-                actions.speedDec,
-
-                -- set to speed 1
-                actions.speedInc,
-                actions.speedInc,
-                actions.speedInc,
-
-                -- continue playing
-                actions.pause,
-
-            },
+            speedReset = actionSpeedReset,
             speedInc = { { "shift" }, "right" },
             speedDec = { { "shift" }, "left" },
             moveForward = { {}, "right" },
