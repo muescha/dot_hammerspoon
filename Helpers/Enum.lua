@@ -41,8 +41,14 @@ debugTable(enum({"a","b","c"}))
 
 ]]--
 
+---@param tbl table<number,string>
+---@return table<string,string>
+---
 function enumString(tbl)
+
     local length = #tbl
+
+    ---@type table<string,string>
     local enum = {}
     for i = 1, length do
         local v = tbl[i]

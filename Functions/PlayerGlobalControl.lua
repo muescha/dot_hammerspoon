@@ -80,6 +80,41 @@ local ControlKeys = {
             moveForward = { {}, "right" },
             moveBackward = { {}, "left" }
         },
+        ["udemy.com"] = {
+            pause = { {}, "SPACE" },
+
+            -- maybe direct solution via javascript is here:
+            --   https://github.com/igrigorik/videospeed/blob/master/inject.js
+            -- since i don't know the current speed:
+            -- just tune down to minimum (7 keyStrokes from max 2x speed)
+            -- and then up to 1
+            speedReset = {
+                -- stop playing
+                actions.pause,
+
+                -- set to speed 0.25
+                actions.speedDec,
+                actions.speedDec,
+                actions.speedDec,
+                actions.speedDec,
+                actions.speedDec,
+                actions.speedDec,
+                actions.speedDec,
+
+                -- set to speed 1
+                actions.speedInc,
+                actions.speedInc,
+                actions.speedInc,
+
+                -- continue playing
+                actions.pause,
+
+            },
+            speedInc = { { "shift" }, "right" },
+            speedDec = { { "shift" }, "left" },
+            moveForward = { {}, "right" },
+            moveBackward = { {}, "left" }
+        },
         ["tvnow.de"] = {
             pause = { {}, "SPACE" },
             speedReset = {},
@@ -187,6 +222,8 @@ local function checkSwitch()
 
     local win = hs.window.focusedWindow()
     local bundleID = win:application():bundleID()
+
+    -- TODO -> check the focused Window on the currentApp and then switch back
 
     if bundleIdChrome ~= bundleID then debugInfo("checkSwitch: no Chrome") return end
     if bundleIdChrome ~= currentBundleId then debugInfo("checkSwitch: saved no chrome") return end
