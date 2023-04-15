@@ -16,6 +16,9 @@ function reloadConfig(files)
         if file:sub(-4) == ".lua" then
             doReload = true
         end
+        if file:sub(-3) == ".js" then
+            doReload = true
+        end
     end
     if doReload then
         print("------------- ############## reload")
