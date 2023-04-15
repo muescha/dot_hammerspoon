@@ -17,6 +17,8 @@
 
 fileInfo()
 
+local cache = {}
+
 local bundleIdIINA = "com.colliderli.iina"
 local bundleIdChrome = "com.google.Chrome"
 
@@ -35,7 +37,7 @@ local actions = enumString {
 -- since i don't know the current speed:
 -- just tune down to minimum (7 keyStrokes from max 2x speed)
 -- and then up to 1
-local actionSpeedReset = {
+local actionSpeedReset3Inc = {
     -- stop playing
     actions.pause,
 
@@ -50,6 +52,26 @@ local actionSpeedReset = {
 
     -- set to speed 1
     actions.speedInc,
+    actions.speedInc,
+    actions.speedInc,
+
+    -- continue playing
+    actions.pause,
+
+}
+local actionSpeedReset2Inc = {
+    -- stop playing
+    actions.pause,
+
+    -- set to speed 0.5
+    actions.speedDec,
+    actions.speedDec,
+    actions.speedDec,
+    actions.speedDec,
+    actions.speedDec,
+    actions.speedDec,
+
+    -- set to speed 1
     actions.speedInc,
     actions.speedInc,
 
@@ -75,16 +97,20 @@ local ControlKeys = {
     },
     [bundleIdChrome] = {
         ["youtube.com"] = {
+            selector = "#movie_player",
             pause = { {}, "k" },
-            speedReset = actionSpeedReset,
+            speedReset = actionSpeedReset3Inc,
             speedInc = { { "shift" }, "." }, -- '>'
             speedDec = { { "shift" }, "," }, -- '<'
             moveForward = { {}, "right" },
             moveBackward = { {}, "left" }
         },
         ["udemy.com"] = {
+            --selector = "[class*='app--body-container--']",
+            --selector = "[data-purpose='curriculum-item-viewer-content']",
+            selector = "video.vjs-tech",
             pause = { {}, "SPACE" },
-            speedReset = actionSpeedReset,
+            speedReset = actionSpeedReset2Inc,
             speedInc = { { "shift" }, "right" },
             speedDec = { { "shift" }, "left" },
             moveForward = { {}, "right" },
@@ -183,6 +209,32 @@ local function doCommand(appActions, actionQueue)
 
 end
 
+-- TODO add error message if no javascript is activated
+-- TODO inform how to activate javascript in Chrome
+-- https://sites.google.com/a/chromium.org/dev/developers/applescript?visit_id=638164618181850548-1888693479&p=applescript&rd=1
+local function testforScriptEnabled()
+    local wasSuccessful,  jsout, error = hs.osascript.javascript("Application('Google Chrome').windows[0].activeTab.execute({javascript:'true'})")
+    debugInfo("wasSuccessful: ",wasSuccessful)
+    debugInfo("error: ", error)
+    debugTable(error)
+    debugInfo("jsout: ", jsout)
+end
+
+local function selectPlayer(selector)
+    if selector==nil then return end
+    local code = cache[selector]
+    if code == nil then
+        debugInfo("no cache - generate javascript")
+        local jsPath = path() .. filename() .. 'ChromeSelect.js'
+        debugInfo("Filename: ", jsPath)
+        debugInfo("Selector: ", selector)
+        code = readFileTemplate(jsPath, {selector=selector})
+        cache[selector] = code
+    end
+    local error, output, message = runJavaScript(code)
+    debugInfo(error, " - ", output, " - " , message)
+end
+
 -- TODO: when Chrome is not the current App, then also i need to switch to
 --       the right tab to get the keyStrokes send to the right tab
 
@@ -213,6 +265,19 @@ local function checkSwitch()
     return win
 end
 
+local function getAppActions()
+
+    local appActions
+
+    if currentBundleId == bundleIdChrome then
+        local domain = getChromeUrlDomain()
+        appActions = ControlKeys[currentBundleId][domain]
+    else
+        appActions = ControlKeys[currentBundleId]
+    end
+
+    return appActions
+end
 
 -- types
 ---@param sourceKey string
@@ -223,14 +288,7 @@ local function createHotkey(sourceKey, action, description)
 
         local switchBackToWindow = checkSwitch()
 
-        local appActions = nil
-
-        if currentBundleId == bundleIdChrome then
-            local domain = getChromeUrlDomain()
-            appActions = ControlKeys[currentBundleId][domain]
-        else
-            appActions = ControlKeys[currentBundleId]
-        end
+        local appActions = getAppActions()
 
         if appActions == nil then
             debugInfo("exit - no commands found")
@@ -258,6 +316,9 @@ local function setCurrentWindow()
 
     currentWindow = win
     currentBundleId = bundleID
+
+    local appActions = getAppActions()
+    selectPlayer(appActions.selector)
 
     debugInfo("changed currentBundleId to " .. currentBundleId)
 end
