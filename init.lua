@@ -1,5 +1,6 @@
 hs.notify.show("Hammerspoon", "Starting Hammerspoon: ", hs.screen.mainScreen():name())
 require("Helpers.Base")
+require("Helpers.Util")
 
 -- Note: Setup this hyper Key with Karabiner ELements
 hyper = { "shift", "ctrl", "alt", "cmd" }
