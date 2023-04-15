@@ -3,6 +3,10 @@
 --- Created by muescha.
 --- DateTime: 06.12.22 14:45
 ---
+function path(level)
+    return debug.getinfo(level or 2).source:match("@?(.*/)")
+end
+
 function filename(level)
     local str = debug.getinfo(level or 2, "S").source:sub(2)
     return str:match("^.*/(.*).lua$") or str
