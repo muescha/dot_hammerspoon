@@ -27,6 +27,7 @@ require("Helpers.Enum")
 
 require("Helpers.SendKeysOnlyInApp")
 require("Helpers.HotkeyBindModal")
+require("Helpers.HotkeyBindSafe")
 
 hs.logger.defaultLogLevel = "info"
 --hs.logger.defaultLogLevel = "verbose"
@@ -67,6 +68,8 @@ require('Functions.FuzzyWindowSearch')
 require('Functions.AudioSwitcher') -- hyper-6
 require('Functions.Caffeine')
 require('Functions.MultiDisplayBlack') -- heper-4 and hyper-5
+
+require('Functions.KeyMapping')
 
 --require('Functions.WindowTimer') -- cmd+ctrl+E
 
