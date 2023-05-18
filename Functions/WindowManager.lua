@@ -27,6 +27,7 @@ spoon.MiroWindowsManager:bindHotkeys({
     middle = {hyper, "2"}
 })
 
-
-hs.hotkey.bind(hyper, '[', keyInfo("move to left Screen"), function() hs.window.focusedWindow():moveOneScreenWest(true, true) end)
-hs.hotkey.bind(hyper, ']', keyInfo("move to right Screen"), function() hs.window.focusedWindow():moveOneScreenEast(true, true) end)
+-- remove this hotkeys because I don't use them
+-- i need this in IntelliJ to Navigate backward and forward
+--hs.hotkey.bind(hyper, '[', keyInfo("move to left Screen"), function() hs.window.focusedWindow():moveOneScreenWest(true, true) end)
+--hs.hotkey.bind(hyper, ']', keyInfo("move to right Screen"), function() hs.window.focusedWindow():moveOneScreenEast(true, true) end)
