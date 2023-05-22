@@ -12,5 +12,5 @@ local mailmateName = "MailMate"
 -- Disable the Cmd + W shortcut in Mailmate's viewer window
 bindHotkey(toAppAndTab(mailmateName,"essages%)$"),{"cmd"}, "W", keyInfo("disable cmd+w on MailMate"), function()
     -- noop
-    debugInfo("ignore shortcut on mailmate in messages")
+    debugInfo("ignore shortcut cmd+w on MailMate in main view")
 end)
