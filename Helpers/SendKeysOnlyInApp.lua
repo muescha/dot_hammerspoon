@@ -120,9 +120,9 @@ function bindHotkey(runWithAppCondition, modifier, key, message, callback)
         else
             --hs.alert.show("no function at: " .. currentApp)
             --logger.i("no function at: " .. currentApp)
-            hotkeyHandler:disable()
+            hotkeyDisableSilent(hotkeyHandler)
             hs.eventtap.keyStroke(modifier, key)
-            hotkeyHandler:enable()
+            hotkeyEnableSilent(hotkeyHandler)
         end
     end)
 end

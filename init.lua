@@ -25,6 +25,7 @@ require("Helpers.DebugFunction")
 
 require("Helpers.Enum")
 
+require("Helpers.HotkeySilence")
 require("Helpers.SendKeysOnlyInApp")
 require("Helpers.HotkeyBindModal")
 require("Helpers.HotkeyBindSafe")
