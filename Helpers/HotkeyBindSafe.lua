@@ -14,22 +14,21 @@ function HotkeyBindSafe(mods, key, message, pressedfn, releasedfn, repeatfn)
             message,
             function ()
                 if (pressedfn == nil ) then return end
-                hotkeyHandler:disable()
+                hotkeyDisableSilent(hotkeyHandler)
                 pressedfn()
-                hotkeyHandler:enable()
+                hotkeyEnableSilent(hotkeyHandler)
             end,
             function ()
                 if (releasedfn == nil ) then return end
-                hotkeyHandler:disable()
+                hotkeyDisableSilent(hotkeyHandler)
                 releasedfn()
-                hotkeyHandler:enable()
-
+                hotkeyEnableSilent(hotkeyHandler)
             end,
             function ()
                 if (repeatfn == nil ) then return end
-                hotkeyHandler:disable()
+                hotkeyDisableSilent(hotkeyHandler)
                 repeatfn()
-                hotkeyHandler:enable()
+                hotkeyEnableSilent(hotkeyHandler)
             end
     )
     end
