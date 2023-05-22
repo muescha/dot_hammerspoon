@@ -139,9 +139,9 @@ function bindHotkeyOnlyTo(appname, modifier, key, message, callback, ...)
         if (appname == currentApp) then
             callback()
         else
-            hotkeyHandler:disable()
+            hotkeyDisableSilent(hotkeyHandler)
             hs.eventtap.keyStroke(modifier, key)
-            hotkeyHandler:enable()
+            hotkeyEnableSilent(hotkeyHandler)
         end
     end)
 end
