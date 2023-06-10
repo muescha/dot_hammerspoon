@@ -217,75 +217,91 @@ function obj:bindHotkeys(mapping)
   hs.inspect(mapping)
   print("Bind Hotkeys for Miro's Windows Manager")
 
-  modalKey:bind(mapping.down[1], mapping.down[2], function ()
-    exitTimer:start()
-    self._pressed.down = true
-    if self._pressed.up then
-      self:_fullDimension('h')
-    else
-      self:_nextStep('h', true, function (cell, nextSize)
-        cell.y = self.GRID.h - self.GRID.h / nextSize
-        cell.h = self.GRID.h / nextSize
-      end)
-    end
-  end, function ()
-    self._pressed.down = false
-  end)
+  -- TODO: change it to use `bindHotkeysToSpec`
+  -- TODO: change it to use `bindHotkeysToSpec`
+  -- https://www.hammerspoon.org/docs/hs.spoons.html#bindHotkeysToSpec
 
-  modalKey:bind(mapping.right[1], mapping.right[2], function ()
-    exitTimer:start()
-    self._pressed.right = true
-    if self._pressed.left then
-      self:_fullDimension('w')
-    else
-      self:_nextStep('w', true, function (cell, nextSize)
-        cell.x = self.GRID.w - self.GRID.w / nextSize
-        cell.w = self.GRID.w / nextSize
-      end)
-    end
-  end, function ()
-    self._pressed.right = false
-  end)
-
-  modalKey:bind(mapping.left[1], mapping.left[2], function ()
-    exitTimer:start()
-    self._pressed.left = true
-    if self._pressed.right then
-      self:_fullDimension('w')
-    else
-      self:_nextStep('w', false, function (cell, nextSize)
-        cell.x = 0
-        cell.w = self.GRID.w / nextSize
-      end)
-    end
-  end, function ()
-    self._pressed.left = false
-  end)
-
-  modalKey:bind(mapping.up[1], mapping.up[2], function ()
-    exitTimer:start()
-    self._pressed.up = true
-    if self._pressed.down then
+  if mapping.down then
+    modalKey:bind(mapping.down[1], mapping.down[2], function ()
+      exitTimer:start()
+      self._pressed.down = true
+      if self._pressed.up then
         self:_fullDimension('h')
-    else
-      self:_nextStep('h', false, function (cell, nextSize)
-        cell.y = 0
-        cell.h = self.GRID.h / nextSize
-      end)
-    end
-  end, function ()
-    self._pressed.up = false
-  end)
+      else
+        self:_nextStep('h', true, function (cell, nextSize)
+          cell.y = self.GRID.h - self.GRID.h / nextSize
+          cell.h = self.GRID.h / nextSize
+        end)
+      end
+    end, function ()
+      self._pressed.down = false
+    end)
+  end
 
-  modalKey:bind(mapping.fullscreen[1], mapping.fullscreen[2], function ()
-    exitTimer:start()
-    self:_nextFullScreenStep()
-  end)
+  if mapping.right then
+    modalKey:bind(mapping.right[1], mapping.right[2], function ()
+      exitTimer:start()
+      self._pressed.right = true
+      if self._pressed.left then
+        self:_fullDimension('w')
+      else
+        self:_nextStep('w', true, function (cell, nextSize)
+          cell.x = self.GRID.w - self.GRID.w / nextSize
+          cell.w = self.GRID.w / nextSize
+        end)
+      end
+    end, function ()
+      self._pressed.right = false
+    end)
+  end
 
-  modalKey:bind(mapping.middle[1], mapping.middle[2], function ()
-    exitTimer:start()
-    self:_push(0.05, 0, 0.9, 1)
-  end)
+  if mapping.left then
+    modalKey:bind(mapping.left[1], mapping.left[2], function ()
+      exitTimer:start()
+      self._pressed.left = true
+      if self._pressed.right then
+        self:_fullDimension('w')
+      else
+        self:_nextStep('w', false, function (cell, nextSize)
+          cell.x = 0
+          cell.w = self.GRID.w / nextSize
+        end)
+      end
+    end, function ()
+      self._pressed.left = false
+    end)
+  end
+
+  if mapping.up then
+    modalKey:bind(mapping.up[1], mapping.up[2], function ()
+      exitTimer:start()
+      self._pressed.up = true
+      if self._pressed.down then
+        self:_fullDimension('h')
+      else
+        self:_nextStep('h', false, function (cell, nextSize)
+          cell.y = 0
+          cell.h = self.GRID.h / nextSize
+        end)
+      end
+    end, function ()
+      self._pressed.up = false
+    end)
+  end
+
+  if mapping.fullscreen then
+    modalKey:bind(mapping.fullscreen[1], mapping.fullscreen[2], function ()
+      exitTimer:start()
+      self:_nextFullScreenStep()
+    end)
+  end
+
+  if mapping.middle then
+    modalKey:bind(mapping.middle[1], mapping.middle[2], function ()
+      exitTimer:start()
+      self:_push(0.05, 0, 0.9, 1)
+    end)
+  end
 
 end
 
