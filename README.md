@@ -98,7 +98,7 @@ local umlauts = {
 - interesting when you use IntelliJ IDEA to show complettions
 - NOTE: load this spoon before other an reload watcher to avoid reloads while this spoon writes the annotation files
 
-### BindHotkey only to some apps
+### [BindHotkey only to some apps](/Helpers/SendKeysOnlyInApp.lua)
 
 If you like to have hotkeys only in some apps or exclude some apps from your global hotkeys, then the helper `bindHotkey` help you.
 
