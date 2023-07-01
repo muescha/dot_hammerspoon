@@ -49,8 +49,8 @@ Install:andUse("WiFiTransitions",
             -- start the spoon
             start = true,
 
-            -- remove this line to get no debug infos
-            loglevel = "debug"
+            -- activate this comment line to get debug infos
+            -- loglevel = "debug"
 
         }
 )
