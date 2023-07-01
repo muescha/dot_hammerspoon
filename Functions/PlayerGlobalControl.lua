@@ -105,6 +105,15 @@ local ControlKeys = {
             moveForward = { {}, "right" },
             moveBackward = { {}, "left" }
         },
+        ["twitch.tv"] = {
+            selector = ".persistent-player",
+            pause = { {}, "k" },
+            speedReset = actionSpeedReset3Inc,
+            speedInc = { {}, "." }, -- '>'
+            speedDec = { {}, "," }, -- '<'
+            moveForward = { {}, "right" },
+            moveBackward = { {}, "left" }
+        },
         ["udemy.com"] = {
             --selector = "[class*='app--body-container--']",
             --selector = "[data-purpose='curriculum-item-viewer-content']",
