@@ -106,10 +106,13 @@ If you like to have hotkeys only in some apps or exclude some apps from your glo
 
 `bindHotkey(AppCondition, modifier, key, function)`
 
-- where `AppCondition` := `to(apps)` | `exclude(apps)`
+- where `AppCondition` := `to(apps)` | `exclude(apps)` | `toAppAndTab(appName,tabPattern)` | `excludeAppAndTab(appName,tabPattern)`
 
-- and where `apps` := can be a list of parameters or a table
-
+- and where:
+  - `apps` := can be a list of string parameters or a table of string
+  - `appName` := string
+  - `tabPattern` := pattern to match a tab
+  
 Examples:
 
 ```lua
