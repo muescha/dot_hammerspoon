@@ -4,7 +4,11 @@
 --- DateTime: 02.07.23 00:11
 ---
 
--- download Spooninstall unzip and double click on the SpoonInstall.spoon
+-- How to install the Spooninstall:
+--   - download the zip from https://www.hammerspoon.org/Spoons/SpoonInstall.html
+--   - in finder go to your download folder
+--   - double click the zip file to unzip
+--   - double click on the SpoonInstall.spoon to "automatic" install the spoon into hammerspoon
 
 hs.loadSpoon("SpoonInstall")
 Install = spoon.SpoonInstall
