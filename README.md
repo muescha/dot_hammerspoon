@@ -4,15 +4,16 @@ This are my collection of my Hammerspoon Scripts
 
 ### [MailMateFocus](/Functions/MailMateFocus.lua)
 
-I don't like it when MailMate switches the focus to Chrome when I click on a link. This script changes the focus back to MailMate if it detects a click in MailMate before the focus switches to Chrome. You can modify the behavior of the script by enabling "enable_cmdClick" to only observe cmd+click events.
+I don't like it when MailMate switches the focus to Chrome when I click on a link. This script changes the focus back to MailMate if it detects a click in MailMate before the focus switches to Chrome. You can modify the behavior of the script by enabling `enable_cmdClick` to only observe cmd+click events.
 
 ### [MailMateDisableCmdW](/Functions/MailMateDisableCmdW.lua)
 
-This disable the shortcut `cmd+w` at the main screen of MailMate so it not closes the MailMate main window.This disables the shortcut cmd+w on the main screen of MailMate so that it does not close the MailMate main window.
+This disable the shortcut `cmd+w` at the main screen of MailMate so it not closes the MailMate main window.
+It uses my helper `bindHotkey(toAppAndTab(mailmateName,"essages%)$")` (see below).
 
 ### [MacZoom](/Functions/MacZoom.lua)
 
-Enable the original MacZoom to my hyper key it's an better shortcut for my hand. i have set my hyper key to the `fn` key and to the `cmd_right` key.Enabling the original MacZoom to my Hyper key would be a better shortcut for my hand. I have set my Hyper key to the fn key and the cmd_right key.
+Enabling the original MacZoom to my Hyper key would be a better shortcut for my hand. I have set my Hyper key to the `fn` key and the `cmd_right` key.
 
 Shortcuts:
 - hyper + 0 -> Zoom In/Zoom out
@@ -32,6 +33,10 @@ Shortcuts:
 - hyper + ' -> Jump Backward
 - hyper + \ -> Jump Forward
 
+Supported Apps:
+- [IINA](https://iina.io/)
+- Google Chrome
+
 Shortcuts available for this websites:
 - https://youtube.com
 - https://twitch.tv
@@ -42,11 +47,21 @@ Shortcuts available for this websites:
 
 ### [ResizeChildWindows](/Functions/ResizeChildWindows.lua)
 
-Resize all child windows of an app to the current shild's window size.This command will adjust the size of all child windows within an application to match the dimensions of the active child window.   
+Resize all child windows of an app to the current shild's window size. This command will adjust the size of all child windows within an application to match the dimensions of the active child window.
+
+Shortcuts:
+- hyper + r -> Resize all child windows
+
+
 
 ### [WindowPlacer](/Functions/WindowPlacer.lua)
 
-This functionality allows the user to move windows to pre-defined locations on either their MacBook or an external monitor in portrait orientation. Specifically, there are three designated locations: the upper half of the monitor (designated as hyper+1), the lower half of the monitor (designated as hyper+2), and the MacBook itself (designated as hyper+3). By using this feature, users can more quickly and easily arrange their windows to best suit their workflow and preferences.    
+This functionality allows the user to move windows to pre-defined locations on either their MacBook or an external monitor in portrait orientation. Specifically, there are three designated locations: the upper half of the monitor (designated as hyper+1), the lower half of the monitor (designated as hyper+2), and the MacBook itself (designated as hyper+3). By using this feature, users can more quickly and easily arrange their windows to best suit their workflow and preferences.
+
+Shortcuts:
+- hyper + 1 -> External Monitor Top
+- hyper + 2 -> External Monitor Bottom
+- hyper + 3 -> Main Monitor
 
 ### [AppBorders](/Functions/AppBorders.lua)
 
@@ -59,6 +74,9 @@ This feature enables users to open a new Chrome window with the same size as an 
 ### [ChromeTabToNewWindow](/Functions/ChromeTabToNewWindow.lua)
 
 This feature allows the user to detach the current tab from a browser window and move it into a new window. Please note that users may need to customize the menu command to match their current language settings. For those interested in contributing to a language-independent solution, pull requests are welcome. One possible solution could be to search all menus for specific keywords (similar to the approach used in [KSheet](/Spoons/KSheet.spoon/init.lua), although the exact keywords would need to be determined).
+
+Shortcuts:
+- hyper + t -> show current tab in new window
 
 ### [Umlauts.lua](/Functions/Umlauts.lua)
 
