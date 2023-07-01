@@ -16,7 +16,24 @@ Enable the original MacZoom to my hyper key it's an better shortcut for my hand.
 
 ### [PlayerGlobalControl](/Functions/PlayerGlobalControl.lua)
 
-This feature enables the user to control a media player with a standardized set of keyboard shortcuts, regardless of whether the player is the currently active application or not. This is particularly useful when working on a tutorial or coding in an IDE, where the user may need to switch between the player and the IDE frequently. This feature currently supports controlling the IINA and Chrome media players, as well as providing special shortcuts for certain websites.      
+This feature enables the user to control a media player with a standardized set of keyboard shortcuts, regardless of whether the player is the currently active application or not. This is particularly useful when working on a tutorial or coding in an IDE, where the user may need to switch between the player and the IDE frequently. This feature currently supports controlling the IINA and Chrome media players, as well as providing special shortcuts for certain websites.
+
+Current Shortcuts:
+
+- hyper + p -> Pause
+- hyper + k -> Reset Speed
+- hyper + l -> Decrease Speed
+- hyper + ; -> Increase Speed
+- hyper + ' -> Jump Backward
+- hyper + \ -> Jump Forward
+
+Shortcuts available for:
+- https://youtube.com
+- https://twitch.tv
+- https://udemy.com
+- https://tvnow.de (no speed controls)
+- https://spiegel.de (no speed controls)
+- https://joyn.de (no speed controls)
 
 ### [ResizeChildWindows](/Functions/ResizeChildWindows.lua)
 
