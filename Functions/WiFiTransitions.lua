@@ -9,27 +9,42 @@
 hs.loadSpoon("SpoonInstall")
 Install = spoon.SpoonInstall
 
+function myCommand()
+    print("do my commands...")
+end
+
 Install:andUse("WiFiTransitions",
         {
             config = {
                 actions = {
-                    { -- Test action just to see the SSID transitions
+                    {
+                        -- Test action just to see the SSID transitions
+                        -- This action fires everytime
+
                         fn = function(_, _, prev_ssid, new_ssid)
-                            hs.notify.show("SSID change", string.format("From '%s' to '%s'", prev_ssid, new_ssid), "")
-                            print("SSID change", string.format("From '%s' to '%s'", prev_ssid, new_ssid), "")
+                            local infoText = string.format("From '%s' to '%s'", prev_ssid, new_ssid)
+                            hs.notify.show("SSID change", infoText, "")
+                            print("SSID change", infoText, "")
                         end
                     },
                     { -- Test action just to see the SSID transitions
                         from = "iPhone",
                         fn = function(_, _, prev_ssid, new_ssid)
-                            hs.notify.show("SSID change", string.format("From '%s' to '%s'", prev_ssid, new_ssid), "")
-                            print("iPhone: SSID change", string.format("From '%s' to '%s'", prev_ssid, new_ssid), "")
+                            local infoText = string.format("From '%s' to '%s'", prev_ssid, new_ssid)
+                            hs.notify.show("iPhone: SSID change", infoText, "")
+                            print("iPhone: SSID change", infoText, "")
+                            myCommand()
                         end
                     },
                 },
+                -- add this to get both action with from=nil and with to=nil
                 actOnNilTransitions = true,
             },
+
+            -- start the spoon
             start = true,
+
+            -- remove this line to get no debug infos
             loglevel = "debug"
 
         }
