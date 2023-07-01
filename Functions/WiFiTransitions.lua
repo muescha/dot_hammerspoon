@@ -31,12 +31,13 @@ Install:andUse("WiFiTransitions",
                             print("SSID change", infoText, "")
                         end
                     },
-                    { -- Test action just to see the SSID transitions
+                    {
+                        -- this action run when it leaves the 'iPhone' Wifi
                         from = "iPhone",
                         fn = function(_, _, prev_ssid, new_ssid)
                             local infoText = string.format("From '%s' to '%s'", prev_ssid, new_ssid)
-                            hs.notify.show("iPhone: SSID change", infoText, "")
-                            print("iPhone: SSID change", infoText, "")
+                            hs.notify.show("from iPhone: SSID change", infoText, "")
+                            print("from iPhone: SSID change", infoText, "")
                             myCommand()
                         end
                     },
