@@ -23,7 +23,7 @@ Install:andUse("WiFiTransitions",
                 actions = {
                     {
                         -- Test action just to see the SSID transitions
-                        -- This action fires everytime
+                        -- This action fires everytime because it has no `from` and no `to`
 
                         fn = function(_, _, prev_ssid, new_ssid)
                             local infoText = string.format("From '%s' to '%s'", prev_ssid, new_ssid)
