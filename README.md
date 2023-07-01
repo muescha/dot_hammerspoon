@@ -12,13 +12,18 @@ This disable the shortcut `cmd+w` at the main screen of MailMate so it not close
 
 ### [MacZoom](/Functions/MacZoom.lua)
 
-Enable the original MacZoom to my hyper key it's an better shortcut for my hand. i have set my hyper key to the `fn` key and to the `cmd_right` key.Enabling the original MacZoom to my Hyper key would be a better shortcut for my hand. I have set my Hyper key to the fn key and the cmd_right key.   
+Enable the original MacZoom to my hyper key it's an better shortcut for my hand. i have set my hyper key to the `fn` key and to the `cmd_right` key.Enabling the original MacZoom to my Hyper key would be a better shortcut for my hand. I have set my Hyper key to the fn key and the cmd_right key.
+
+Shortcuts:
+- hyper + 0 -> Zoom In/Zoom out
+- hyper + - -> Decrease Zoom
+- hyper + + -> Increase Zoom
 
 ### [PlayerGlobalControl](/Functions/PlayerGlobalControl.lua)
 
 This feature enables the user to control a media player with a standardized set of keyboard shortcuts, regardless of whether the player is the currently active application or not. This is particularly useful when working on a tutorial or coding in an IDE, where the user may need to switch between the player and the IDE frequently. This feature currently supports controlling the IINA and Chrome media players, as well as providing special shortcuts for certain websites.
 
-Current Shortcuts:
+Shortcuts:
 
 - hyper + p -> Pause
 - hyper + k -> Reset Speed
@@ -27,7 +32,7 @@ Current Shortcuts:
 - hyper + ' -> Jump Backward
 - hyper + \ -> Jump Forward
 
-Shortcuts available for:
+Shortcuts available for this websites:
 - https://youtube.com
 - https://twitch.tv
 - https://udemy.com
