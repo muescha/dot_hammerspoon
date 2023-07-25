@@ -93,8 +93,7 @@ local ControlKeys = {
         speedInc = { {}, "=" }, -- +
         speedDec = { {}, "-" },
         moveForward = { {}, "right" },
-        moveBackward = { {}, "left" },
-        info = "IINA Player"
+        moveBackward = { {}, "left" }
     },
     [bundleIdChrome] = {
         ["youtube.com"] = {
@@ -104,8 +103,7 @@ local ControlKeys = {
             speedInc = { { "shift" }, "." }, -- '>'
             speedDec = { { "shift" }, "," }, -- '<'
             moveForward = { {}, "right" },
-            moveBackward = { {}, "left" },
-            info = "YouTube Player"
+            moveBackward = { {}, "left" }
         },
         ["twitch.tv"] = {
             selector = ".persistent-player",
@@ -114,8 +112,7 @@ local ControlKeys = {
             speedInc = { {}, "." }, -- '>'
             speedDec = { {}, "," }, -- '<'
             moveForward = { {}, "right" },
-            moveBackward = { {}, "left" },
-            info = "Twitch Player"
+            moveBackward = { {}, "left" }
         },
         ["udemy.com"] = {
             --selector = "[class*='app--body-container--']",
@@ -126,8 +123,7 @@ local ControlKeys = {
             speedInc = { { "shift" }, "right" },
             speedDec = { { "shift" }, "left" },
             moveForward = { {}, "right" },
-            moveBackward = { {}, "left" },
-            info = "Udemy Player"
+            moveBackward = { {}, "left" }
         },
         ["tvnow.de"] = {
             pause = { {}, "SPACE" },
@@ -135,8 +131,7 @@ local ControlKeys = {
             speedInc = {},
             speedDec = {},
             moveForward = { {}, "right" },
-            moveBackward = { {}, "left" },
-            info = "TVnow Player (no speed controls)"
+            moveBackward = { {}, "left" }
 
         },
         ["spiegel.de"] = {
@@ -145,8 +140,7 @@ local ControlKeys = {
             speedInc = {},
             speedDec = {},
             moveForward = { {}, "right" },
-            moveBackward = { {}, "left" },
-            info = "Spiegel.de Player (no speed controls)"
+            moveBackward = { {}, "left" }
         },
         ["joyn.de"] = {
             pause = { {}, "SPACE" },
@@ -154,8 +148,8 @@ local ControlKeys = {
             speedInc = {},
             speedDec = {},
             moveForward = { {}, "right" },
-            moveBackward = { {}, "left" },
-            info = "Joyn Player (no speed controls)"
+            moveBackward = { {}, "left" }
+
         },
     }
 }
@@ -180,7 +174,6 @@ local function doKey(modifier, key)
     if currentWindow then
         receiverApp = currentWindow:application()
         -- TODO: activate the window - place over others - but go back to current app
-        -- TODO: check if currentWindow still exists - otherwise null it or use the current
     else
         receiverApp = hs.application.applicationsForBundleID(currentBundleId)[1]
     end
@@ -334,17 +327,9 @@ local function setCurrentWindow()
     currentBundleId = bundleID
 
     local appActions = getAppActions()
-
-    if appActions == nil then
-        debugInfo("no player actions defined for current domain.")
-        return
-    end
-
-    debugInfo("changed currentBundleId to: " .. currentBundleId)
-    debugInfo("Detected: "..appActions.info)
-    hs.alert.show("Detected: "..appActions.info)
-
     selectPlayer(appActions.selector)
+
+    debugInfo("changed currentBundleId to " .. currentBundleId)
 end
 
 -- Play / Pause
