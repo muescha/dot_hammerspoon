@@ -236,19 +236,49 @@ local function testforScriptEnabled()
     debugInfo("jsout: ", jsout)
 end
 
-local function selectPlayer(selector)
-    if selector==nil then return end
-    local code = cache[selector]
+local function getCacheKey(path, params)
+    return "cache-key-'"..path.."'-params:"..hs.inspect(params, {newline="",indent=""})
+end
+
+local function getActionCode(templatePath, action, params)
+    local templateBaseName = "PlayerGlobalControl-"
+
+    local jsPath = templatePath .. templateBaseName..action..".js"
+    local cacheKey = getCacheKey(jsPath, params)
+
+    local code = cache[cacheKey]
     if code == nil then
         debugInfo("no cache - generate javascript")
-        local jsPath = path() .. filename() .. 'ChromeSelect.js'
         debugInfo("Filename: ", jsPath)
-        debugInfo("Selector: ", selector)
-        code = readFileTemplate(jsPath, {selector=selector})
-        cache[selector] = code
+        debugInfo("params: ", params)
+        code = readFileTemplate(jsPath, params)
+        cache[cacheKey] = code
     end
-    local error, output, message = runJavaScript(code)
-    debugInfo(error, " - ", output, " - " , message)
+    --debugTable(cache)
+    return code
+end
+
+local function runActionCode(code)
+    local wrapper = path() .. "PlayerGlobalControl-BrowserWrapper.js"
+    return runJavaScriptInBrowser(code, "Google Chrome", wrapper)
+end
+
+local function runActionCodeDebug(code)
+    local error, output, message = runActionCode(code)
+    debugInfo("runActionCode -   Error: ", error)
+    debugInfo("runActionCode -  Output: ", output)
+    debugInfo("runActionCode - Message: ", message)
+end
+
+local function selectPlayer(selector)
+    if selector==nil then return end
+
+    local templatePath = path()
+    local action = "ActionSelect"
+    local code = getActionCode(templatePath, action, { selector=selector })
+
+    runActionCodeDebug(code)
+
 end
 
 -- TODO: when Chrome is not the current App, then also i need to switch to
