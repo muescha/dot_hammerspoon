@@ -6,6 +6,9 @@
 
 function readFile(path)
     local f = io.open(path, 'r')
+    if f==nil then
+        error("\nERROR: missing File: "..path)
+    end
     local s = f:read('a')
     f:close()
     return s
