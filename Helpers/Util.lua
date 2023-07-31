@@ -14,6 +14,7 @@ function readFile(path)
     return s
 end
 
+-- TODO: Remove because better implementation is in hs.fnutils.partial
 function partial(fn, arg)
     return function(...)
         return fn(arg, ...)
@@ -23,7 +24,11 @@ end
 -- usage:
 -- template([[
 --   var name = "{{ action }}";
--- ]], {value=(value and 1 or 0)})
+-- ]], {
+--        value=(value and 1 or 0),
+--        something=value,
+--        javascript=readFile('assets/breaks/main.js')
+-- })
 
 function template(s, t)
     local pattern = '{{%s*([^}]-)%s*}}'
@@ -34,6 +39,16 @@ end
 
 function readFileTemplate(path, t)
     return template(readFile(path), t)
+end
+
+function runJavaScriptInBrowser(code, browser, wrapper)
+    return runJavaScript(
+            readFileTemplate(wrapper, {
+                code = code,
+                application = browser,
+            }
+        )
+    )
 end
 
 function runJavaScript(code)
