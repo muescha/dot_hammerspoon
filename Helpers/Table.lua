@@ -36,4 +36,25 @@ function Table.each(table, callback)
     end
 end
 
+function Table.assign(t1, t2)
+    if t2 == nil then return t1 end
+    for key, value in pairs(t2) do
+        t1[key] = value
+    end
+
+    return t1
+end
+
+function Table.assigned(t1, t2)
+    local new = { }
+    for key, value in pairs(t1) do
+        new[key] = value
+    end
+    if t2 == nil then return new end
+    for key, value in pairs(t2) do
+        new[key] = value
+    end
+    return new
+end
+
 return Table
