@@ -41,8 +41,9 @@ Shortcuts available for this websites:
 - https://youtube.com
 - https://twitch.tv
 - https://udemy.com
+- https://wdr.de
+- https://spiegel.de
 - https://tvnow.de (no speed controls)
-- https://spiegel.de (no speed controls)
 - https://joyn.de (no speed controls)
 
 ### [ResizeChildWindows](/Functions/ResizeChildWindows.lua)

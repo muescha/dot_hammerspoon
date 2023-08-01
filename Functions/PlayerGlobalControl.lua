@@ -157,6 +157,16 @@ function ActionGetProperty(params)
     return ok, result
 end
 
+function ActionGetChildIndex(params)
+    local templatePath = path()
+    debugInfo("Params: ", params)
+    local action = "ActionGetChildIndex"
+    local code = getActionCode(templatePath, action, params)
+    local ok, output = runActionCodeDebug(code)
+    local result = { [params.property] = output}
+    return ok, result
+end
+
 local ControlKeys = {
     [bundleIdIINA] = {
         pause = { {}, "p" },
@@ -211,13 +221,46 @@ local ControlKeys = {
 
         },
         ["spiegel.de"] = {
+            --defaultFunctionParams = {
+            --    speedItems = { '0.5x', '1x', '1.25x', '1.5x', '2x' },
+            --    speedItemsDefault = '1x',
+            --},
             pause = { {}, "SPACE" },
-            speedReset = {},
-            speedInc = {},
-            speedDec = {},
+            speedReset = {
+                --ActionClick, { selector="div[aria-label='Einstellungen']"},
+                --ActionClick, { selector="div[name='playbackRates']"},
+                ActionClick, { selector="button.jw-settings-content-item[aria-label='1x']"},
+                --ActionClick, { selector=".jw-settings-close"},
+            },
+            speedInc = {
+                ActionGetChildIndex, {
+                    selector=".jw-settings-submenu-playbackRates button.jw-settings-content-item.jw-settings-item-active",
+                    property="child-index",
+                },
+                MemoryCalc, {
+                    calc=function(value) return value+1+1 end,
+                    property="child-index",
+                },
+                ActionClick, {
+                    selector=".jw-settings-submenu-playbackRates button.jw-settings-content-item:nth-child({{ child-index }})",
+                }
+            },
+            speedDec = {
+                ActionGetChildIndex, {
+                    selector=".jw-settings-submenu-playbackRates button.jw-settings-content-item.jw-settings-item-active",
+                    property="child-index",
+                },
+                MemoryCalc, {
+                    calc=function(value) return value-1+1 end,
+                    property="child-index",
+                },
+                ActionClick, {
+                    selector=".jw-settings-submenu-playbackRates button.jw-settings-content-item:nth-child({{ child-index }})",
+                }
+            },
             moveForward = { {}, "right" },
             moveBackward = { {}, "left" },
-            info = "Spiegel.de Player (no speed controls)"
+            info = "Spiegel.de Player"
         },
         -- https://exporte.wdr.de/player/current/v-6.5.0/ardplayer-wdr.js?t=19569
         ["wdr.de"] = {
