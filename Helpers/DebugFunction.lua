@@ -41,6 +41,12 @@ function ReadSource(filename, fromLine, toLine)
     return data
 end
 
+function getFunctionName(fun)
+    local info = debug.getinfo(fun,"S")
+    local sourcePath = info.source:match("@?(.*)") -- remove @ from beginning
+    local sourceText = ReadSource(sourcePath, info.linedefined-1, info.linedefined-1)
+    return table.concat(sourceText,"\n")
+end
 
 function debugFunction(fun)
     local info = debug.getinfo(fun,"Sln")
