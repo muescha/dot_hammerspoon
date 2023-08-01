@@ -2,16 +2,15 @@
 // Action Click
 
 (function() {
-
     const el = document.querySelector("{{ selector }}");
     let timeout = ('{{ timeout }}' === 'nil') ? 0 : Number('{{ timeout }}');
-
+    console.log(el)
     if (el){
         if(timeout === 0){
-            el.click()
+            el.dispatchEvent(new CustomEvent('click'))
         } else {
             setTimeout(function(){
-                el.click()
+                el.dispatchEvent(new CustomEvent('click'))
             },timeout)
         }
     } else {
