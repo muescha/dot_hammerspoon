@@ -7,7 +7,7 @@
 ---   -> Chrome for Player in:
 ---      -> [x] YouTube
 ---      -> [x] RTL+
----      -> WDR
+---      -> [x] WDR
 ---      -> Spiegel
 ---      -> Netflix
 ---      -> https://podcasts.google.com/ (TODO)
@@ -86,6 +86,77 @@ local currentBundleId = bundleIdChrome
 ---@type hs.Application
 local currentWindow = nil
 
+
+-- Java Script Actions
+
+local function getCacheKey(path, params)
+    return "cache-key-'"..path.."'-params:"..hs.inspect(params, {newline="",indent=""})
+end
+
+local function getActionCode(templatePath, action, params)
+    local templateBaseName = "PlayerGlobalControl-"
+
+    local jsPath = templatePath .. templateBaseName..action..".js"
+    local cacheKey = getCacheKey(jsPath, params)
+
+    local code = cache[cacheKey]
+    if code == nil then
+        debugInfo("no cache - generate javascript")
+        debugInfo("Filename: ", jsPath)
+        debugInfo("params: ", params)
+        code = readFileTemplate(jsPath, params)
+        cache[cacheKey] = code
+    end
+    return code
+end
+
+local function runActionCode(code)
+    local wrapper = path() .. "PlayerGlobalControl-BrowserWrapper.js"
+    return runJavaScriptInBrowser(code, "Google Chrome", wrapper)
+end
+
+local function runActionCodeDebug(code)
+    local error, output, message = runActionCode(code)
+    debugInfo("runActionCode -   Error: ", error)
+    debugInfo("runActionCode -  Output: ", output)
+    debugInfo("runActionCode - Message: ", message)
+    return error, output, message
+end
+
+--
+
+function ActionSelect(params)
+    local templatePath = path()
+    debugInfo("Params: ", params)
+    local action = "ActionSelect"
+    local code = getActionCode(templatePath, action, params)
+    return runActionCodeDebug(code)
+end
+
+function ActionClick(params)
+    local templatePath = path()
+    debugInfo("Params: ", params)
+    local action = "ActionClick"
+    local code = getActionCode(templatePath, action, params)
+    return runActionCodeDebug(code)
+end
+
+function MemoryCalc(params)
+    local output = params.calc(params[params.property])
+    local result = { [params.property] = output}
+    return true, result
+end
+
+function ActionGetProperty(params)
+    local templatePath = path()
+    debugInfo("Params: ", params)
+    local action = "ActionGetProperty"
+    local code = getActionCode(templatePath, action, params)
+    local ok, output = runActionCodeDebug(code)
+    local result = { [params.property] = output}
+    return ok, result
+end
+
 local ControlKeys = {
     [bundleIdIINA] = {
         pause = { {}, "p" },
@@ -148,6 +219,46 @@ local ControlKeys = {
             moveBackward = { {}, "left" },
             info = "Spiegel.de Player (no speed controls)"
         },
+        -- https://exporte.wdr.de/player/current/v-6.5.0/ardplayer-wdr.js?t=19569
+        ["wdr.de"] = {
+
+            selector = "#videoPlayer",
+            pause = { ActionClick, { selector=".ardplayer-button-playpause" } },
+            speedReset = {
+                ActionClick, { selector="button.ardplayer-button-settings"},
+                ActionClick, { selector=".ardplayer-bottom-sheet-container div[aria-label='Geschwindigkeit'] span.ardplayer-option[data-index='3']"},
+                ActionClick, { timeout=500, selector=".ardplayer-bottom-sheet-close-button.ardplayer-icon-close"},
+            },
+            speedInc = {
+                ActionClick, { selector="button.ardplayer-button-settings"},
+                ActionGetProperty, {
+                    selector=".ardplayer-bottom-sheet-container div[aria-label='Geschwindigkeit'] span.ardplayer-option.ardplayer-option-active",
+                    property="data-index"
+                },
+                MemoryCalc, {
+                    calc=function(value) return value+1 end,
+                    property="data-index"
+                },
+                ActionClick, { selector=".ardplayer-bottom-sheet-container div[aria-label='Geschwindigkeit'] span.ardplayer-option[data-index='{{ data-index }}']"},
+                ActionClick, { timeout=500, selector=".ardplayer-bottom-sheet-close-button.ardplayer-icon-close"},
+            },
+            speedDec = {
+                ActionClick, { selector="button.ardplayer-button-settings"},
+                ActionGetProperty, {
+                    selector=".ardplayer-bottom-sheet-container div[aria-label='Geschwindigkeit'] span.ardplayer-option.ardplayer-option-active",
+                    property="data-index"
+                },
+                MemoryCalc, {
+                    calc=function(value) return value-1 end,
+                    property="data-index"
+                },
+                ActionClick, { selector=".ardplayer-bottom-sheet-container div[aria-label='Geschwindigkeit'] span.ardplayer-option[data-index='{{ data-index }}']"},
+                ActionClick, { timeout=500, selector=".ardplayer-bottom-sheet-close-button.ardplayer-icon-close"},
+            },
+            moveForward = { {}, "l" },
+            moveBackward = { {}, "j" },
+            info = "wdr.de Player"
+        },
         ["joyn.de"] = {
             pause = { {}, "SPACE" },
             speedReset = {},
@@ -172,6 +283,10 @@ function getChromeUrlDomain()
     return domain
 end
 
+---@param modifier table @available modifiers or empty table
+---@param key string @key
+---@return void
+---
 local function doKey(modifier, key)
     debugInfo("--> doKey(", modifier, ',"', key, '")')
 
@@ -188,6 +303,25 @@ local function doKey(modifier, key)
     if receiverApp then
         hs.eventtap.keyStroke(modifier, key, 0, receiverApp)
     end
+end
+
+local functionMemory = {}
+
+---@param function function @function to be called
+---@param params table @params for the function
+---@return void
+---
+local function doFunction(actionFunction, actionParameter)
+
+    debugInfo("--> doFunction(", getFunctionName(actionFunction), ',"', actionParameter, '")')
+    debugFunction(actionFunction)
+
+    local combinedParameters = helper.table.assigned(functionMemory, actionParameter)
+    local ok, result = actionFunction(combinedParameters)
+    --debugInfo(ok, result, type(result))
+    helper.table.assign(functionMemory, result)
+    --debugTable("functionMemory")
+    --debugTable(functionMemory)
 end
 
 
@@ -212,7 +346,14 @@ local function doCommand(appActions, actionQueue)
         local actionCommands = { table.unpack(appActions[action]) }
         doCommand(appActions, actionCommands)
 
-    else
+    elseif type(peek) == 'function' then
+        -- function type
+        local actionFunction = table.remove(actionQueue, 1)
+        local actionParameter = table.remove(actionQueue, 1)
+
+        doFunction(actionFunction, actionParameter)
+
+    else -- table?
 
         local modifier = table.remove(actionQueue, 1)
         local key = table.remove(actionQueue, 1)
@@ -236,49 +377,9 @@ local function testforScriptEnabled()
     debugInfo("jsout: ", jsout)
 end
 
-local function getCacheKey(path, params)
-    return "cache-key-'"..path.."'-params:"..hs.inspect(params, {newline="",indent=""})
-end
-
-local function getActionCode(templatePath, action, params)
-    local templateBaseName = "PlayerGlobalControl-"
-
-    local jsPath = templatePath .. templateBaseName..action..".js"
-    local cacheKey = getCacheKey(jsPath, params)
-
-    local code = cache[cacheKey]
-    if code == nil then
-        debugInfo("no cache - generate javascript")
-        debugInfo("Filename: ", jsPath)
-        debugInfo("params: ", params)
-        code = readFileTemplate(jsPath, params)
-        cache[cacheKey] = code
-    end
-    --debugTable(cache)
-    return code
-end
-
-local function runActionCode(code)
-    local wrapper = path() .. "PlayerGlobalControl-BrowserWrapper.js"
-    return runJavaScriptInBrowser(code, "Google Chrome", wrapper)
-end
-
-local function runActionCodeDebug(code)
-    local error, output, message = runActionCode(code)
-    debugInfo("runActionCode -   Error: ", error)
-    debugInfo("runActionCode -  Output: ", output)
-    debugInfo("runActionCode - Message: ", message)
-end
-
 local function selectPlayer(selector)
     if selector==nil then return end
-
-    local templatePath = path()
-    local action = "ActionSelect"
-    local code = getActionCode(templatePath, action, { selector=selector })
-
-    runActionCodeDebug(code)
-
+    ActionSelect({ selector=selector })
 end
 
 -- TODO: when Chrome is not the current App, then also i need to switch to

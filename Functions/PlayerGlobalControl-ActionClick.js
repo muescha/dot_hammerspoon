@@ -2,10 +2,19 @@
 // Action Click
 
 (function() {
-    // console.log(document.activeElement.id)
-    // Get First element (otherwise querySelectorAll)
-    const elementWithId = document.querySelector("{{ selector }}");
-    console.log(elementWithId)
-    elementWithId.click()
-    return document.activeElement.id
+
+    const el = document.querySelector("{{ selector }}");
+    let timeout = ('{{ timeout }}' === 'nil') ? 0 : Number('{{ timeout }}');
+
+    if (el){
+        if(timeout === 0){
+            el.click()
+        } else {
+            setTimeout(function(){
+                el.click()
+            },timeout)
+        }
+    } else {
+        console.log("no item to click")
+    }
 })();

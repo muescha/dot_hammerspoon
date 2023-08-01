@@ -2,14 +2,13 @@
 // Action Select
 
 (function() {
-    // console.log(document.activeElement.id)
-    console.log(document.activeElement)
-    // Get First element (otherwise querySelectorAll)
-    const elementWithId = document.querySelector("{{ selector }}");
-    console.log(elementWithId)
+    const el = document.querySelector("{{ selector }}");
 
-    elementWithId.focus()
+    if(el){
+        el.focus()
+    } else {
+        console.log("no item to focus")
+    }
 
-    console.log(document.activeElement)
-    return document.activeElement.id
+    return el.id
 })();
