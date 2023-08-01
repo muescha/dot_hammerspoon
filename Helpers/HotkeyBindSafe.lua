@@ -4,6 +4,16 @@
 --- DateTime: 24.04.23 11:09
 ---
 
+--- if a hotkey use sendKeys which where a modifier
+--- is used then the hyperkey can still be active and
+--- sendKeys is not working
+--- HotkeyBindSafe disable the original hotkey
+--- and enable it after the call
+--- solution for:
+---   also do be aware that if you are holding modifiers while emitting keystrokes,
+---   those modifiers may apply to those keystrokes, depending on how the target app
+---   is receiving its input
+
 function HotkeyBindSafe(mods, key, message, pressedfn, releasedfn, repeatfn)
 
     local hotkeyHandler
