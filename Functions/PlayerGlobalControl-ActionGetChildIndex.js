@@ -1,5 +1,5 @@
 
-// Action Get Property
+// Action Get Child Index
 
 (function() {
     const el = document.querySelector("{{ selector }}");
