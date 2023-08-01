@@ -38,7 +38,7 @@ function template(s, t)
 end
 
 function readFileTemplate(path, t)
-    return template(readFile(path), t)
+    return template(template(readFile(path), t),t)
 end
 
 function runJavaScriptInBrowser(code, browser, wrapper)
