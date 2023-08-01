@@ -146,8 +146,8 @@ function GenericAction(action, defaultParams)
 
         if params.property == nil then return ok, output end
 
-    local result = { [params.property] = output}
-    return ok, result
+        local calc = params.calc or function(v) return v end
+
         local result = { [params.property] = calc(output)}
         return ok, result
     end
@@ -261,8 +261,7 @@ local ControlKeys = {
                 ActionGetChildIndex({
                     selector=".jw-settings-submenu-playbackRates button.jw-settings-content-item.jw-settings-item-active",
                     property="child-index",
-                },
-                MemoryCalc, {
+                    --calc=function(value) return value-1+1 end,
                 }),
                 MemoryCalc({
                     calc=function(value) return value-1+1 end,
