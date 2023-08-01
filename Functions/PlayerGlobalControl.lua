@@ -135,16 +135,22 @@ local function runActionCodeDebug(code)
 end
 
 --
-function GenericAction(action, params)
+function GenericAction(action, defaultParams)
     local templatePath = path()
-    debugInfo("Params: ", params)
-    local code = getActionCode(templatePath, action, params)
-    local ok, output = runActionCodeDebug(code)
 
-    if params.property == nil then return ok, output end
+    return function(memory)
+        local params = helper.table.assigned(memory, defaultParams)
+        debugInfo("Params: ", params)
+        local code = getActionCode(templatePath, action, params)
+        local ok, output = runActionCodeDebug(code)
+
+        if params.property == nil then return ok, output end
 
     local result = { [params.property] = output}
     return ok, result
+        local result = { [params.property] = calc(output)}
+        return ok, result
+    end
 end
 
 function ActionSelect(params)
@@ -156,9 +162,13 @@ function ActionClick(params)
 end
 
 function MemoryCalc(params)
-    local output = params.calc(params[params.property])
-    local result = { [params.property] = output}
-    return true, result
+    return function(memory) -- MemoryCalc
+        local allParams = helper.table.assigned(memory, params)
+        debugInfo("Params: ", allParams)
+        local output = allParams.calc(allParams[allParams.property])
+        local result = { [allParams.property] = output}
+        return true, result
+    end
 end
 
 function ActionGetProperty(params)
@@ -228,37 +238,39 @@ local ControlKeys = {
             --    speedItemsDefault = '1x',
             --},
             pause = { {}, "SPACE" },
-            speedReset = {
+            speedReset ={
                 --ActionClick, { selector="div[aria-label='Einstellungen']"},
                 --ActionClick, { selector="div[name='playbackRates']"},
-                ActionClick, { selector="button.jw-settings-content-item[aria-label='1x']"},
+                ActionClick({ selector = "button.jw-settings-content-item[aria-label='1x']" })
                 --ActionClick, { selector=".jw-settings-close"},
             },
             speedInc = {
-                ActionGetChildIndex, {
+                ActionGetChildIndex({
                     selector=".jw-settings-submenu-playbackRates button.jw-settings-content-item.jw-settings-item-active",
                     property="child-index",
-                },
-                MemoryCalc, {
+                }),
+                MemoryCalc({
                     calc=function(value) return value+1+1 end,
                     property="child-index",
-                },
-                ActionClick, {
+                }),
+                ActionClick({
                     selector=".jw-settings-submenu-playbackRates button.jw-settings-content-item:nth-child({{ child-index }})",
-                }
+                })
             },
             speedDec = {
-                ActionGetChildIndex, {
+                ActionGetChildIndex({
                     selector=".jw-settings-submenu-playbackRates button.jw-settings-content-item.jw-settings-item-active",
                     property="child-index",
                 },
                 MemoryCalc, {
+                }),
+                MemoryCalc({
                     calc=function(value) return value-1+1 end,
                     property="child-index",
-                },
-                ActionClick, {
+                }),
+                ActionClick({
                     selector=".jw-settings-submenu-playbackRates button.jw-settings-content-item:nth-child({{ child-index }})",
-                }
+                })
             },
             moveForward = { {}, "right" },
             moveBackward = { {}, "left" },
@@ -268,37 +280,37 @@ local ControlKeys = {
         ["wdr.de"] = {
 
             selector = "#videoPlayer",
-            pause = { ActionClick, { selector=".ardplayer-button-playpause" } },
+            pause = ActionClick({ selector=".ardplayer-button-playpause" }),
             speedReset = {
-                ActionClick, { selector="button.ardplayer-button-settings"},
-                ActionClick, { selector=".ardplayer-bottom-sheet-container div[aria-label='Geschwindigkeit'] span.ardplayer-option[data-index='3']"},
-                ActionClick, { timeout=500, selector=".ardplayer-bottom-sheet-close-button.ardplayer-icon-close"},
+                ActionClick({ selector="button.ardplayer-button-settings"}),
+                ActionClick({ selector=".ardplayer-bottom-sheet-container div[aria-label='Geschwindigkeit'] span.ardplayer-option[data-index='3']"}),
+                ActionClick({ timeout=500, selector=".ardplayer-bottom-sheet-close-button.ardplayer-icon-close"}),
             },
             speedInc = {
-                ActionClick, { selector="button.ardplayer-button-settings"},
-                ActionGetProperty, {
+                ActionClick({ selector="button.ardplayer-button-settings"}),
+                ActionGetProperty({
                     selector=".ardplayer-bottom-sheet-container div[aria-label='Geschwindigkeit'] span.ardplayer-option.ardplayer-option-active",
                     property="data-index"
-                },
-                MemoryCalc, {
+                }),
+                MemoryCalc({
                     calc=function(value) return value+1 end,
                     property="data-index"
-                },
-                ActionClick, { selector=".ardplayer-bottom-sheet-container div[aria-label='Geschwindigkeit'] span.ardplayer-option[data-index='{{ data-index }}']"},
-                ActionClick, { timeout=500, selector=".ardplayer-bottom-sheet-close-button.ardplayer-icon-close"},
+                }),
+                ActionClick({ selector=".ardplayer-bottom-sheet-container div[aria-label='Geschwindigkeit'] span.ardplayer-option[data-index='{{ data-index }}']"}),
+                ActionClick({ timeout=500, selector=".ardplayer-bottom-sheet-close-button.ardplayer-icon-close"}),
             },
             speedDec = {
-                ActionClick, { selector="button.ardplayer-button-settings"},
-                ActionGetProperty, {
+                ActionClick({ selector="button.ardplayer-button-settings"}),
+                ActionGetProperty({
                     selector=".ardplayer-bottom-sheet-container div[aria-label='Geschwindigkeit'] span.ardplayer-option.ardplayer-option-active",
                     property="data-index"
-                },
-                MemoryCalc, {
+                }),
+                MemoryCalc({
                     calc=function(value) return value-1 end,
                     property="data-index"
-                },
-                ActionClick, { selector=".ardplayer-bottom-sheet-container div[aria-label='Geschwindigkeit'] span.ardplayer-option[data-index='{{ data-index }}']"},
-                ActionClick, { timeout=500, selector=".ardplayer-bottom-sheet-close-button.ardplayer-icon-close"},
+                }),
+                ActionClick({ selector=".ardplayer-bottom-sheet-container div[aria-label='Geschwindigkeit'] span.ardplayer-option[data-index='{{ data-index }}']"}),
+                ActionClick({ timeout=500, selector=".ardplayer-bottom-sheet-close-button.ardplayer-icon-close"}),
             },
             moveForward = { {}, "l" },
             moveBackward = { {}, "j" },
@@ -356,13 +368,12 @@ local functionMemory = {}
 ---@param params table @params for the function
 ---@return void
 ---
-local function doFunction(actionFunction, actionParameter)
+local function doFunction(actionFunction)
 
     debugInfo("--> doFunction(", getFunctionName(actionFunction), ',"', actionParameter, '")')
     debugFunction(actionFunction)
 
-    local combinedParameters = helper.table.assigned(functionMemory, actionParameter)
-    local ok, result = actionFunction(combinedParameters)
+    local ok, result = actionFunction(functionMemory)
     --debugInfo(ok, result, type(result))
     helper.table.assign(functionMemory, result)
     --debugTable("functionMemory")
@@ -388,15 +399,20 @@ local function doCommand(appActions, actionQueue)
 
         -- unpack reference
         local action = table.remove(actionQueue, 1)
-        local actionCommands = { table.unpack(appActions[action]) }
+        --local actionCommands = { table.unpack(appActions[action]) }
+        local actionCommands = appActions[action]
+        if type(actionCommands) == 'function' then
+            actionCommands = { actionCommands }
+        else
+            actionCommands = { table.unpack(appActions[action]) }
+        end
         doCommand(appActions, actionCommands)
 
     elseif type(peek) == 'function' then
         -- function type
         local actionFunction = table.remove(actionQueue, 1)
-        local actionParameter = table.remove(actionQueue, 1)
 
-        doFunction(actionFunction, actionParameter)
+        doFunction(actionFunction)
 
     else -- table?
 
