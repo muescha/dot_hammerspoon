@@ -161,6 +161,15 @@ function ActionClick(params)
     return GenericAction("ActionClick", params)
 end
 
+
+function ActionGetProperty(params)
+    return GenericAction("ActionGetProperty", params)
+end
+
+function ActionGetChildIndex(params)
+    return GenericAction("ActionGetChildIndex", params)
+end
+
 function MemoryCalc(params)
     return function(memory) -- MemoryCalc
         local allParams = helper.table.assigned(memory, params)
@@ -169,14 +178,6 @@ function MemoryCalc(params)
         local result = { [allParams.property] = output}
         return true, result
     end
-end
-
-function ActionGetProperty(params)
-    return GenericAction("ActionGetProperty", params)
-end
-
-function ActionGetChildIndex(params)
-    return GenericAction("ActionGetChildIndex", params)
 end
 
 local ControlKeys = {
