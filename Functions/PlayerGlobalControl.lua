@@ -125,20 +125,19 @@ end
 
 --
 
-function ActionSelect(params)
+function GenericVoidAction(action, params)
     local templatePath = path()
     debugInfo("Params: ", params)
-    local action = "ActionSelect"
     local code = getActionCode(templatePath, action, params)
     return runActionCodeDebug(code)
 end
 
+function ActionSelect(params)
+    return GenericVoidAction("ActionSelect", params)
+end
+
 function ActionClick(params)
-    local templatePath = path()
-    debugInfo("Params: ", params)
-    local action = "ActionClick"
-    local code = getActionCode(templatePath, action, params)
-    return runActionCodeDebug(code)
+    return GenericVoidAction("ActionClick", params)
 end
 
 function MemoryCalc(params)
@@ -147,24 +146,21 @@ function MemoryCalc(params)
     return true, result
 end
 
-function ActionGetProperty(params)
+function GenericGetAction(action, params)
     local templatePath = path()
     debugInfo("Params: ", params)
-    local action = "ActionGetProperty"
     local code = getActionCode(templatePath, action, params)
     local ok, output = runActionCodeDebug(code)
     local result = { [params.property] = output}
     return ok, result
 end
 
+function ActionGetProperty(params)
+    return GenericGetAction("ActionGetProperty", params)
+end
+
 function ActionGetChildIndex(params)
-    local templatePath = path()
-    debugInfo("Params: ", params)
-    local action = "ActionGetChildIndex"
-    local code = getActionCode(templatePath, action, params)
-    local ok, output = runActionCodeDebug(code)
-    local result = { [params.property] = output}
-    return ok, result
+    return GenericGetAction("ActionGetChildIndex", params)
 end
 
 local ControlKeys = {
