@@ -89,6 +89,21 @@ local currentWindow = nil
 
 -- Java Script Actions
 
+local function doCache(cacheKey, f)
+
+    local code = cache[cacheKey]
+
+    if code ~= nil then
+        debugInfo("Cache: found - reusing javascript")
+        return code
+    end
+
+    debugInfo("Cache: not found - generate javascript")
+    code = f()
+    cache[cacheKey] = code
+    return code
+end
+
 local function getCacheKey(path, params)
     return "cache-key-'"..path.."'-params:"..hs.inspect(params, {newline="",indent=""})
 end
@@ -98,16 +113,12 @@ local function getActionCode(templatePath, action, params)
 
     local jsPath = templatePath .. templateBaseName..action..".js"
     local cacheKey = getCacheKey(jsPath, params)
-
-    local code = cache[cacheKey]
-    if code == nil then
-        debugInfo("no cache - generate javascript")
-        debugInfo("Filename: ", jsPath)
-        debugInfo("params: ", params)
-        code = readFileTemplate(jsPath, params)
-        cache[cacheKey] = code
+    local generate = function()
+            debugInfo("Filename: ", jsPath)
+            debugInfo("params: ", params)
+            return readFileTemplate(jsPath, params)
     end
-    return code
+    return doCache(cacheKey, generate)
 end
 
 local function runActionCode(code)
