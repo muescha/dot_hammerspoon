@@ -35,50 +35,24 @@ local actions = enumString {
 -- maybe direct solution via javascript is here:
 --   https://github.com/igrigorik/videospeed/blob/master/inject.js
 -- since i don't know the current speed:
+
+
 -- just tune down to minimum (7 keyStrokes from max 2x speed)
 -- and then up to 1
-local actionSpeedReset3Inc = {
-    -- stop playing
-    actions.pause,
+function actionSpeedReset(count)
+    local reset = {}
+    table.insert(reset, actions.pause)
 
-    -- set to speed 0.25
-    actions.speedDec,
-    actions.speedDec,
-    actions.speedDec,
-    actions.speedDec,
-    actions.speedDec,
-    actions.speedDec,
-    actions.speedDec,
+    for _=1,count+4 do
+        table.insert(reset, actions.speedDec)
+    end
+    for _=1,count do
+        table.insert(reset, actions.speedInc)
+    end
 
-    -- set to speed 1
-    actions.speedInc,
-    actions.speedInc,
-    actions.speedInc,
-
-    -- continue playing
-    actions.pause,
-
-}
-local actionSpeedReset2Inc = {
-    -- stop playing
-    actions.pause,
-
-    -- set to speed 0.5
-    actions.speedDec,
-    actions.speedDec,
-    actions.speedDec,
-    actions.speedDec,
-    actions.speedDec,
-    actions.speedDec,
-
-    -- set to speed 1
-    actions.speedInc,
-    actions.speedInc,
-
-    -- continue playing
-    actions.pause,
-
-}
+    table.insert(reset, actions.pause)
+    return reset
+end
 
 --local currentBundleId = bundleIdIINA
 local currentBundleId = bundleIdChrome
@@ -194,7 +168,7 @@ local ControlKeys = {
         ["youtube.com"] = {
             selector = "#movie_player",
             pause = { {}, "k" },
-            speedReset = actionSpeedReset3Inc,
+            speedReset = actionSpeedReset(3),
             speedInc = { { "shift" }, "." }, -- '>'
             speedDec = { { "shift" }, "," }, -- '<'
             moveForward = { {}, "right" },
@@ -204,7 +178,7 @@ local ControlKeys = {
         ["twitch.tv"] = {
             selector = ".persistent-player",
             pause = { {}, "k" },
-            speedReset = actionSpeedReset3Inc,
+            speedReset = actionSpeedReset(3),
             speedInc = { {}, "." }, -- '>'
             speedDec = { {}, "," }, -- '<'
             moveForward = { {}, "right" },
@@ -216,7 +190,7 @@ local ControlKeys = {
             --selector = "[data-purpose='curriculum-item-viewer-content']",
             selector = "video.vjs-tech",
             pause = { {}, "SPACE" },
-            speedReset = actionSpeedReset2Inc,
+            speedReset = actionSpeedReset(2),
             speedInc = { { "shift" }, "right" },
             speedDec = { { "shift" }, "left" },
             moveForward = { {}, "right" },
