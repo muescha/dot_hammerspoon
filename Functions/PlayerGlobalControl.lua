@@ -10,6 +10,7 @@
 ---      -> [x] WDR
 ---      -> Spiegel
 ---      -> Netflix
+---      -> twitter (Example: https://twitter.com/jnybgr/status/1688423139330469888?s=12&t=UKgH_3wb-W7rBipFV7CKXg)
 ---      -> https://podcasts.google.com/ (TODO)
 --- reduce Chromoim like apps to Chrome - and Safari like to WebKit
 --- add fullscreen shortcut
@@ -57,9 +58,9 @@ end
 --local currentBundleId = bundleIdIINA
 local currentBundleId = bundleIdChrome
 
----@type hs.Application
+---@type hs.window
 local currentWindow = nil
-
+local currentDomain = nil
 
 -- Java Script Actions
 
@@ -309,6 +310,7 @@ end
 
 function getChromeUrlDomain()
     local url = getChromeUrl()
+    debugInfo("current url:", url)
     local domain = url:match("[%w%.]*%.(%w+%.%w+)")
     debugInfo("current domain: ", domain)
     return domain
@@ -432,26 +434,47 @@ local function checkSwitch()
     local win = hs.window.focusedWindow()
     local bundleID = win:application():bundleID()
 
-    -- TODO -> check the focused Window on the currentApp and then switch back
+    local returnSwitchBacks = { win }
 
-    if bundleIdChrome ~= bundleID then debugInfo("checkSwitch: no Chrome") return end
-    if bundleIdChrome ~= currentBundleId then debugInfo("checkSwitch: saved no chrome") return end
+    --if bundleIdChrome ~= bundleID then debugInfo("checkSwitch: current app no Chrome") return end
+    if bundleIdChrome ~= currentBundleId then debugInfo("checkSwitch: saved window is not chrome") return end
     if currentWindow==nil then debugInfo("checkSwitch: no window saved") return end
-    if win == currentWindow then debugInfo("checkSwitch: same window") return end
+    if win == currentWindow then debugInfo("checkSwitch: current app focused is same window as saved") return end
 
-    debugInfo("checkSwitch: switch to", currentWindow)
+    local currentWindowFocused = currentWindow:application():focusedWindow()
+
+    if currentWindowFocused == currentWindow then debugInfo("checkSwitch: saved app focused is the same window as saved") return end
+    debugInfo("checkSwitch: saved app focused is NOT the same window as saved")
+
+    if win ~= currentWindowFocused then
+        debugInfo("checkSwitch: add currentWinFocused to return table")
+        table.insert(returnSwitchBacks, 1, currentWindowFocused)
+    end
+
+    debugInfo("checkSwitch: switch to ", currentWindow)
     currentWindow:focus()
     hs.timer.usleep(10000)
     --currentWindow:raise()
 
-    return win
+    return returnSwitchBacks
 end
+
+local function checkSwitchBack(switchBacks)
+    if switchBacks then
+        for _, win in pairs(switchBacks) do
+            debugInfo("checkSwitch: switch back to", win)
+            win:focus()
+        end
+    end
+end
+
 
 local function getAppActions()
 
     local appActions
 
     if currentBundleId == bundleIdChrome then
+        --local domain = currentDomain or getChromeUrlDomain()
         local domain = getChromeUrlDomain()
         appActions = ControlKeys[currentBundleId][domain]
     else
@@ -479,11 +502,7 @@ local function createHotkey(sourceKey, action, description)
 
         doCommand(appActions, { action })
 
-        if switchBackToWindow then
-            debugInfo("checkSwitch: switch back to", switchBackToWindow)
-            switchBackToWindow:focus()
-        end
-
+        checkSwitchBack(switchBackToWindow)
     end)
 
 end
@@ -498,6 +517,7 @@ local function setCurrentWindow()
 
     currentWindow = win
     currentBundleId = bundleID
+    currentDomain = getChromeUrlDomain()
 
     local appActions = getAppActions()
 
