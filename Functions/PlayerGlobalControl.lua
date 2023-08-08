@@ -56,11 +56,11 @@ function actionSpeedReset(count)
 end
 
 --local currentBundleId = bundleIdIINA
-local currentBundleId = bundleIdChrome
+local savedBundleId = bundleIdChrome
 
 ---@type hs.window
-local currentWindow = nil
-local currentDomain = nil
+local savedWindow = nil
+local savedDomain = nil
 
 -- Java Script Actions
 
@@ -325,12 +325,12 @@ local function doKey(modifier, key)
 
     local receiverApp
 
-    if currentWindow then
-        receiverApp = currentWindow:application()
+    if savedWindow then
+        receiverApp = savedWindow:application()
         -- TODO: activate the window - place over others - but go back to current app
-        -- TODO: check if currentWindow still exists - otherwise null it or use the current
+        -- TODO: check if savedWindow still exists - otherwise null it or use the current
     else
-        receiverApp = hs.application.applicationsForBundleID(currentBundleId)[1]
+        receiverApp = hs.application.applicationsForBundleID(savedBundleId)[1]
     end
 
     if receiverApp then
@@ -426,7 +426,7 @@ end
 -- remember current window - activate player window to receive the actionCommands
 
 -- when in same maybe use the current tab ---> first test: not work on Chrome :(
--- currentWindow:focusTab(1)
+-- savedWindow:focusTab(1)
 -- local _,tabIndex = hs.osascript.applescript('tell application "Google Chrome" to return active tab index of front window')
 
 local function checkSwitch()
@@ -437,24 +437,24 @@ local function checkSwitch()
     local returnSwitchBacks = { win }
 
     --if bundleIdChrome ~= bundleID then debugInfo("checkSwitch: current app no Chrome") return end
-    if bundleIdChrome ~= currentBundleId then debugInfo("checkSwitch: saved window is not chrome") return end
-    if currentWindow==nil then debugInfo("checkSwitch: no window saved") return end
-    if win == currentWindow then debugInfo("checkSwitch: current app focused is same window as saved") return end
+    if bundleIdChrome ~= savedBundleId then debugInfo("checkSwitch: saved window is not chrome") return end
+    if savedWindow==nil then debugInfo("checkSwitch: no window saved") return end
+    if win == savedWindow then debugInfo("checkSwitch: current app focused is same window as saved") return end
 
-    local currentWindowFocused = currentWindow:application():focusedWindow()
+    local savedWindowFocused = savedWindow:application():focusedWindow()
 
-    if currentWindowFocused == currentWindow then debugInfo("checkSwitch: saved app focused is the same window as saved") return end
+    if savedWindowFocused == savedWindow then debugInfo("checkSwitch: saved app focused is the same window as saved") return end
     debugInfo("checkSwitch: saved app focused is NOT the same window as saved")
 
-    if win ~= currentWindowFocused then
+    if win ~= savedWindowFocused then
         debugInfo("checkSwitch: add currentWinFocused to return table")
-        table.insert(returnSwitchBacks, 1, currentWindowFocused)
+        table.insert(returnSwitchBacks, 1, savedWindowFocused)
     end
 
-    debugInfo("checkSwitch: switch to ", currentWindow)
-    currentWindow:focus()
+    debugInfo("checkSwitch: switch to ", savedWindow)
+    savedWindow:focus()
     hs.timer.usleep(10000)
-    --currentWindow:raise()
+    --savedWindow:raise()
 
     return returnSwitchBacks
 end
@@ -473,12 +473,12 @@ local function getAppActions()
 
     local appActions
 
-    if currentBundleId == bundleIdChrome then
-        --local domain = currentDomain or getChromeUrlDomain()
+    if savedBundleId == bundleIdChrome then
+        --local domain = savedDomain or getChromeUrlDomain()
         local domain = getChromeUrlDomain()
-        appActions = ControlKeys[currentBundleId][domain]
+        appActions = ControlKeys[savedBundleId][domain]
     else
-        appActions = ControlKeys[currentBundleId]
+        appActions = ControlKeys[savedBundleId]
     end
 
     return appActions
@@ -507,7 +507,7 @@ local function createHotkey(sourceKey, action, description)
 
 end
 
-local function setCurrentWindow()
+local function setSavedWindow()
     local win = hs.window.focusedWindow()
     local bundleID = win:application():bundleID()
 
@@ -515,9 +515,9 @@ local function setCurrentWindow()
         return
     end
 
-    currentWindow = win
-    currentBundleId = bundleID
-    currentDomain = getChromeUrlDomain()
+    savedWindow = win
+    savedBundleId = bundleID
+    savedDomain = getChromeUrlDomain()
 
     local appActions = getAppActions()
 
@@ -526,7 +526,7 @@ local function setCurrentWindow()
         return
     end
 
-    debugInfo("changed currentBundleId to: " .. currentBundleId)
+    debugInfo("changed savedBundleId to: " .. savedBundleId)
     debugInfo("Detected: "..appActions.info)
     hs.alert.show("Detected: "..appActions.info)
 
@@ -546,4 +546,4 @@ createHotkey(";", actions.speedInc, keyInfo("Increase Speed")) -- like yotube >
 createHotkey("'", actions.moveBackward, keyInfo("Jump Backward"))
 createHotkey("\\", actions.moveForward, keyInfo("Jump Forward"))
 
-hs.hotkey.bind(hyper, "o", keyInfo("Set active App"), setCurrentWindow)
+hs.hotkey.bind(hyper, "o", keyInfo("Set active App"), setSavedWindow)
