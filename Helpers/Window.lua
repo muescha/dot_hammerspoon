@@ -9,12 +9,17 @@ Window.__index = Window
 
 local windows = {}
 
+-- source: https://github.com/fuelingtheweb/fuelingzsh/blob/master/dotfiles/.hammerspoon/Helpers/String.lua#L8-L10
+local function strContains(needle, haystack)
+    return string.find(haystack, needle)
+end
+
 function Window.titleContains(needle)
-    return str.contains(needle:gsub('-', '%%-'), Window.title())
+    return strContains(needle:gsub('-', '%%-'), Window.title())
 end
 
 function Window.pathContains(needle)
-    return str.contains(needle:gsub('-', '%%-'), Window.path())
+    return strContains(needle:gsub('-', '%%-'), Window.path())
 end
 
 function Window.path()
@@ -32,7 +37,7 @@ end
 function Window.openWithCache(name, callback)
     local window = windows[name]
 
-    if window and window:isVisible() and str.contains(name, window:title():lower()) then
+    if window and window:isVisible() and strContains(name, window:title():lower()) then
         return window:focus()
     end
 
