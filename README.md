@@ -42,6 +42,7 @@ Shortcuts available for this websites:
 - https://twitch.tv
 - https://udemy.com
 - https://wdr.de
+- https://ardmediathek.de
 - https://spiegel.de
 - https://tvnow.de (no speed controls)
 - https://joyn.de (no speed controls)

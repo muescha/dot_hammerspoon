@@ -291,6 +291,46 @@ local ControlKeys = {
             moveBackward = { {}, "j" },
             info = "wdr.de Player"
         },
+        -- https://www.ardmediathek.de/video/lokalzeit-aus-koeln/lokalzeit-aus-koeln-oder-25-08-2023/wdr/Y3JpZDovL3dkci5kZS9CZWl0cmFnLWU3NjI3YTM4LTI4YTUtNDlkNi04NGZkLTNhZmYxMWI1ZTY1Ng
+        ["ardmediathek.de"] = {
+
+            selector = ".ardplayer-viewport",
+            pause = ActionClick({ selector=".ardplayer-button-playpause" }),
+            speedReset = {
+                ActionClick({ selector="button.ardplayer-button-settings"}),
+                ActionClick({ selector=".ardplayer-bottom-sheet-container div[aria-label='Geschwindigkeit'] span.ardplayer-option[data-index='3']"}),
+                ActionClick({ timeout=500, selector=".ardplayer-bottom-sheet-close-button.ardplayer-icon-close"}),
+            },
+            speedInc = {
+                ActionClick({ selector="button.ardplayer-button-settings"}),
+                ActionGetProperty({
+                    selector=".ardplayer-bottom-sheet-container div[aria-label='Geschwindigkeit'] span.ardplayer-option.ardplayer-option-active",
+                    property="data-index"
+                }),
+                MemoryCalc({
+                    calc=function(value) return value+1 end,
+                    property="data-index"
+                }),
+                ActionClick({ selector=".ardplayer-bottom-sheet-container div[aria-label='Geschwindigkeit'] span.ardplayer-option[data-index='{{ data-index }}']"}),
+                ActionClick({ timeout=500, selector=".ardplayer-bottom-sheet-close-button.ardplayer-icon-close"}),
+            },
+            speedDec = {
+                ActionClick({ selector="button.ardplayer-button-settings"}),
+                ActionGetProperty({
+                    selector=".ardplayer-bottom-sheet-container div[aria-label='Geschwindigkeit'] span.ardplayer-option.ardplayer-option-active",
+                    property="data-index"
+                }),
+                MemoryCalc({
+                    calc=function(value) return value-1 end,
+                    property="data-index"
+                }),
+                ActionClick({ selector=".ardplayer-bottom-sheet-container div[aria-label='Geschwindigkeit'] span.ardplayer-option[data-index='{{ data-index }}']"}),
+                ActionClick({ timeout=500, selector=".ardplayer-bottom-sheet-close-button.ardplayer-icon-close"}),
+            },
+            moveForward = { {}, "l" },
+            moveBackward = { {}, "j" },
+            info = "ardmediathek.de Player"
+        },
         ["joyn.de"] = {
             pause = { {}, "SPACE" },
             speedReset = {},
