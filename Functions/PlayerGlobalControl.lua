@@ -567,7 +567,9 @@ local function setSavedWindow()
     local appActions = getAppActions()
 
     if appActions == nil then
-        debugInfo("no player actions defined for current domain.")
+        local msg = "no player actions defined for current domain: " .. savedDomain
+        debugInfo(msg)
+        hs.alert.show(msg)
         return
     end
 
