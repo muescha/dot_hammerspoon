@@ -26,12 +26,14 @@ This feature enables the user to control a media player with a standardized set 
 
 Shortcuts:
 
+- hyper + u -> Start
 - hyper + p -> Pause
 - hyper + k -> Reset Speed
 - hyper + l -> Decrease Speed
 - hyper + ; -> Increase Speed
 - hyper + ' -> Jump Backward
 - hyper + \ -> Jump Forward
+- hyper + j -> Max Quality (1080)
 
 Supported Apps:
 - [IINA](https://iina.io/)
