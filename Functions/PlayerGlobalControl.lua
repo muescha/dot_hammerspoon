@@ -28,6 +28,7 @@ local bundleIdIINA = "com.colliderli.iina"
 local bundleIdChrome = "com.google.Chrome"
 
 local actions = enumString {
+    "start",
     "pause",
     "speedReset",
     "speedInc",
@@ -172,6 +173,9 @@ local ControlKeys = {
     [bundleIdChrome] = {
         ["youtube.com"] = {
             selector = "#movie_player",
+            start = {
+                ActionClick({ selector = ".ytp-large-play-button" })
+            },
             pause = { {}, "k" },
             speedReset = actionSpeedReset(3),
             speedInc = { { "shift" }, "." }, -- '>'
@@ -182,6 +186,7 @@ local ControlKeys = {
         },
         ["twitch.tv"] = {
             selector = ".persistent-player",
+            start = {},
             pause = { {}, "k" },
             speedReset = actionSpeedReset(3),
             speedInc = { {}, "." }, -- '>'
@@ -193,6 +198,9 @@ local ControlKeys = {
         ["udemy.com"] = {
             --selector = "[class*='app--body-container--']",
             --selector = "[data-purpose='curriculum-item-viewer-content']",
+            start = {
+                ActionClick({ selector = "[data-purpose='go-to-next-button']" })
+            },
             selector = "video.vjs-tech",
             pause = { {}, "SPACE" },
             speedReset = actionSpeedReset(2),
@@ -203,6 +211,7 @@ local ControlKeys = {
             info = "Udemy Player"
         },
         ["tvnow.de"] = {
+            start = {},
             pause = { {}, "SPACE" },
             speedReset = {},
             speedInc = {},
@@ -217,6 +226,7 @@ local ControlKeys = {
             --    speedItems = { '0.5x', '1x', '1.25x', '1.5x', '2x' },
             --    speedItemsDefault = '1x',
             --},
+            start = {},
             pause = { {}, "SPACE" },
             speedReset ={
                 --ActionClick, { selector="div[aria-label='Einstellungen']"},
@@ -259,6 +269,7 @@ local ControlKeys = {
         ["wdr.de"] = {
 
             selector = "#videoPlayer",
+            start = {},
             pause = ActionClick({ selector=".ardplayer-button-playpause" }),
             speedReset = {
                 ActionClick({ selector="button.ardplayer-button-settings"}),
@@ -299,6 +310,7 @@ local ControlKeys = {
         ["ardmediathek.de"] = {
 
             selector = ".ardplayer-viewport",
+            start = {},
             pause = ActionClick({ selector=".ardplayer-button-playpause" }),
             speedReset = {
                 ActionClick({ selector="button.ardplayer-button-settings"}),
@@ -336,6 +348,7 @@ local ControlKeys = {
             info = "ardmediathek.de Player"
         },
         ["joyn.de"] = {
+            start = {},
             pause = { {}, "SPACE" },
             speedReset = {},
             speedInc = {},
@@ -591,6 +604,9 @@ local function setSavedWindow()
 
     selectPlayer(appActions.selector)
 end
+
+-- Start
+createHotkey("u", actions.start, keyInfo("Start (next) Video"))
 
 -- Play / Pause
 createHotkey("p", actions.pause, keyInfo("Pause Video"))
