@@ -122,7 +122,7 @@ function GenericAction(action, defaultParams)
         local params = helper.table.assigned(memory, defaultParams)
         debugInfo("Params: ", params)
         local code = getActionCode(templatePath, action, params)
-        local ok, output = runActionCodeDebug(code)
+        local ok, output, message = runActionCodeDebug(code)
 
         if params.property == nil then return ok, output end
 
@@ -148,6 +148,10 @@ end
 
 function ActionGetChildIndex(params)
     return GenericAction("ActionGetChildIndex", params)
+end
+
+function ActionPatch(params)
+    return GenericAction("ActionPatch", params)
 end
 
 function MemoryCalc(params)
