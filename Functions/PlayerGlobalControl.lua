@@ -354,10 +354,21 @@ function getChromeUrl()
     return url
 end
 
+local function host(url)
+    return (url.."/"):match("://(.-)/")
+end
+
+local function tld(domain)
+    local parts = hs.fnutils.split(domain, '%.')
+    return parts[#parts -1]..".".. parts[#parts]
+end
+
 function getChromeUrlDomain()
     local url = getChromeUrl()
-    debugInfo("current url:", url)
-    local domain = url:match("[%w%.]*%.(%w+%.%w+)")
+    debugInfo("current url: ", url)
+    debugInfo("current host: ", hs.http.urlParts(url).host)
+    --local domain = url:match("[%w%.]*%.(%w+%.%w+)")
+    local domain = tld(hs.http.urlParts(url).host)
     debugInfo("current domain: ", domain)
     return domain
 end
