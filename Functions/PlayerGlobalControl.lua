@@ -348,7 +348,9 @@ local ControlKeys = {
 }
 
 function getChromeUrl()
-    local _,url = hs.osascript.applescript('tell application "Google Chrome" to return URL of active tab of front window')
+    --local _,url = hs.osascript.applescript('tell application "Google Chrome" to return URL of active tab of front window')
+    --_, title, _ = hs.osascript.javascript("Application('Google Chrome').windows[0].activeTab().title()")
+    _, url, _ = hs.osascript.javascript("Application('Google Chrome').windows[0].activeTab().url()")
     return url
 end
 
