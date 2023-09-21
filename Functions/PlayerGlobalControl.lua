@@ -8,10 +8,14 @@
 ---      -> [x] YouTube
 ---      -> [x] RTL+
 ---      -> [x] WDR
+---             TODO: onlye some Controls working on: https://www1.wdr.de/lokalzeit/fernsehen/koeln/video-studiogespraech-linda-rennings-gruenderin-heimatlos-in-koeln-hik-und-koelsche-linda-100.html
 ---      -> Spiegel
 ---      -> Netflix
 ---      -> twitter (Example: https://twitter.com/jnybgr/status/1688423139330469888?s=12&t=UKgH_3wb-W7rBipFV7CKXg)
+---      -> Loom https://www.loom.com/share/8771f24615e04735a00de927bb6fde99?t=277
 ---      -> https://podcasts.google.com/ (TODO)
+---      -> https://www.linkedin.com/learning/small-talk-und-netzwerken-2-unterschatzte-karriere-booster/gutes-small-talk-thema-wie-findet-man-das?autoSkip=true&resume=false
+---   -> TODO: add qualitiy selector for YT
 --- reduce Chromoim like apps to Chrome - and Safari like to WebKit
 --- add fullscreen shortcut
 
