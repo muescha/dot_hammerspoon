@@ -378,6 +378,7 @@ local function doKey(modifier, key)
     end
 
     if receiverApp then
+        debugInfo("keyStroke:", modifier, key, 0, receiverApp)
         hs.eventtap.keyStroke(modifier, key, 0, receiverApp)
     end
 end
