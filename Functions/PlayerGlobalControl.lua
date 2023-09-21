@@ -182,6 +182,12 @@ local ControlKeys = {
                 ActionClick({ selector = ".ytp-large-play-button" })
             },
             pause = { {}, "k" },
+            -- document.querySelector('.ytp-large-play-button').click()
+            -- not working: 
+            --pause = {
+            --    ActionClick({ selector = ".ytp-large-play-button" })
+            --},
+
             speedReset = actionSpeedReset(3),
             speedInc = { { "shift" }, "." }, -- '>'
             speedDec = { { "shift" }, "," }, -- '<'
