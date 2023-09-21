@@ -398,8 +398,7 @@ end
 
 local functionMemory = {}
 
----@param function function @function to be called
----@param params table @params for the function
+---@param actionFunction function @function to be called
 ---@return void
 ---
 local function doFunction(actionFunction)
