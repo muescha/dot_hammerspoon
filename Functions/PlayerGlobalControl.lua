@@ -34,7 +34,8 @@ local actions = enumString {
     "speedInc",
     "speedDec",
     "moveForward",
-    "moveBackward"
+    "moveBackward",
+    "maxQuality"
 }
 
 
@@ -186,6 +187,19 @@ local ControlKeys = {
             speedDec = { { "shift" }, "," }, -- '<'
             moveForward = { {}, "right" },
             moveBackward = { {}, "left" },
+            maxQuality = {
+                ActionClick({ selector="button.ytp-settings-button"}),
+                ActionPatch({
+                    selector=".ytp-settings-menu .ytp-panel-menu .ytp-menuitem",
+                    childSelector=".ytp-menuitem-label"
+                }),
+                ActionClick({ selector=".ytp-settings-menu .ytp-panel-menu .ytp-menuitem[data-content-inner-text='Qualität']"}),
+                ActionPatch({
+                    selector=".ytp-quality-menu .ytp-menuitem",
+                    childSelector=".ytp-menuitem-label"
+                }),
+                ActionClick({ selector=".ytp-menuitem[data-content-inner-text*='1080'"}),
+            },
             info = "YouTube Player"
         },
         ["twitch.tv"] = {
@@ -624,5 +638,7 @@ createHotkey(";", actions.speedInc, keyInfo("Increase Speed")) -- like yotube >
 -- Rewind / Forward
 createHotkey("'", actions.moveBackward, keyInfo("Jump Backward"))
 createHotkey("\\", actions.moveForward, keyInfo("Jump Forward"))
+
+createHotkey("j", actions.maxQuality, keyInfo("Max Quality"))
 
 hs.hotkey.bind(hyper, "o", keyInfo("Set active App"), setSavedWindow)
