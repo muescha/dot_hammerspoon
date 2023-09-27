@@ -81,6 +81,20 @@ This feature allows the user to detach the current tab from a browser window and
 
 Shortcuts:
 - hyper + t -> show current tab in new window
+- 
+### [DateString](/Functions/DateString.lua)
+
+This feature allows the user to insert the current date in the format `yyyy-mm-dd`:
+
+Shortcuts:
+- hyper + d -> insert current date
+- 
+### [HighLight](/Functions/Highlight.lua)
+
+This feature allows the user to  highlight current mouse position
+
+Shortcuts:
+- hyper + g -> highlight current mouse position
 
 ### [Umlauts.lua](/Functions/Umlauts.lua)
 
