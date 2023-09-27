@@ -57,4 +57,97 @@ function Table.assigned(t1, t2)
     return new
 end
 
+
+-- source: https://github.com/Kampfkarren/Roblox/blob/master/DataStore2/TableUtil.lua
+function Table.clone(tbl)
+    local clone = {}
+
+    for key, value in pairs(tbl) do
+        if type(value) == "table" then
+            clone[key] = Table.clone(value)
+        else
+            clone[key] = value
+        end
+    end
+
+    return clone
+end
+
+
+-- TODO: more table helpers:
+--       https://github.com/Kampfkarren/Roblox/blob/master/Boilerplate/table.module.lua#L110
+
+function Table.keys(tbl)
+    local ret = {}
+
+    for key,_ in pairs(tbl) do
+        table.insert(ret, key)
+    end
+
+    return ret
+end
+
+function Table.values(tbl)
+    local ret = {}
+
+    for _,val in pairs(tbl) do
+        table.insert(ret, val)
+    end
+
+    return ret
+end
+
+function Table.sortByKeyIterator(tbl, sort)
+    local keys = Table.keys(tbl)
+
+    table.sort(keys, sort)
+
+    return function()
+        if #keys == 0 then
+            return nil
+        end
+
+        local nextValue = table.remove(keys, 1)
+
+        return nextValue, tbl[nextValue]
+    end
+end
+
+--sort by values
+function Table.sortByValueIterator(tbl, sort)
+    sort = sort or function(x, y)
+        return x < y
+    end
+
+    return Table.sortByKeyIterator(tbl, function(x, y)
+        return sort(tbl[x], tbl[y])
+    end)
+end
+
+
+function Table.sortByKey(tbl, sort)
+    local keys = Table.keys(tbl)
+
+    table.sort(keys, sort)
+
+    local sortedTable = {}
+
+    for _, key in ipairs(keys) do
+        sortedTable[key] = tbl[key]
+    end
+
+    return sortedTable
+end
+
+--sort by values
+function Table.sortByValue(tbl, sort)
+    sort = sort or function(x, y)
+        return x > y
+    end
+
+    return Table.sortByKey(tbl, function(x, y)
+        return sort(tbl[x], tbl[y])
+    end)
+end
+
 return Table

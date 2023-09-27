@@ -622,11 +622,33 @@ local function setSavedWindow()
         return
     end
 
+    local enabledInfo = getEnabledInfo(appActions)
+
     debugInfo("changed savedBundleId to: " .. savedBundleId)
     debugInfo("Detected: "..appActions.info)
+    debugInfo("Enabled: \n" .. enabledInfo)
+
     hs.alert.show("Detected: "..appActions.info)
+    hs.alert.show("Enabled:\n\n"..enabledInfo)
 
     selectPlayer(appActions.selector)
+end
+
+function getEnabledInfo(appActions)
+    local enabledInfo = ""
+
+    local sortedActionsIterator = helper.table.sortByKeyIterator(actions)
+
+    for k, v in sortedActionsIterator do
+
+        if appActions[v] and #appActions[v] > 0 then
+            enabledInfo = enabledInfo .. "🟢 "
+        else
+            enabledInfo = enabledInfo .. "🔴 "
+        end
+        enabledInfo = enabledInfo .. v .. "\n"
+    end
+    return enabledInfo
 end
 
 -- Start
