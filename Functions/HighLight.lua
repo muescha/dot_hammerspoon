@@ -30,7 +30,7 @@ function mouseHighlight()
     drawCircle(mousepoint, 40)
 
 end
-hs.hotkey.bind(hyper, "d", keyInfo("Highlight mouse position"),mouseHighlight)
+hs.hotkey.bind(hyper, "g", keyInfo("Highlight mouse position"),mouseHighlight)
 
 
 function showTimed(object, seconds, callevent)
