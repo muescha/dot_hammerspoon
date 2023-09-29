@@ -46,6 +46,7 @@ Shortcuts available for this websites:
 - https://wdr.de
 - https://ardmediathek.de
 - https://spiegel.de
+- https://spotify.com/
 - https://tvnow.de (no speed controls)
 - https://joyn.de (no speed controls)
 

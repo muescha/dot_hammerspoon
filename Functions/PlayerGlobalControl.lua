@@ -9,6 +9,7 @@
 ---      -> [x] RTL+
 ---      -> [x] WDR
 ---             TODO: onlye some Controls working on: https://www1.wdr.de/lokalzeit/fernsehen/koeln/video-studiogespraech-linda-rennings-gruenderin-heimatlos-in-koeln-hik-und-koelsche-linda-100.html
+---      -> [x] spotify
 ---      -> Spiegel
 ---      -> Netflix
 ---      -> twitter (Example: https://twitter.com/jnybgr/status/1688423139330469888?s=12&t=UKgH_3wb-W7rBipFV7CKXg)
@@ -158,7 +159,9 @@ end
 function MemoryCalc(params)
     return function(memory) -- MemoryCalc
         local allParams = helper.table.assigned(memory, params)
+        debugInfo("MemoryCalc")
         debugInfo("Params: ", allParams)
+        debugFunction(allParams.calc)
         local output = allParams.calc(allParams[allParams.property])
         local result = { [allParams.property] = output}
         return true, result
@@ -396,6 +399,71 @@ local ControlKeys = {
             moveBackward = { {}, "left" },
             info = "Joyn Player (no speed controls)"
         },
+        ["spotify.com"] = {
+            start = {},
+            pause = { {}, "SPACE" },
+            speedReset = {
+                ActionClick({
+                    selector = "button[data-testid='control-button-playback-speed']"
+                }),
+                ActionPatch({
+                    selector="#context-menu ul div li",
+                    childSelector="button span"
+                }),
+                ActionClick({
+                    selector = "#context-menu ul div li[data-content-inner-text='1x'] button"
+                })
+            },
+            speedInc = {
+                ActionClick({
+                    selector = "button[data-testid='control-button-playback-speed']"
+                }),
+                ActionPatch({
+                    selector="#context-menu ul div li",
+                    childSelector="button span"
+                }),
+                ActionGetProperty({
+                    selector="#context-menu ul div li:has( button[aria-checked='true'])",
+                    property="data-element-index",
+                    calc=function(value) return value+1 end,
+                }),
+                MemoryCalcCheck({
+                    min=0,
+                    max=30,
+                    property="data-element-index"
+                }),
+                ActionClick({
+                    selector = "#context-menu ul div li[data-element-index='{{ data-element-index }}'] button"
+                })
+
+            },
+            speedDec = {
+                ActionClick({
+                    selector = "button[data-testid='control-button-playback-speed']"
+                }),
+                ActionPatch({
+                    selector="#context-menu ul div li",
+                    childSelector="button span"
+                }),
+                ActionGetProperty({
+                    selector="#context-menu ul div li:has( button[aria-checked='true'])",
+                    property="data-element-index",
+                    calc=function(value) return value-1 end,
+                }),
+                MemoryCalcCheck({
+                    min=0,
+                    max=30,
+                    property="data-element-index"
+                }),
+                ActionClick({
+                    selector = "#context-menu ul div li[data-element-index='{{ data-element-index }}'] button"
+                })
+
+            },
+            moveForward = { { "cmd", "shift"}, "right" },
+            moveBackward = { { "cmd", "shift" }, "left" },
+            info = "Spotify Player (no speed controls)"
+        },
     }
 }
 
@@ -443,7 +511,7 @@ local function doKey(modifier, key)
     end
 
     if receiverApp then
-        debugInfo("keyStroke:", modifier, key, 0, receiverApp)
+        debugInfo("doKey => keyStroke: ", modifier, key, 0, receiverApp)
         hs.eventtap.keyStroke(modifier, key, 0, receiverApp)
     end
 end
