@@ -6,10 +6,11 @@
     elList.forEach(el =>
         console.log(el)
     )
-    elList.forEach(el => {
+    elList.forEach((el, index) => {
         const childElement = el.querySelector("{{ childSelector }}")
         if (childElement && childElement.innerText) {
-            el.dataset.contentInnerText = childElement.innerText
+            el.dataset.contentInnerText = childElement.innerText;
+            el.dataset.elementIndex = String(index);
         }
     }
 )
