@@ -100,7 +100,7 @@ local showAlert = function(message, image, style, screenObj, duration)
         --        print(finspect(message:asTable()))
     end
 
-    local screenFrame = screenObj.frame and screenObj:frame() or screenObj:fullFrame()
+    local screenFrame = screenObj.fullFrame and screenObj:fullFrame() or screenObj:frame()
 
     local absoluteTop = screenFrame.y + (screenFrame.h * (1 - 1 / 1.55) + 55) -- mimic module behavior for inverted rect
     if thisAlertStyle.atScreenEdge > 0 then
