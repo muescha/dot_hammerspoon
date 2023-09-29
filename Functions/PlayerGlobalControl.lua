@@ -165,6 +165,21 @@ function MemoryCalc(params)
     end
 end
 
+function MemoryCalcCheck(params)
+    return MemoryCalc({
+            calc = function(value)
+                if params.min ~= nil then
+                    value = math.max(params.min, value)
+                end
+                if params.max ~= nil then
+                    value = math.min(params.max, value)
+                end
+                return value
+            end,
+            property = params.property
+        })
+end
+
 local ControlKeys = {
     [bundleIdIINA] = {
         pause = { {}, "p" },
