@@ -668,10 +668,18 @@ local function getAppActions()
     return appActions
 end
 
+local hotkeyInfo = {}
+
 -- types
 ---@param sourceKey string
 ---@param action string
 local function createHotkey(sourceKey, action, description)
+
+    hotkeyInfo[action] = {
+        sourceKey = sourceKey,
+        action = action,
+        description = description
+    }
 
     hs.hotkey.bind(hyper, sourceKey, description, function()
 
@@ -715,28 +723,30 @@ local function setSavedWindow()
     local enabledInfo = getEnabledInfo(appActions)
 
     debugInfo("changed savedBundleId to: " .. savedBundleId)
-    debugInfo("Detected: "..appActions.info)
-    debugInfo("Enabled: \n" .. enabledInfo)
 
-    hs.alert.show("Detected: "..appActions.info)
-    hs.alert.show("Enabled:\n\n"..enabledInfo)
+    local infoText = "Detected: "..appActions.info
+            .."\n\n"..enabledInfo
+
+    debugInfo("\n\n".. infoText)
+    hs.alert.show(infoText, { textFont = "Menlo"}, win)
 
     selectPlayer(appActions.selector)
 end
 
 function getEnabledInfo(appActions)
     local enabledInfo = ""
+    local icon = ""
 
     local sortedActionsIterator = helper.table.sortByKeyIterator(actions)
 
     for k, v in sortedActionsIterator do
 
-        if appActions[v] and #appActions[v] > 0 then
-            enabledInfo = enabledInfo .. "🟢 "
+        if appActions[v] == nil or type(appActions[v]) == 'table' and #appActions[v] == 0 then
+            icon = "🔴 "
         else
-            enabledInfo = enabledInfo .. "🔴 "
+            icon = "🟢 "
         end
-        enabledInfo = enabledInfo .. v .. "\n"
+        enabledInfo = enabledInfo .. '[' .. hotkeyInfo[v].sourceKey .. '] ' .. icon .. v .. "\n"
     end
     return enabledInfo
 end
