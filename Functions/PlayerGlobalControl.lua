@@ -126,7 +126,12 @@ function GenericAction(action, defaultParams)
         local code = getActionCode(templatePath, action, params)
         local ok, output, message = runActionCodeDebug(code)
 
-        if params.property == nil then return ok, output end
+        if params.property == nil then
+            if output == nil then
+                return ok, {}
+            end
+            return ok, { [(memory.domain or '') .. '-' .. action..'-'.. params.action] = output}
+        end
 
         local calc = params.calc or function(v) return v end
 
