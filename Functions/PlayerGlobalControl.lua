@@ -534,8 +534,7 @@ local function doFunction(actionFunction)
     local ok, result = actionFunction(functionMemory)
     --debugInfo(ok, result, type(result))
     helper.table.assign(functionMemory, result)
-    --debugTable("functionMemory")
-    --debugTable(functionMemory)
+    debugInfo("Memory: ", functionMemory)
 end
 
 
