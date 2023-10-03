@@ -12,9 +12,7 @@
             el.dataset.contentInnerText = childElement.innerText;
             el.dataset.elementIndex = String(index);
         }
-    }
-)
-
+π    })
 
 })();
 
