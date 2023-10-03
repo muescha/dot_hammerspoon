@@ -222,7 +222,7 @@ local ControlKeys = {
                     selector=".ytp-quality-menu .ytp-menuitem",
                     childSelector=".ytp-menuitem-label"
                 }),
-                ActionClick({ selector=".ytp-menuitem[data-content-inner-text*='1080'"}),
+                ActionClick({ selector=".ytp-menuitem[data-content-inner-text='1080p HD'"}),
             },
             info = "YouTube Player"
         },
