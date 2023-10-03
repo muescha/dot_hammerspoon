@@ -557,12 +557,16 @@ local function doCommand(appActions, actionQueue)
         local action = table.remove(actionQueue, 1)
         --local actionCommands = { table.unpack(appActions[action]) }
         local actionCommands = appActions[action]
-        if type(actionCommands) == 'function' then
-            actionCommands = { actionCommands }
+        if actionCommands == nil then
+            debugInfo("No command defined for action: " .. action)
         else
-            actionCommands = { table.unpack(appActions[action]) }
+            if type(actionCommands) == 'function' then
+                actionCommands = { actionCommands }
+            else
+                actionCommands = { table.unpack(actionCommands) }
+            end
+            doCommand(appActions, actionCommands)
         end
-        doCommand(appActions, actionCommands)
 
     elseif type(peek) == 'function' then
         -- function type
