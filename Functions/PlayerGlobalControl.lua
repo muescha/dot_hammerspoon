@@ -109,11 +109,11 @@ local function runActionCode(code)
 end
 
 local function runActionCodeDebug(code)
-    local error, output, message = runActionCode(code)
-    debugInfo("runActionCode -   Error: ", error)
+    local ok, output, message = runActionCode(code)
+    debugInfo("runActionCode -      ok: ", ok)
     debugInfo("runActionCode -  Output: ", output)
     debugInfo("runActionCode - Message: ", message)
-    return error, output, message
+    return ok, output, message
 end
 
 --
