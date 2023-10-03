@@ -5,6 +5,7 @@
 --- Current Apps / Sites
 ---   -> IINA
 ---   -> Chrome for Player in:
+---      -> Generic HTML Video
 ---      -> [x] YouTube
 ---      -> [x] RTL+
 ---      -> [x] WDR
@@ -161,6 +162,11 @@ function ActionPatch(params)
     return GenericAction("ActionPatch", params)
 end
 
+function ActionGenericVideo(command)
+    local params = (command == nil) and {} or { action = command }
+    return GenericAction("ActionGenericVideo", params)
+end
+
 function MemoryCalc(params)
     return function(memory) -- MemoryCalc
         local allParams = helper.table.assigned(memory, params)
@@ -199,6 +205,18 @@ local ControlKeys = {
         info = "IINA Player"
     },
     [bundleIdChrome] = {
+        ["generic.video"] = {
+            selector = "",
+            start = {},
+            pause = ActionGenericVideo("doPause"),
+            speedReset = ActionGenericVideo(),
+            speedInc = ActionGenericVideo(),
+            speedDec = ActionGenericVideo(),
+            moveForward = ActionGenericVideo(),
+            moveBackward = ActionGenericVideo(),
+            maxQuality = {},
+            info = "Generic Video"
+        },
         ["youtube.com"] = {
             selector = "#movie_player",
             start = {
@@ -661,6 +679,18 @@ local function getAppActions()
         --local domain = savedDomain or getChromeUrlDomain()
         local domain = getChromeUrlDomain()
         appActions = ControlKeys[savedBundleId][domain]
+        if appActions == nil then
+            --local generic = ControlKeys[savedBundleId]["genieric.video"]
+            functionMemory['domain'] = domain
+            doFunction(ActionGenericVideo("isGeneric"))
+            if functionMemory[domain..'-ActionGenericVideo-isGeneric'] then
+                domain = "generic.video"
+                appActions = ControlKeys[savedBundleId][domain]
+            else
+                return
+            end
+        end
+        functionMemory['domain'] = domain
     else
         appActions = ControlKeys[savedBundleId]
     end
@@ -692,6 +722,7 @@ local function createHotkey(sourceKey, action, description)
             return
         end
 
+        helper.table.assign(functionMemory, { action = action })
         doCommand(appActions, { action })
 
         checkSwitchBack(switchBackToWindow)
