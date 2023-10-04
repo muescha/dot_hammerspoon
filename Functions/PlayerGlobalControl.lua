@@ -711,7 +711,7 @@ local function createHotkey(sourceKey, action, description)
         description = description
     }
 
-    hs.hotkey.bind(hyper, sourceKey, description, function()
+    hs.hotkey.bind(hyper, sourceKey, keyInfo(description), function()
 
         local switchBackToWindow = checkSwitch()
 
@@ -769,35 +769,37 @@ function getEnabledInfo(appActions)
     local icon = ""
 
     local sortedActionsIterator = helper.table.sortByKeyIterator(actions)
-
+    local format = "✧%s %s %-12s %s\n"
     for k, v in sortedActionsIterator do
 
         if appActions[v] == nil or type(appActions[v]) == 'table' and #appActions[v] == 0 then
-            icon = "🔴 "
+            icon = "🔴"
         else
-            icon = "🟢 "
+            icon = "🟢"
         end
-        enabledInfo = enabledInfo .. '[' .. hotkeyInfo[v].sourceKey .. '] ' .. icon .. v .. "\n"
+
+        local info = string.format(format, hotkeyInfo[v].sourceKey  ,icon ,v, hotkeyInfo[v].description)
+        enabledInfo = enabledInfo .. info
     end
     return enabledInfo
 end
 
 -- Start
-createHotkey("u", actions.start, keyInfo("Start (next) Video"))
+createHotkey("u", actions.start, "Start (next) Video")
 
 -- Play / Pause
-createHotkey("p", actions.pause, keyInfo("Pause Video"))
+createHotkey("p", actions.pause, "Pause Video")
 
 -- normal Speed 0
-createHotkey("k", actions.speedReset, keyInfo("Reset Speed")) -- ?
+createHotkey("k", actions.speedReset, "Reset Speed")
 --speed with +/-
-createHotkey("l", actions.speedDec, keyInfo("Decrease Speed")) -- like yotube <
-createHotkey(";", actions.speedInc, keyInfo("Increase Speed")) -- like yotube >
+createHotkey("l", actions.speedDec, "Decrease Speed")
+createHotkey(";", actions.speedInc, "Increase Speed")
 
 -- Rewind / Forward
-createHotkey("'", actions.moveBackward, keyInfo("Jump Backward"))
-createHotkey("\\", actions.moveForward, keyInfo("Jump Forward"))
+createHotkey("'", actions.moveBackward, "Jump Backward")
+createHotkey("\\", actions.moveForward, "Jump Forward")
 
-createHotkey("j", actions.maxQuality, keyInfo("Max Quality"))
+createHotkey("j", actions.maxQuality, "Max Quality")
 
 hs.hotkey.bind(hyper, "o", keyInfo("Set active App"), setSavedWindow)
