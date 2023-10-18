@@ -509,9 +509,10 @@ end
 function getChromeUrlDomain()
     local url = getChromeUrl()
     debugInfo("current url: ", url)
-    debugInfo("current host: ", hs.http.urlParts(url).host)
+    local host = hs.http.urlParts(url).host
+    debugInfo("current host: ", host)
     --local domain = url:match("[%w%.]*%.(%w+%.%w+)")
-    local domain = tld(hs.http.urlParts(url).host)
+    local domain = tld(host)
     debugInfo("current domain: ", domain)
     return domain
 end
