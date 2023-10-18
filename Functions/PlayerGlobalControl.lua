@@ -163,8 +163,16 @@ function ActionPatch(params)
 end
 
 function ActionGenericVideo(command)
+    return ActionJavascript("ActionGenericVideo", command)
+end
+
+function ActionYoutubeVideo(command)
+    return ActionJavascript("ActionYoutubeVideo", command)
+end
+
+function ActionJavascript(template, command)
     local params = (command == nil) and {} or { action = command }
-    return GenericAction("ActionGenericVideo", params)
+    return GenericAction(template, params)
 end
 
 function MemoryCalc(params)
@@ -234,7 +242,8 @@ local ControlKeys = {
             speedDec = { { "shift" }, "," }, -- '<'
             moveForward = { {}, "right" },
             moveBackward = { {}, "left" },
-            maxQuality = {
+            maxQuality = ActionYoutubeVideo("getQuality"),
+            maxQuality1 = {
                 ActionClick({ selector="button.ytp-settings-button"}),
                 ActionPatch({
                     selector=".ytp-settings-menu .ytp-panel-menu .ytp-menuitem",
