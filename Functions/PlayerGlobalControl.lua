@@ -503,6 +503,7 @@ end
 
 local function tld(domain)
     local parts = hs.fnutils.split(domain, '%.')
+    if #parts == 1 then return domain end
     return parts[#parts -1]..".".. parts[#parts]
 end
 
