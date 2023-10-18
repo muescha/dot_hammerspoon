@@ -13,11 +13,16 @@
     function injectYoutubePlayer(){
 
         const script = document.createElement('script');
-// Set the source of the script to the YouTube Iframe API
+
+        // Set the source of the script to the YouTube Iframe API
         script.src = 'https://www.youtube.com/iframe_api';
         console.log(script);
-// Append the script element to the document body
+
+        // Append the script element to the document body
         document.body.appendChild(script);
+
+        // here I expect to have the YouTube API available...
+        // but I get an error
         const ytp = new YT.Player('player');
         console.log(ytp);
     }
@@ -25,40 +30,16 @@
     const controller = {
 
         getQuality: function () {
+
+            // test if I can inject the script
             // injectYoutubePlayer();
+
+            // the getAvailableQualityData is undefined, because mvp is onlye a html node
             const qualityData = mvp.getAvailableQualityData();
             console.log(qualityData);
         },
-        // isGeneric: function(){
-        //     return player != null;
-        // },
-        //
-        // doPause: function () {
-        //     if (player.paused) {
-        //         player.play();
-        //     } else {
-        //         player.pause();
-        //     }
-        //     return player.paused;
-        // },
-        // speedInc: function(){
-        //     player.playbackRate += 0.25;
-        //     return player.playbackRate;
-        // },
-        // speedDec: function(){
-        //     player.playbackRate -= 0.25;
-        //     return player.playbackRate;
-        // },
-        // speedReset: function(){
-        //     player.playbackRate = player.defaultPlaybackRate;
-        //     return player.playbackRate;
-        // },
-        // moveForward: function(){
-        //     player.currentTime += 5; // jump 5 seconds
-        // },
-        // moveBackward: function(){
-        //     player.currentTime -= 5; // jump 5 seconds backwards
-        // },
+
+        // housekeeping for undefined values
         nil: function () {
             return 'function not defined in params.action';
         }
