@@ -1,12 +1,14 @@
-
 // Action Generic Video
 
-(function() {
-    var player = document.querySelector('video');
+(function () {
+    const player = document.querySelector('video');
+    console.log("Action: {{ action }}")
+    console.log("Generic Player:");
+    console.log(player);
 
-    var controller = {
+    const controller = {
 
-        isGeneric: function(){
+        isGeneric: function () {
             return player != null;
         },
 
@@ -18,33 +20,33 @@
             }
             return player.paused;
         },
-        speedInc: function(){
+        speedInc: function () {
             player.playbackRate += 0.25;
             return player.playbackRate;
         },
-        speedDec: function(){
+        speedDec: function () {
             player.playbackRate -= 0.25;
             return player.playbackRate;
         },
-        speedReset: function(){
+        speedReset: function () {
             player.playbackRate = player.defaultPlaybackRate;
             return player.playbackRate;
         },
-        moveForward: function(){
+        moveForward: function () {
             player.currentTime += 5; // jump 5 seconds
         },
-        moveBackward: function(){
+        moveBackward: function () {
             player.currentTime -= 5; // jump 5 seconds backwards
         },
-        nil: function(){
+        nil: function () {
             return 'function not defined in params.action';
         }
     };
 
-    if(controller["{{ action }}"]){
+    if (controller["{{ action }}"]) {
         return controller["{{ action }}"]();
     } else {
-        var info = 'no function controller.{{ action }}() found - params.action="{{ action }}"'
+        const info = 'no function controller.{{ action }}() found - params.action="{{ action }}"';
         console.log(info);
         return info;
     }
