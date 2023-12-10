@@ -511,6 +511,7 @@ local function host(url)
 end
 
 local function tld(domain)
+    if domain == nil then return nil end
     local parts = hs.fnutils.split(domain, '%.')
     if #parts == 1 then return domain end
     return parts[#parts -1]..".".. parts[#parts]
