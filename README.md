@@ -67,6 +67,22 @@ Shortcuts:
 - hyper + 1 -> External Monitor Top
 - hyper + 2 -> External Monitor Bottom
 - hyper + 3 -> Main Monitor
+- hyper + 4 -> External Monitor FullScreen
+
+### [MultiDisplayBlack](/Functions/MultiDisplayBlack.lua)
+
+Switch display to black.
+
+Shortcuts:
+- hyper + 5 -> toggle other display black
+- hyper + 6 -> toggle all displays black
+ 
+### [AudioSwitcher](/Functions/AudioSwitcher.lua)
+
+Select audio out device
+
+Shortcuts:
+- hyper + 7 -> open audio out device selector
 
 ### [AppBorders](/Functions/AppBorders.lua)
 
