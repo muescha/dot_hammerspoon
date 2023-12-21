@@ -255,6 +255,7 @@ local ControlKeys = {
                     childSelector=".ytp-menuitem-label"
                 }),
                 ActionClick({ selector=".ytp-menuitem[data-content-inner-text='1080p HD'"}),
+                ActionYoutubeVideo("getQuality"),
             },
             info = "YouTube Player"
         },
