@@ -64,7 +64,7 @@ end
 
 hotkeybindmodal(
         hyper,
-        "4",
+        "5",
         keyInfo("toggle other display black"),
         function() blackOn() end,
         function() blackOff() end
@@ -72,7 +72,7 @@ hotkeybindmodal(
 
 hotkeybindmodal(
         hyper,
-        "5",
+        "6",
         keyInfo("toggle all displays black"),
         function() blackOnAll() end,
         function() blackOff() end
