@@ -743,7 +743,11 @@ local function setSavedWindow()
 
     savedWindow = win
     savedBundleId = bundleID
-    savedDomain = getChromeUrlDomain()
+    if savedBundleId == bundleIdChrome then
+        savedDomain = getChromeUrlDomain()
+    else
+        savedDomain = nil
+    end
 
     local appActions = getAppActions()
 
