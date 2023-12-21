@@ -53,7 +53,7 @@ end
 local audioChooser = hs.chooser.new(handleAudioChoice)
 audioChooser:width(40)
 
-hs.hotkey.bind(hyper, '6',keyInfo("Audio Switcher"), function()
+hs.hotkey.bind(hyper, '7',keyInfo("Audio Switcher"), function()
     local choices = getDeviceChoices()
 
     audioChooser:choices(choices)
