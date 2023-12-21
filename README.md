@@ -112,6 +112,7 @@ This feature allows the user to  highlight current mouse position
 
 Shortcuts:
 - hyper + g -> highlight current mouse position
+- hyper + h -> highlight current app
 
 ### [Umlauts.lua](/Functions/Umlauts.lua)
 
