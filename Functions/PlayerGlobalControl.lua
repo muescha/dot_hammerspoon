@@ -162,17 +162,17 @@ function ActionPatch(params)
     return GenericAction("ActionPatch", params)
 end
 
+function ActionJavascript(template, command)
+    local params = (command == nil) and {} or { action = command }
+    return GenericAction(template, params)
+end
+
 function ActionGenericVideo(command)
     return ActionJavascript("ActionGenericVideo", command)
 end
 
 function ActionYoutubeVideo(command)
     return ActionJavascript("ActionYoutubeVideo", command)
-end
-
-function ActionJavascript(template, command)
-    local params = (command == nil) and {} or { action = command }
-    return GenericAction(template, params)
 end
 
 function MemoryCalc(params)
