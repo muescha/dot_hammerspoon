@@ -738,6 +738,13 @@ local function setSavedWindow()
     local bundleID = win:application():bundleID()
 
     if ControlKeys[bundleID] == nil then
+        if savedWindow then
+            local msg = "focus saved window"
+            debugInfo(msg)
+            hs.alert.show(msg)
+
+            savedWindow:focus()
+        end
         return
     end
 
