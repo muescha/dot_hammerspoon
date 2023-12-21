@@ -23,6 +23,14 @@ hs.hotkey.bind(hyper, "3", keyInfo("place on main screen"), function()
     window:maximize()
 end)
 
+hs.hotkey.bind(hyper, "4", keyInfo("place fullscreen on monitor"), function()
+    --local mainScreen = hs.screen.mainScreen()
+    local mainScreen = hs.screen.allScreens()[2]
+    local window = hs.window.focusedWindow()
+    window:moveToScreen(mainScreen, false, true)
+    window:maximize()
+end)
+
 hs.hotkey.bind(hyper, "1", keyInfo("place on one half of monitor"), function()
     local externalScreen = hs.screen.allScreens()[2]
     local window = hs.window.frontmostWindow()
