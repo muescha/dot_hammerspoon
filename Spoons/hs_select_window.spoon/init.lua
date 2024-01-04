@@ -249,13 +249,13 @@ end
  --end):start()
 
  -- select any other window
- hs.hotkey.bind({"alt"}, "b", "hs_select_window: select other window",function()
+ hs.hotkey.bind({"alt"}, "g", "hs_select_window: select other window",function()
      obj:startOnce()
      obj:selectWindow(false)
  end)
 
  ---- select any window for the same application
- hs.hotkey.bind({"alt", "shift"}, "b", "hs_select_window: windows current app",function()
+ hs.hotkey.bind({"alt", "shift"}, "g", "hs_select_window: windows current app",function()
      obj:startOnce()
      obj:selectWindow(true)
  end)

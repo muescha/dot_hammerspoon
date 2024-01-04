@@ -83,6 +83,14 @@ Select audio out device
 
 Shortcuts:
 - hyper + 7 -> open audio out device selector
+- 
+### [hs_select_window](/Spoons/hs_select_window/init.lua)
+
+Select child windows
+
+Shortcuts:
+- opt + g -> open all child window selector
+- opt + shift + g -> open current app child window selector
 
 ### [AppBorders](/Functions/AppBorders.lua)
 
