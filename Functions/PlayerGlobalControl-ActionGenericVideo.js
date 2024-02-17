@@ -46,7 +46,9 @@
     };
 
     if (controller["{{ action }}"]) {
-        return controller["{{ action }}"]();
+        let info = controller["{{ action }}"]();
+        console.log(info);
+        return info;
     } else {
         const info = 'no function controller.{{ action }}() found - params.action="{{ action }}"';
         console.log(info);
