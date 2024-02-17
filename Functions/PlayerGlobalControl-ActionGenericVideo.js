@@ -6,6 +6,23 @@
     console.log("Generic Player:");
     console.log(player);
 
+    const speedSteps = {
+        speedInc: function(currentSpeed){
+            if(currentSpeed >= 1){
+                return 0.5
+            } else {
+                return 0.25
+            }
+        },
+        speedDec: function(currentSpeed){
+            if(currentSpeed <= 1){
+                return 0.25
+            } else {
+                return 0.5
+            }
+        }
+    }
+
     const controller = {
 
         isGeneric: function () {
@@ -21,11 +38,15 @@
             return player.paused;
         },
         speedInc: function () {
-            player.playbackRate += 0.25;
+            let speedDiff = speedSteps.speedInc(player.playbackRate);
+            console.log(speedDiff);
+            player.playbackRate += speedDiff;
             return player.playbackRate;
         },
         speedDec: function () {
-            player.playbackRate -= 0.25;
+            let speedDiff = speedSteps.speedDec(player.playbackRate);
+            console.log(speedDiff);
+            player.playbackRate -= speedDiff;
             return player.playbackRate;
         },
         speedReset: function () {
