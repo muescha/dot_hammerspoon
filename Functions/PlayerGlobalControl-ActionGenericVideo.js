@@ -34,9 +34,11 @@
         },
         moveForward: function () {
             player.currentTime += 5; // jump 5 seconds
+            return player.currentTime
         },
         moveBackward: function () {
             player.currentTime -= 5; // jump 5 seconds backwards
+            return player.currentTime
         },
         nil: function () {
             return 'function not defined in params.action';
