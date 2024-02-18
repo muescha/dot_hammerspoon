@@ -6,6 +6,17 @@
     console.log("Generic Player:");
     console.log(player);
 
+    function formatTime(timestampInSeconds, showMilliseconds = false) {
+        const hours = Math.floor(timestampInSeconds / 3600);
+        const minutes = Math.floor((timestampInSeconds % 3600) / 60);
+        const seconds = Math.floor(timestampInSeconds % 60);
+        const milliseconds = Math.floor((timestampInSeconds % 1) * 1000);
+
+        return ((hours < 10 ? '0' : '') + hours
+                + ':' + (minutes < 10 ? '0' : '') + minutes
+                + ':' + (seconds < 10 ? '0' : '') + seconds)
+            + (showMilliseconds ? '.' + milliseconds : '');
+    }
     const speedSteps = {
         speedInc: function(currentSpeed){
             if(currentSpeed >= 1){
@@ -55,11 +66,11 @@
         },
         moveForward: function () {
             player.currentTime += 5; // jump 5 seconds
-            return player.currentTime
+            return formatTime(player.currentTime)
         },
         moveBackward: function () {
             player.currentTime -= 5; // jump 5 seconds backwards
-            return player.currentTime
+            return formatTime(player.currentTime)
         },
         nil: function () {
             return 'function not defined in params.action';
