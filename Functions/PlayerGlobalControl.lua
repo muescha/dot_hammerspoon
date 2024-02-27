@@ -37,7 +37,8 @@ local actions = enumString {
     "speedDec",
     "moveForward",
     "moveBackward",
-    "maxQuality"
+    "maxQuality",
+    "maxSpeed"
 }
 
 
@@ -215,6 +216,7 @@ local ControlKeys = {
             moveForward = ActionGenericVideo(),
             moveBackward = ActionGenericVideo(),
             maxQuality = {},
+            maxSpeed = ActionGenericVideo(),
             info = "Generic Video"
         },
         ["youtube.com"] = {
@@ -815,5 +817,6 @@ createHotkey("'", actions.moveBackward, "Jump Backward")
 createHotkey("\\", actions.moveForward, "Jump Forward")
 
 createHotkey("j", actions.maxQuality, "Max Quality")
+createHotkey("9", actions.maxSpeed, "Max Speed")
 
 hs.hotkey.bind(hyper, "o", keyInfo("Set active App"), setSavedWindow)
