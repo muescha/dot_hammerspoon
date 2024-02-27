@@ -60,6 +60,10 @@
             player.playbackRate -= speedDiff;
             return player.playbackRate;
         },
+        maxSpeed: function () {
+            player.playbackRate = 16;
+            return player.playbackRate;
+        },
         speedReset: function () {
             player.playbackRate = player.defaultPlaybackRate;
             return player.playbackRate;
