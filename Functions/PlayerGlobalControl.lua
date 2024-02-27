@@ -220,6 +220,22 @@ local ControlKeys = {
             info = "Generic Video"
         },
         ["youtube.com"] = {
+            selector = "",
+            selector = "",
+            start = {
+                ActionClick({ selector = ".ytp-large-play-button" })
+            },
+            pause = ActionGenericVideo("doPause"),
+            speedReset = ActionGenericVideo(),
+            speedInc = ActionGenericVideo(),
+            speedDec = ActionGenericVideo(),
+            moveForward = ActionGenericVideo(),
+            moveBackward = ActionGenericVideo(),
+            maxQuality = {},
+            maxSpeed = ActionGenericVideo(),
+            info = "Generic YouTube"
+        },
+        ["youtube.com-old"] = {
             selector = "#movie_player",
             start = {
                 ActionClick({ selector = ".ytp-large-play-button" })
