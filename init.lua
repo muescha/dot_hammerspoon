@@ -74,6 +74,7 @@ require('Functions.Caffeine')
 require('Functions.MultiDisplayBlack') -- heper-4 and hyper-5
 
 require('Functions.KeyMapping')
+require('Functions.WiFiTransitions')
 
 --require('Functions.WindowTimer') -- cmd+ctrl+E
 
