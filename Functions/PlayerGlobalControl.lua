@@ -467,6 +467,12 @@ local ControlKeys = {
     }
 }
 
+-- https://www.ardaudiothek.de/sendung/legion/12015417/
+ControlKeys[bundleIdChrome]["ardaudiothek.de"] = helper.table.assigned(ControlKeys[bundleIdChrome]["wdr.de"], {
+        selector = ".ardplayer-viewport",
+        info = "ardaudiothek.de Player"
+    })
+
 -- https://www.ardmediathek.de/video/lokalzeit-aus-koeln/lokalzeit-aus-koeln-oder-25-08-2023/wdr/Y3JpZDovL3dkci5kZS9CZWl0cmFnLWU3NjI3YTM4LTI4YTUtNDlkNi04NGZkLTNhZmYxMWI1ZTY1Ng
 ControlKeys[bundleIdChrome]["ardmediathek.de"] = helper.table.assigned(ControlKeys[bundleIdChrome]["wdr.de"], {
         selector = ".ardplayer-viewport",
