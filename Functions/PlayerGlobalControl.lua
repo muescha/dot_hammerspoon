@@ -8,6 +8,8 @@
 ---      -> Generic HTML Video
 ---      -> [x] YouTube
 ---      -> [x] RTL+
+---      -> [x] ARD Audiothek
+---      -> [x] ARD Mediathek:
 ---      -> [x] WDR
 ---             TODO: onlye some Controls working on: https://www1.wdr.de/lokalzeit/fernsehen/koeln/video-studiogespraech-linda-rennings-gruenderin-heimatlos-in-koeln-hik-und-koelsche-linda-100.html
 ---      -> [x] spotify

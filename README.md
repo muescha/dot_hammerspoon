@@ -45,6 +45,7 @@ Shortcuts available for this websites:
 - https://udemy.com
 - https://wdr.de
 - https://ardmediathek.de
+- https://ardaudiothek.de
 - https://spiegel.de
 - https://spotify.com/
 - https://tvnow.de (no speed controls)
