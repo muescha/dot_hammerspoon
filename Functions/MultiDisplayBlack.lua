@@ -11,6 +11,8 @@ fileInfo()
 movieblocks = nil
 
 local function blackOff()
+    if movieblocks == nil then return end
+
     for k, v in pairs(movieblocks) do
         v:delete()
     end
@@ -62,20 +64,24 @@ end
 --hs.hotkey.bind(hyper, "2", keyInfo("toggle other display black"),toggleMovieMode)
 --hs.hotkey.bind(hyper, "3", keyInfo("toggle all display black"),toggleMovieModeAll)
 
-hotkeybindmodal(
+local modalGroup = {}
+
+hotkeybindmodalgroup(
         hyper,
         "5",
         keyInfo("toggle other display black"),
         function() blackOn() end,
-        function() blackOff() end
+        function() blackOff() end,
+        modalGroup
 );
 
-hotkeybindmodal(
+hotkeybindmodalgroup(
         hyper,
         "6",
         keyInfo("toggle all displays black"),
         function() blackOnAll() end,
-        function() blackOff() end
+        function() blackOff() end,
+        modalGroup
 );
 
 

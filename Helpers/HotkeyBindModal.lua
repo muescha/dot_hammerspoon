@@ -3,7 +3,10 @@
 --- Created by muescha.
 --- DateTime: 16.12.22 22:54
 ---
-function hotkeybindmodal(mod, key, description, pressedFn, releasedFn)
+function hotkeybindmodal(mod, key, description, startFn, exitFn)
+
+    local active = false
+
     local ks = hs.hotkey.modal.new(
             mod,
             key,
@@ -11,14 +14,42 @@ function hotkeybindmodal(mod, key, description, pressedFn, releasedFn)
 
     function ks:entered()
         debugInfo("Start Modal Mode for ".. description)
-        pressedFn()
+        startFn()
+        active = true
     end
     function ks:exited()
-        releasedFn()
+        active = false
+        exitFn()
         debugInfo("Exit Modal Mode for ".. description)
+    end
+
+    function ks:isActive()
+        return active
     end
 
     ks:bind('', 'escape', "~~~~~hide~~~~~", function() ks:exit() end)
     ks:bind(mod, key, description, function() ks:exit() end)
     return ks
+end
+
+-- Hotkey Bind Modal Group
+-- allow define groups to have only one of a modal active
+-- define group as `modalGroup = {}`
+
+function hotkeybindmodalgroup(mod, key, description, startFn, exitFn, modalGroup)
+
+    function exclusiveStartFn()
+        if modalGroup ~= nil then
+            for k, v in pairs(modalGroup) do
+                if v:isActive() then
+                    v:exit()
+                end
+            end
+        end
+        startFn()
+    end
+
+    local ks = hotkeybindmodal(mod, key, description, exclusiveStartFn, exitFn)
+
+    table.insert(modalGroup,ks)
 end
