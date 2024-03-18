@@ -6,6 +6,20 @@
 
 -- Helper Functions
 
+function p(value)
+    return value and " " .. value or ""
+end
+
+function debugMenuItem(application, element, description)
+    local names = element:actionNames()
+    if names then
+        for i, name in ipairs(names) do
+            print(p(application:name()) .. " " .. i ..". ".. p(element.AXTitle) .. p(element.AXValue) .. p(element.AXDescription).. p(element.AXHelp).. ' - "' .. name .. '": ' .. element:actionDescription(name))
+        end
+    end
+
+end
+
 function debugElement(element, description)
     if description then
         print("Check element: ".. description)
@@ -20,15 +34,20 @@ function debugElement(element, description)
         return
     end
 
-
-    for i, v in pairs(element:attributeNames()) do
-        local o = element:attributeValue(v)
-        print("attributeValue " .. i .. ". " .. v .. ": " .. hs.inspect(o))
+    local attributeNames = element:attributeNames()
+    if attributeNames then
+        for i, v in pairs(attributeNames) do
+            local o = element:attributeValue(v)
+            print("attributeValue " .. i .. ". " .. v .. ": " .. hs.inspect(o))
+        end
     end
 
+    local parameterizedAttributeNames = element:parameterizedAttributeNames()
     --     logger.i(inspect(currentElement:parameterizedAttributeNames()))
-    for i, name in ipairs(element:parameterizedAttributeNames()) do
-        print("parameterizedAttributeNames " .. i .. ". " .. name .. ': ' .. hs.inspect(element:parameterizedAttributeValue(name, {})))
+    if parameterizedAttributeNames then
+        for i, name in ipairs(parameterizedAttributeNames) do
+            print("parameterizedAttributeNames " .. i .. ". " .. name .. ': ' .. hs.inspect(element:parameterizedAttributeValue(name, {})))
+        end
     end
 
     -- see more: https://github.com/dbalatero/dotfiles/blob/88db55576616a697e81cbc7478eecbec5672a22e/hammerspoon/experimental.lua#L267
@@ -40,8 +59,10 @@ function debugElement(element, description)
     print('--------------------')
     print('action descriptions:')
 
-    for i, name in ipairs(names) do
-        print("actionDescription " .. i .. '.  ' .. name .. ': ' .. element:actionDescription(name))
+    if names then
+        for i, name in ipairs(names) do
+            print("actionDescription " .. i .. '.  "' .. name .. '": ' .. element:actionDescription(name))
+        end
     end
 
     print('Children:' .. hs.inspect(element:attributeValue('AXChildren')))
