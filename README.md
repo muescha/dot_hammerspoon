@@ -69,6 +69,7 @@ Shortcuts:
 - hyper + 2 -> External Monitor Bottom
 - hyper + 3 -> Main Monitor
 - hyper + 4 -> External Monitor FullScreen
+- hyper + 8 -> External Monitor 2/3 screen
 
 ### [MultiDisplayBlack](/Functions/MultiDisplayBlack.lua)
 
