@@ -158,4 +158,4 @@ function MenuBarChooser()
     chooser:show()
 end
 
-hs.hotkey.bind(hyper, "w", keyInfo("macOS MenuBar"), MenuBarChooser)
+hs.hotkey.bind(hyper, "b", keyInfo("macOS MenuBar"), MenuBarChooser)

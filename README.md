@@ -94,6 +94,25 @@ Shortcuts:
 - opt + g -> open all child window selector
 - opt + shift + g -> open current app child window selector
 
+### [MenuBarChooser](/Functions/MenuBarChooser.lua)
+
+Select an icon in the macOS menu bar. Also find hidden icons.
+
+List all apps:
+![selection](/assets/readme/MenuBarChooser-all.png)
+
+Filter apps: 
+![selection m](/assets/readme/MenuBarChooser-selected-m.png)
+
+Select for docker app:
+![selection docker](/assets/readme/MenuBarChooser-selected-docker.png)
+
+Clicked the docker menu bar item:
+![selection m](/assets/readme/MenuBarChooser-docker-clicked.png)
+
+Shortcuts:
+- hyper + b
+
 ### [AppBorders](/Functions/AppBorders.lua)
 
 Draw a red border around the current active app.
