@@ -4,7 +4,6 @@
 --- DateTime: 03.08.23 00:47
 ---
 
-
 function hotkeybindcycle(modifier, key, message, callbackMap)
     local currentIndex = 1
     local maxIndex = #callbackMap

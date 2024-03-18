@@ -6,17 +6,21 @@
 
 require("Helpers.HotkeyBindCycle")
 
+log = hs.logger.new("HotKeyCycle")
+log.setLogLevel(5)
 fileInfo()
 
-hotkeybindcycle(hyper, "v", keyInfo("Cycle abc"), {
-    function() print("a") end,
-    function() print("b") end,
-    function() print("c") end,
+hotkeybindcycle(hyper, "v", keyInfo("Cycle abc: loggers"), {
+    function() log.v("a") end,
+    function() log.d("b") end,
+    function() log.w("c") end,
+    function() log.e("d") end,
 })
 
-hotkeybindcycle(hyper, "b", keyInfo("Cycle defg"), {
+hotkeybindcycle(hyper, "b", keyInfo("Cycle defg: print"), {
     function() print("d") end,
     function() print("e") end,
     function() print("f") end,
     function() print("g") end,
+    function() print("h") end,
 })
