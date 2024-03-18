@@ -5,6 +5,7 @@
 --- source https://github.com/kazu914/dotfiles/blob/master/hammerspoon/FuzzyMatcher.lua
 
 -- NOTE: text/subText can be created as: hs.styledtext.new() or as string
+-- additional: preserve previous values and not strip down to { text,subtext}
 
 local function fuzzyMatch(target, query)
     local matched_idx = {}
@@ -89,7 +90,10 @@ local function filter(choices, query, ignore_sub_text)
                             choice_subText,
                             sub_text_matched_idxs) or
                     choice.subText -- leave original otherwise formatting is lost
-            local new_app = { text = new_text, subText = new_sub_text }
+
+            --local new_app = { text = new_text, subText = new_sub_text }
+            -- preserve previous values
+            local new_app = helper.table.assigned(choice,{ text = new_text, subText = new_sub_text })
             table.insert(filtered_choices, new_app)
         end
     end
