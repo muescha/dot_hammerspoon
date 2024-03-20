@@ -1,5 +1,7 @@
 fileInfo()
 
+-- See: https://github.com/asmagill/hammerspoon/wiki/Luarocks-and-Hammerspoon#addressing-paths
+
 local lVer = _VERSION:match("Lua (.+)$")
 
 --local luarocks = hs.execute("which luarocks"):gsub("\n", "")
