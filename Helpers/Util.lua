@@ -45,6 +45,8 @@ function template(s, t)
 end
 
 function readFileTemplate(path, t)
+    -- double template if inside the replaced
+    -- code is the memory used
     return template(template(readFile(path), t),t)
 end
 
