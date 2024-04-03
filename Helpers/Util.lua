@@ -32,7 +32,14 @@ end
 
 function template(s, t)
     local pattern = '{{%s*([^}]-)%s*}}'
-    local replace = function(k) return tostring(t[k]) end
+    -- allow usage of backticks ` in javascript files
+    -- and do not replace ${} placeholder in first place.
+    local replace = function(k)
+        return tostring(t[k])
+                :gsub("`", "\\`")
+                :gsub("%$", "\\$")
+    end
+    --local replace = function(k) return tostring(t[k]) end
     local result, _ = s:gsub(pattern, replace)
     return result
 end
