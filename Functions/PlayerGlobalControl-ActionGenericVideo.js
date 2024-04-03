@@ -7,15 +7,19 @@
     console.log(player);
 
     function formatTime(timestampInSeconds, showMilliseconds = false) {
-        const hours = Math.floor(timestampInSeconds / 3600);
-        const minutes = Math.floor((timestampInSeconds % 3600) / 60);
-        const seconds = Math.floor(timestampInSeconds % 60);
-        const milliseconds = Math.floor((timestampInSeconds % 1) * 1000);
+        const hoursValue = Math.floor(timestampInSeconds / 3600);
+        const minutesValue = Math.floor((timestampInSeconds % 3600) / 60);
+        const secondsValue = Math.floor(timestampInSeconds % 60);
+        const millisecondsValue = Math.floor((timestampInSeconds % 1) * 1000);
 
-        return ((hours < 10 ? '0' : '') + hours
-                + ':' + (minutes < 10 ? '0' : '') + minutes
-                + ':' + (seconds < 10 ? '0' : '') + seconds)
-            + (showMilliseconds ? '.' + milliseconds : '');
+        const hours = hoursValue.toString().padStart(2, "0");
+        const minutes = minutesValue.toString().padStart(2, "0");
+        const seconds = secondsValue.toString().padStart(2, "0");
+        const milliseconds = millisecondsValue.toString().padStart(4, "0");
+
+        return showMilliseconds
+            ? `${hours}:${minutes}:${seconds}.${milliseconds}`
+            : `${hours}:${minutes}:${seconds}`;
     }
     const speedSteps = {
         speedInc: function(currentSpeed){
