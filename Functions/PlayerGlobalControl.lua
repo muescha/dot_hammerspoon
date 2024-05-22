@@ -544,6 +544,8 @@ local function doFunction(actionFunction)
 
     local ok, result = actionFunction(functionMemory)
     --debugInfo(ok, result, type(result))
+    local win = hs.window.focusedWindow()
+    hs.alert.show(hs.inspect(result), { atScreenEdge = 2}, win)
     helper.table.assign(functionMemory, result)
     debugInfo("Memory: ", functionMemory)
 end
