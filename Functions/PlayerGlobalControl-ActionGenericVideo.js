@@ -65,8 +65,15 @@
             return player.playbackRate;
         },
         maxSpeed: function () {
-            player.playbackRate = 16;
-            return player.playbackRate;
+            const skipButton = document.querySelector("button.ytp-skip-ad-button");
+            console.log(skipButton);
+            if( skipButton ){
+                skipButton.click();
+                return "skipButton clicked";
+            } else {
+                player.playbackRate = 16;
+                return player.playbackRate;
+            }
         },
         speedReset: function () {
             player.playbackRate = player.defaultPlaybackRate;
