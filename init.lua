@@ -51,7 +51,9 @@ require('Functions.ReloadWatcher')
 
 require('Functions.AppBorders')
 require('Functions.ChromeNewWindow')
-require('Functions.ChromeTabToIina')
+-- i don't use Iina anymore
+--require('Functions.ChromeTabToIina')
+require('Functions.ChromeTabAudioActivate')
 require('Functions.ChromeTabToNewWindow')
 require('Functions.CheatSheet')
 require('Functions.DateString')
