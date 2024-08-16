@@ -6,7 +6,7 @@ local logger = hs.logger.new("SendKeysOnlyInApp")
 
 -- Helper Function
 
-local function Set (list)
+local function listToSet (list)
     local set = {}
     for _, l in ipairs(list) do
         set[l] = true
@@ -14,12 +14,8 @@ local function Set (list)
     return set
 end
 
-local function isTable(t)
-    return type(t) == 'table'
-end
-
 local function toTable(st)
-    return isTable(st) and st or { st }
+    return type(st) == 'table' and st or { st }
 end
 
 local function normalizeArgs(st)
@@ -41,7 +37,7 @@ local function conditionExclude(set, app)
 end
 
 local function curryCondition(condition, ...)
-    local appSet = Set(normalizeArgs({ ... }))
+    local appSet = listToSet({ ... })
     local function curried(name)
         return condition(appSet, name)
     end
@@ -62,6 +58,30 @@ function exclude(...)
     return curryCondition(conditionExclude, ...)
 end
 
+function any(...)
+    local conditions = { ... }
+    return function(currentAppName, currentTab)
+        for _, cond in ipairs(conditions) do
+            if cond(currentAppName, currentTab) then
+                return true
+            end
+        end
+        return false
+    end
+end
+
+function none(...)
+    local conditions = { ... }
+    return function(currentAppName, currentTab)
+        for _, cond in ipairs(conditions) do
+            if cond(currentAppName, currentTab) then
+                return false
+            end
+        end
+        return true
+    end
+end
+
 -- for patterns see https://www.lua.org/manual/5.1/manual.html#5.4.1
 function toAppAndTab(appName,tabPattern)
     local function condition(currentAppName, currentTab)
@@ -70,12 +90,30 @@ function toAppAndTab(appName,tabPattern)
     return condition
 end
 
+function toAppsAndTabs(...)
+    local conditions = {}
+    for _, pair in ipairs({...}) do
+        local appName, tabPattern = unpack(pair)
+        table.insert(conditions, toAppAndTab(appName, tabPattern))
+    end
+    return any(table.unpack(conditions))
+end
+
 -- for patterns see https://www.lua.org/manual/5.1/manual.html#5.4.1
 function excludeAppAndTab(appName,tabPattern)
     local function condition(currentAppName, currentTab)
         return not (currentAppName == appName and string.match(currentTab,tabPattern))
     end
     return condition
+end
+
+function excludeAppsAndTabs(...)
+    local conditions = {}
+    for _, pair in ipairs({...}) do
+        local appName, tabPattern = unpack(pair)
+        table.insert(conditions, excludeAppAndTab(appName, tabPattern))
+    end
+    return none(table.unpack(conditions))
 end
 
 -- bindHotkey(AppCondition, modifier, key, function)
@@ -94,7 +132,12 @@ end
 -- bindHotkey(exclude("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", nil, myFunction)
 
 -- bindHotkey(toAppAndTab("MailMate","pattern"), {"cmd"}, "n", nil, myFunction)
+-- bindHotkey(toAppsAndTabs({"MailMate", "pattern"}, {"WhatsApp", "pattern"}), {"cmd"}, "n", nil, myFunction)
+-- bindHotkey(any(toAppAndTab("MailMate", "pattern"), toAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", nil, myFunction)
+
 -- bindHotkey(excludeAppAndTab("MailMate","pattern"), {"cmd"}, "n", nil, myFunction)
+-- bindHotkey(none(excludeAppAndTab("MailMate","pattern"),excludeAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", nil, myFunction)
+-- bindHotkey(excludeAppsAndTabs({"MailMate","pattern"},{"WhatsApp", "pattern"}), {"cmd"}, "n", nil, myFunction)
 
 -- local apps = {"Google Chrome","IntelliJ IDEA"}
 -- bindHotkey(to(apps), {"cmd"}, "n", nil, myFunction)
@@ -130,7 +173,14 @@ end
 
 -- Bind Hotkey only to one app
 
-function bindHotkeyOnlyTo(appname, modifier, key, message, callback, ...)
+function bindHotkeyOnlyTo(appname, modifier, key, message, callback)
+
+    -- in case someone forget to set the message to nil
+    if not callback then
+        callback = message
+        message = nil
+    end
+
     local hotkeyHandler
     hotkeyHandler = hs.hotkey.bind(modifier, key, message, function()
 
