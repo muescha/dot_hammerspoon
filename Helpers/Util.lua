@@ -4,6 +4,9 @@
 --- DateTime: 07.04.23 11:26
 --- https://github.com/mtarbit/dotfiles/blob/master/source/.hammerspoon/util.lua
 
+
+--- more helper files here: https://github.com/peterhajas/dotfiles/blob/master/hammerspoon/.hammerspoon/util.lua
+
 function readFile(path)
     local f = io.open(path, 'r')
     if f==nil then
@@ -70,3 +73,22 @@ function runAppleScript(code)
     return hs.osascript.applescript(code)
 end
 
+-- Define a function that checks if a method exists on a userdata object
+function doesMethodExist(obj, methodName)
+    --return type(obj) == "userdata" and type(rawget(getmetatable(obj), methodName)) == "function"
+    return type(rawget(getmetatable(obj), methodName)) == "function"
+end
+
+--- isHammerspoonExtension(obj. name) -> bool
+--- Function
+--- check if an object is an Hammerspoon extension object
+---
+--- Parameters:
+---  * obj - an hammerspoon object
+---  * name - A string containing the name of a module (e.g. `"hs.screen"`)
+---
+--- Returns:
+---  * if the object is an extension object
+function isHammerspoonExtension(obj, name)
+    return getmetatable(obj) == hs.getObjectMetatable(name)
+end
