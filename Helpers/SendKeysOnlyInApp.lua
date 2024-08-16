@@ -93,7 +93,7 @@ end
 function toAppsAndTabs(...)
     local conditions = {}
     for _, pair in ipairs({...}) do
-        local appName, tabPattern = unpack(pair)
+        local appName, tabPattern = table.unpack(pair)
         table.insert(conditions, toAppAndTab(appName, tabPattern))
     end
     return any(table.unpack(conditions))
@@ -110,7 +110,7 @@ end
 function excludeAppsAndTabs(...)
     local conditions = {}
     for _, pair in ipairs({...}) do
-        local appName, tabPattern = unpack(pair)
+        local appName, tabPattern = table.unpack(pair)
         table.insert(conditions, excludeAppAndTab(appName, tabPattern))
     end
     return none(table.unpack(conditions))
