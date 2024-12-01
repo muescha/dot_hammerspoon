@@ -1410,6 +1410,7 @@ end
 local function startAppWatcher(app,appname,retry,nologging,force)
   if not app or not appname then log.e('called startAppWatcher with no app') return end
   if apps[appname] then return not nologging and log.df('app %s already registered',appname) end
+  if app:bundleID() == "com.apple.WebKit.WebContent" then log.df('app %s is com.apple.WebKit.WebContent',appname) return end -- original: without this line, see also https://github.com/Hammerspoon/hammerspoon/issues/3712
   if app:kind()<0 or not windowfilter.isGuiApp(appname) then log.df('app %s has no GUI',appname) return end
   if not fnutils.contains(axuielement.applicationElement(app):attributeNames() or {}, "AXFocusedWindow") then
       log.df('app %s has no AXFocusedWindow element',appname)
