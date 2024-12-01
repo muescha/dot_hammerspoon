@@ -24,11 +24,9 @@ local function printChildren(application, children, recursive)
     end
 end
 
-local function findMenuExtrasMenuBarForApplication(application)
+local function findMenuExtrasMenuBarForApplication(app)
 
-    local pid = application:pid()
-
-    local appElement = axuielement.applicationElementForPID(pid)
+    local appElement = axuielement.applicationElement(app)
     --debugElement(appElement,"appElement")
     if appElement then
         -- Get the menu bar element
