@@ -33,12 +33,13 @@ local function findMenuExtrasMenuBarForApplication(app)
         local menuBar = appElement:attributeValue("AXExtrasMenuBar")
         --debugElement(menuBar,"menuBar")
         if menuBar then
-            local children = menuBar:attributeValue("AXChildren")
+            return menuBar
+            --local children = menuBar:attributeValue("AXChildren")
             --debugTable(children, "children")
-            if children then
-                --printChildren(application, children)
-            end
-            return children
+            --if children then
+            --    --printChildren(application, children)
+            --end
+            --return children
         end
     end
 
