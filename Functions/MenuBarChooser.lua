@@ -26,6 +26,10 @@ end
 
 local function findMenuExtrasMenuBarForApplication(app)
 
+    if app:bundleID() == "com.apple.WebKit.WebContent" then
+        return nil
+    end
+
     local appElement = axuielement.applicationElement(app)
     --debugElement(appElement,"appElement")
     if appElement then
