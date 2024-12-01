@@ -2,6 +2,8 @@ hs.notify.show("Hammerspoon", "Starting Hammerspoon: ", hs.screen.mainScreen():n
 require("Helpers.Base")
 require("Helpers.Util")
 
+-- enable local patches
+hs.window.filter = require("Helpers.Extensions.window_filter")
 hs.alert = require("Helpers.Extensions.alert")
 
 -- Note: Setup this hyper Key with Karabiner ELements
