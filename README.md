@@ -6,9 +6,9 @@ This are my collection of my Hammerspoon Scripts
 
 I don't like it when MailMate switches the focus to Chrome when I click on a link. This script changes the focus back to MailMate if it detects a click in MailMate before the focus switches to Chrome. You can modify the behavior of the script by enabling `enable_cmdClick` to only observe cmd+click events.
 
-### [MailMateDisableCmdW](/Functions/MailMateDisableCmdW.lua)
+### [DisableCmdW](/Functions/DisableCmdW.lua)
 
-This disable the shortcut `cmd+w` at the main screen of MailMate so it not closes the MailMate main window.
+This disable the shortcut `cmd+w` at the main screen of MailMate and WhatsApp so it not closes the MailMate main window.
 It uses my helper `bindHotkey(toAppAndTab(mailmateName,"essages%)$")` (see below).
 
 ### [MacZoom](/Functions/MacZoom.lua)
