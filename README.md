@@ -2,6 +2,19 @@
 
 This are my collection of my Hammerspoon Scripts
 
+### [WindowAxHotfix](/Helpers/Extensions/WindowAxHotfix.lua)
+
+Hotfix for weird window behaviour during animation. Just include the patch into your `init.lua`:
+
+````lua
+require("Helpers.Extensions.WindowAxHotfix")
+````
+
+See problem description and example code fix:
+  - https://github.com/Hammerspoon/hammerspoon/issues/3224#issuecomment-2155567633
+ - https://github.com/Hammerspoon/hammerspoon/issues/3277
+
+
 ### [MailMateFocus](/Functions/MailMateFocus.lua)
 
 I don't like it when MailMate switches the focus to Chrome when I click on a link. This script changes the focus back to MailMate if it detects a click in MailMate before the focus switches to Chrome. You can modify the behavior of the script by enabling `enable_cmdClick` to only observe cmd+click events.

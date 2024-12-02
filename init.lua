@@ -23,6 +23,7 @@ require('Functions.StartDebug')
 require("Helpers.Extensions.String")
 require("Helpers.Extensions.Table")
 require("Helpers.Extensions.WindowFilterEvents")
+require("Helpers.Extensions.WindowAxHotfix")
 
 require("Helpers.Debug")
 require("Helpers.DebugFunction")
