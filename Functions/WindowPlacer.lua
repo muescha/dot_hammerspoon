@@ -48,6 +48,16 @@ for i, v in sortedLayoutSetupIterator do
     layout_info = layout_info .. "\n key "..i..": " .. v[3]:gsub("-"," "):gsub("+"," ")
 end
 
+local function windowMoveToKey(screenId, key)
+    local screen = hs.screen.allScreens()[screenId]
+    local window = hs.window.focusedWindow()
+    local direction = (screen:rotate()==0) and "landscape" or "portrait"
+    local newUnit = layout[direction][key]
+
+    window:moveToScreen(screen)
+    window:moveToUnit(newUnit)
+end
+
 debugInfo(layout_info)
 
 local hkbm = hotkeybindmodal(hyper, "w", keyInfo("abc"),
@@ -64,15 +74,7 @@ local hkbm = hotkeybindmodal(hyper, "w", keyInfo("abc"),
 for key, _ in pairs(layout_setup) do
 
     local move = function()
-        local screen = hs.screen.allScreens()[3]
-        local window = hs.window.focusedWindow()
-        local direction = (screen:rotate()==0) and "landscape" or "portrait"
-        local newUnit = layout[direction][key]
-
-        window:moveToScreen(screen)
-        window:moveToUnit(newUnit)
-
-        hs.alert.show("Hyper+w+" .. key .. " triggered! ".. hs.inspect(newUnit))
+        windowMoveToKey(3, key)
         hkbm:exit()
     end
 
