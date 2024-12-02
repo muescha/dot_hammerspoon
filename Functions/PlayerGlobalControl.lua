@@ -306,7 +306,7 @@ local ControlKeys = {
             info = "TVnow Player (no speed controls)"
 
         },
-        ["spiegel.de"] = {
+        ["spiegel.de-old"] = {
             --defaultFunctionParams = {
             --    speedItems = { '0.5x', '1x', '1.25x', '1.5x', '2x' },
             --    speedItemsDefault = '1x',
@@ -330,7 +330,11 @@ local ControlKeys = {
                 }),
                 ActionClick({
                     selector=".jw-settings-submenu-playbackRates button.jw-settings-content-item:nth-child({{ child-index }})",
-                })
+                }),
+                ActionGetProperty({
+                    selector=".jw-settings-submenu-playbackRates button.jw-settings-content-item:nth-child({{ child-index }})",
+                    property="aria-label"
+                }),
             },
             speedDec = {
                 ActionGetChildIndex({
@@ -344,7 +348,11 @@ local ControlKeys = {
                 }),
                 ActionClick({
                     selector=".jw-settings-submenu-playbackRates button.jw-settings-content-item:nth-child({{ child-index }})",
-                })
+                }),
+                ActionGetProperty({
+                    selector=".jw-settings-submenu-playbackRates button.jw-settings-content-item:nth-child({{ child-index }})",
+                    property="aria-label"
+                }),
             },
             moveForward = { {}, "right" },
             moveBackward = { {}, "left" },
