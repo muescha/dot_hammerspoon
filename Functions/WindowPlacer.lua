@@ -89,72 +89,21 @@ for key, _ in pairs(layout_setup) do
 end
 
 hs.hotkey.bind(hyper, "3", keyInfo("place on main screen"), function()
-    --local mainScreen = hs.screen.mainScreen()
-    local mainScreen = hs.screen.allScreens()[1]
-    local window = hs.window.focusedWindow()
-    window:moveToScreen(mainScreen, false, true)
-    window:maximize()
+    windowMoveToKey(1,layout_keys.maximize)
 end)
 
 hs.hotkey.bind(hyper, "4", keyInfo("place fullscreen on monitor"), function()
-    --local mainScreen = hs.screen.mainScreen()
-    local mainScreen = hs.screen.allScreens()[2]
-    local window = hs.window.focusedWindow()
-    window:moveToScreen(mainScreen, false, true)
-    window:maximize()
+    windowMoveToKey(2,layout_keys.maximize)
 end)
 
 hs.hotkey.bind(hyper, "8", keyInfo("place 2/3 on monitor (Udemy Mode)"), function()
-    --local mainScreen = hs.screen.mainScreen()
-    local mainScreen = hs.screen.allScreens()[2]
-    local window = hs.window.focusedWindow()
-    window:moveToScreen(mainScreen, false, true)
-    window:setFrame({
-        h = 1656.0,
-        w = 1440.0,
-        x = -1440.0,
-        y = -199.0
-    })
+    windowMoveToKey(2,layout_keys.udemy)
 end)
 
 hs.hotkey.bind(hyper, "1", keyInfo("place on one half of monitor"), function()
-    local externalScreen = hs.screen.allScreens()[2]
-    local window = hs.window.frontmostWindow()
-    window:moveToScreen(externalScreen, false, true)
-    if externalScreen:frame().w > externalScreen:frame().h then
-        window:setFrame({
-            x = externalScreen:frame().x,
-            y = externalScreen:frame().y,
-            w = externalScreen:frame().w / 2,
-            h = externalScreen:frame().h,
-        })
-    else
-        window:setFrame({
-            x = externalScreen:frame().x,
-            y = externalScreen:frame().y,
-            w = externalScreen:frame().w,
-            h = externalScreen:frame().h / 2,
-        })
-    end
+    windowMoveToKey(2,layout_keys.top)
 end)
 
 hs.hotkey.bind(hyper, "2", keyInfo("place on other half of monitor"), function()
-    local externalScreen = hs.screen.allScreens()[2]
-    local window = hs.window.frontmostWindow()
-    window:moveToScreen(externalScreen, false, true)
-    if externalScreen:frame().w > externalScreen:frame().h then
-        window:setFrame({
-            x = externalScreen:frame().x + (externalScreen:frame().w / 2),
-            y = externalScreen:frame().y,
-            w = externalScreen:frame().w / 2,
-            h = externalScreen:frame().h,
-        })
-    else
-        window:setFrame({
-            x = externalScreen:frame().x,
-            y = externalScreen:frame().y + (externalScreen:frame().h / 2),
-            w = externalScreen:frame().w,
-            h = externalScreen:frame().h / 2,
-        })
-    end
+    windowMoveToKey(2,layout_keys.bottom)
 end)
