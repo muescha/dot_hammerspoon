@@ -17,12 +17,12 @@ function hotkeybindmodal(mod, key, description, startFn, exitFn)
 
     function ks:entered()
         debugInfo("Start Modal Mode for ".. description)
-        startFn()
+        if startFn then startFn() end
         active = true
     end
     function ks:exited()
         active = false
-        exitFn()
+        if exitFn then exitFn() end
         debugInfo("Exit Modal Mode for ".. description)
     end
 
