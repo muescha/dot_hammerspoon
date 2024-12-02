@@ -76,7 +76,10 @@ local savedDomain = nil
 -- Java Script Actions
 
 local function doCache(cacheKey, f)
-
+    debugInfo("Cache Size:", helper.table.count(cache))
+    --for key, _ in pairs(cache) do
+    --    print(key)
+    --end
     local code = cache[cacheKey]
 
     if code ~= nil then
@@ -718,6 +721,12 @@ local function createHotkey(sourceKey, action, description)
 
     hs.hotkey.bind(hyper, sourceKey, keyInfo(description), function()
 
+        functionMemory = {}
+        debugInfo("reset functionMemory")
+        print("collectgarbage(count)")
+        print(collectgarbage("count"))
+        --         collectgarbage("collect")
+
         local switchBackToWindow = checkSwitch()
 
         local appActions = getAppActions()
@@ -731,6 +740,9 @@ local function createHotkey(sourceKey, action, description)
         doCommand(appActions, { action })
 
         checkSwitchBack(switchBackToWindow)
+
+        print("collectgarbage(count)")
+        print(collectgarbage("count"))
     end)
 
 end
