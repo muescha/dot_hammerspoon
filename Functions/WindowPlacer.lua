@@ -66,16 +66,16 @@ end
 
 debugInfo(layout_info)
 
-local hkbm = hotkeybindmodal(hyper, "w", keyInfo("abc"),
-        function()
-            local window = hs.window.frontmostWindow()
-            hs.alert.show(layout_info, { textFont = "Menlo"}, window, 'do-not-close')
-        end,
-        function()
-            hs.alert.closeAll()
-        end)
+local function startFn()
+    local window = hs.window.frontmostWindow()
+    hs.alert.show(layout_info, { textFont = "Menlo"}, window, 'do-not-close')
+end
 
--- Bind Exit inside the mode
+local function exitFn ()
+    hs.alert.closeAll()
+end
+
+local hkbm = hotkeybindmodal(hyper, "w", keyInfo("abc"), startFn, exitFn)
 
 for key, _ in pairs(layout_setup) do
 
