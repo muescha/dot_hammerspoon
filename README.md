@@ -135,6 +135,29 @@ This feature allows the user to detach the current tab from a browser window and
 Shortcuts:
 - hyper + t -> show current tab in new window
 
+### [ChromeTabDomainCounter](/Functions/ChromeTabDomainCounter.lua)
+
+Count the open tld sort by most used - output in the console:
+
+```shell
+2024-12-02 06:45:49: Starting to fetch URLs from Google Chrome...
+2024-12-02 06:45:49: -- Loading extension: osascript
+2024-12-02 06:45:53: Successfully fetched URLs from Chrome.
+2024-12-02 06:45:53: Processing URLs...
+2024-12-02 06:45:53: Final TLD Counts:
+2024-12-02 06:45:53: github.com: 137
+2024-12-02 06:45:53: google.com: 73
+2024-12-02 06:45:53: youtube.com: 48
+2024-12-02 06:45:53: x.com: 33
+2024-12-02 06:45:53: computerbase.de: 22
+2024-12-02 06:45:53: reddit.com: 19
+2024-12-02 06:45:53: spiegel.de: 16
+2024-12-02 06:45:53: home-assistant.io: 14
+2024-12-02 06:45:53: amazon.de: 13
+```
+
+Note to me: I should close more tabs.
+
 ### [DateString](/Functions/DateString.lua)
 
 This feature allows the user to insert the current date in the format `yyyy-mm-dd`:
