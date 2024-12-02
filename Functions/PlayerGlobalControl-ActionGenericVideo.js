@@ -1,6 +1,8 @@
 // Action Generic Video
 
 (function () {
+
+    // TODO: the controls also audio element is possible
     const player = document.querySelector('video');
     console.log("Action: {{ action }}")
     console.log("Generic Player:");
@@ -67,11 +69,12 @@
         maxSpeed: function () {
             const skipButton = document.querySelector("button.ytp-skip-ad-button");
             console.log(skipButton);
+            player.playbackRate = 16;
+
             if( skipButton ){
                 skipButton.click();
-                return "skipButton clicked";
+                return "16 & skipButton clicked";
             } else {
-                player.playbackRate = 16;
                 return player.playbackRate;
             }
         },
