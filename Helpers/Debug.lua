@@ -61,7 +61,7 @@ function debugElement(element, description)
 
     if names then
         for i, name in ipairs(names) do
-            print("actionDescription " .. i .. '.  "' .. name .. '": ' .. element:actionDescription(name))
+            print("actionDescription " .. i .. '.  "' .. name .. '": ' .. (element:actionDescription(name) or '{null}'))
         end
     end
 
