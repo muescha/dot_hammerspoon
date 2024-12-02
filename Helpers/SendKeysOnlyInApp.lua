@@ -85,7 +85,8 @@ end
 -- for patterns see https://www.lua.org/manual/5.1/manual.html#5.4.1
 function toAppAndTab(appName,tabPattern)
     local function condition(currentAppName, currentTab)
-        return currentAppName == appName and string.match(currentTab,tabPattern)
+        --return currentAppName == appName and string.match(currentTab,tabPattern)
+        return string.match(currentAppName, appName) and string.match(currentTab,tabPattern)
     end
     return condition
 end
@@ -102,7 +103,8 @@ end
 -- for patterns see https://www.lua.org/manual/5.1/manual.html#5.4.1
 function excludeAppAndTab(appName,tabPattern)
     local function condition(currentAppName, currentTab)
-        return not (currentAppName == appName and string.match(currentTab,tabPattern))
+        --return not (currentAppName == appName and string.match(currentTab,tabPattern))
+        return not (string.match(currentAppName, appName) and string.match(currentTab,tabPattern))
     end
     return condition
 end
@@ -122,22 +124,22 @@ end
 
 -- `apps` := can be a list of parameters or a table
 
--- bindHotkey(to("Google Chrome","code"), modifier, key, function)
--- bindHotkey(to({"Google Chrome","code"}), modifier, key, function)
+-- bindHotkey(to("Google Chrome","code"), modifier, key, message, function)
+-- bindHotkey(to({"Google Chrome","code"}), modifier, key, message, function)
 
--- bindHotkey(exclude("Google Chrome"), modifier, key, function)
--- bindHotkey(exclude("Google Chrome","whatsapp"), modifier, key, function)
+-- bindHotkey(exclude("Google Chrome"), modifier, key, message, function)
+-- bindHotkey(exclude("Google Chrome","whatsapp"), modifier, key, message, function)
 
--- bindHotkey(to("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", nil, myFunction)
--- bindHotkey(exclude("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", nil, myFunction)
+-- bindHotkey(to("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
+-- bindHotkey(exclude("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
 
--- bindHotkey(toAppAndTab("MailMate","pattern"), {"cmd"}, "n", nil, myFunction)
--- bindHotkey(toAppsAndTabs({"MailMate", "pattern"}, {"WhatsApp", "pattern"}), {"cmd"}, "n", nil, myFunction)
--- bindHotkey(any(toAppAndTab("MailMate", "pattern"), toAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", nil, myFunction)
+-- bindHotkey(toAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
+-- bindHotkey(toAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
+-- bindHotkey(any(toAppAndTab("MailMate", "essages%)$"), toAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
 
--- bindHotkey(excludeAppAndTab("MailMate","pattern"), {"cmd"}, "n", nil, myFunction)
--- bindHotkey(none(excludeAppAndTab("MailMate","pattern"),excludeAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", nil, myFunction)
--- bindHotkey(excludeAppsAndTabs({"MailMate","pattern"},{"WhatsApp", "pattern"}), {"cmd"}, "n", nil, myFunction)
+-- bindHotkey(excludeAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
+-- bindHotkey(excludeAppsAndTabs({"MailMate","essages%)$"},{"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
+-- bindHotkey(none(excludeAppAndTab("MailMate","essages%)$",excludeAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
 
 -- local apps = {"Google Chrome","IntelliJ IDEA"}
 -- bindHotkey(to(apps), {"cmd"}, "n", nil, myFunction)

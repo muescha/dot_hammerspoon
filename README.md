@@ -203,9 +203,17 @@ If you like to have hotkeys only in some apps or exclude some apps from your glo
 
 #### Syntax
 
-`bindHotkey(AppCondition, modifier, key, function)`
+`bindHotkey(AppCondition, modifier, key, message, function)`
 
-- where `AppCondition` := `to(apps)` | `exclude(apps)` | `toAppAndTab(appName,tabPattern)` | `excludeAppAndTab(appName,tabPattern)`
+- where `AppCondition` := 
+  - `to(apps)` | 
+  - `exclude(apps)` | 
+  - `toAppAndTab(appName,tabPattern)` | 
+  - `toAppsAndTabs({appName,tabPattern},{appName,tabPattern})` | 
+  - `excludeAppAndTab(appName,tabPattern)` | 
+  - `excludeAppsAndTabs({appName,tabPattern},{appName,tabPattern})` | 
+  - `any(condition...)` | 
+  - `none(condition...)` 
 
 - and where:
   - `apps` := can be a list of string parameters or a table of string
@@ -215,18 +223,22 @@ If you like to have hotkeys only in some apps or exclude some apps from your glo
 Examples:
 
 ```lua
-bindHotkey(to("Google Chrome","code"), modifier, key, function)
-bindHotkey(to({"Google Chrome","code"}), modifier, key, function)
-
-bindHotkey(exclude("Google Chrome"), modifier, key, function)
-bindHotkey(exclude("Google Chrome","WhatsApp"), modifier, key, function)
-
-bindHotkey(to("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", nil, myFunction)
-bindHotkey(exclude("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", nil, myFunction)
-
-bindHotkey(toAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", nil, myFunction)
-bindHotkey(excludeAppAndTab("MailMate","^%d Tabs"), {"cmd"}, "n", nil, myFunction)
-
+  bindHotkey(to("Google Chrome","code"), modifier, key, message, function)
+  bindHotkey(to({"Google Chrome","code"}), modifier, key, message, function)
+  
+  bindHotkey(exclude("Google Chrome"), modifier, key, message, function)
+  bindHotkey(exclude("Google Chrome","whatsapp"), modifier, key, message, function)
+  
+  bindHotkey(to("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
+  bindHotkey(exclude("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
+  
+  bindHotkey(toAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
+  bindHotkey(toAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
+  bindHotkey(any(toAppAndTab("MailMate", "essages%)$"), toAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
+  
+  bindHotkey(excludeAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
+  bindHotkey(excludeAppsAndTabs({"MailMate","essages%)$"},{"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
+  bindHotkey(none(excludeAppAndTab("MailMate","essages%)$",excludeAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
 ```
 
 for patterns see:
