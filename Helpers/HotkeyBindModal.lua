@@ -3,6 +3,9 @@
 --- Created by muescha.
 --- DateTime: 16.12.22 22:54
 ---
+--- Modal Helper to create a modal hotkey where default keys defined:
+---  - esc: exit modal
+---  - same mod & key: exit modal
 function hotkeybindmodal(mod, key, description, startFn, exitFn)
 
     local active = false
