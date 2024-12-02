@@ -75,7 +75,7 @@ local function exitFn ()
     hs.alert.closeAll()
 end
 
-local hkbm = hotkeybindmodal(hyper, "w", keyInfo("abc"), startFn, exitFn)
+local hkbm = hotkeybindmodal(hyper, "w", keyInfo("place on Big Monitor "), startFn, exitFn)
 
 for key, _ in pairs(layout_setup) do
 
