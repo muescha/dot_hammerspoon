@@ -101,7 +101,6 @@ hs.hotkey.bind(hyper, "8", keyInfo("place 2/3 on monitor (Udemy Mode)"), functio
     local mainScreen = hs.screen.allScreens()[2]
     local window = hs.window.focusedWindow()
     window:moveToScreen(mainScreen, false, true)
-    window:maximize()
     window:setFrame({
         h = 1656.0,
         w = 1440.0,
