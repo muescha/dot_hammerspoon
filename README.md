@@ -70,6 +70,9 @@ Shortcuts:
 - hyper + 3 -> Main Monitor
 - hyper + 4 -> External Monitor FullScreen
 - hyper + 8 -> External Monitor 2/3 screen
+- hyper + w -> Modal Mode for different placements on big monitor
+
+![Modal Mode](./assets/readme/WindowPlacer-Modal-Options.png)
 
 ### [MultiDisplayBlack](/Functions/MultiDisplayBlack.lua)
 
