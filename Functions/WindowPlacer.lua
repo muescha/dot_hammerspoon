@@ -15,6 +15,71 @@
 
 fileInfo()
 
+local units = require("hs.geometry").rect
+
+debugTable(hs.screen.allScreens())
+
+local function to_unit(values, rotate)
+    if rotate then
+        return units(values[1], 0, values[2], 1 )
+    else
+        return units(0, values[1], 1, values[2] )
+    end
+end
+
+local layout_setup = {
+    ["1"] = {  0, 1/3, "+==1==+-----+-----+"},
+    ["2"] = {1/3, 1/3, "+-----+==2==+-----+"},
+    ["3"] = {2/3, 1/3, "+-----+-----+==3==+"},
+    ["4"] = {  0,   1, "+========4========+"},
+    ["5"] = {  0, 2/3, "+=====5=====+-----+"},
+    ["6"] = {1/3, 2/3, "+-----+=====6=====+"},
+    ["7"] = {  0, 1/2, "+=====7==+--------+"},
+    ["8"] = {1/2, 1/2, "+--------+==8=====+"},
+}
+
+local layout = { ["portrait"] = {}, ["landscape"] = {}}
+local layout_info = "Layout: "
+
+local sortedLayoutSetupIterator = helper.table.sortByKeyIterator(layout_setup)
+for i, v in sortedLayoutSetupIterator do
+    layout["portrait"][i] = to_unit(v, false)
+    layout["landscape"][i] = to_unit(v, true)
+    layout_info = layout_info .. "\n key "..i..": " .. v[3]:gsub("-"," "):gsub("+"," ")
+end
+
+debugInfo(layout_info)
+
+local hkbm = hotkeybindmodal(hyper, "w", keyInfo("abc"),
+        function()
+            local window = hs.window.frontmostWindow()
+            hs.alert.show(layout_info, { textFont = "Menlo"}, window, 'do-not-close')
+        end,
+        function()
+            hs.alert.closeAll()
+        end)
+
+-- Bind Exit inside the mode
+
+for key, _ in pairs(layout_setup) do
+
+    local move = function()
+        local screen = hs.screen.allScreens()[3]
+        local window = hs.window.focusedWindow()
+        local direction = (screen:rotate()==0) and "landscape" or "portrait"
+        local newUnit = layout[direction][key]
+
+        window:moveToScreen(screen)
+        window:moveToUnit(newUnit)
+
+        hs.alert.show("Hyper+w+" .. key .. " triggered! ".. hs.inspect(newUnit))
+        hkbm:exit()
+    end
+
+    hkbm:bind({}, key, move)
+    hkbm:bind(hyper, key, move)
+end
+
 hs.hotkey.bind(hyper, "3", keyInfo("place on main screen"), function()
     --local mainScreen = hs.screen.mainScreen()
     local mainScreen = hs.screen.allScreens()[1]
