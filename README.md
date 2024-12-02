@@ -135,6 +135,10 @@ This feature allows the user to detach the current tab from a browser window and
 Shortcuts:
 - hyper + t -> show current tab in new window
 
+### [ChromeTabAudioActive](/Functions/ChromeTabAudioActivate.lua)
+
+WIP: I try to activate the first tab of an audio playing tab - not working :/
+
 ### [ChromeTabDomainCounter](/Functions/ChromeTabDomainCounter.lua)
 
 Count the open tld sort by most used - output in the console:
