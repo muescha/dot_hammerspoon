@@ -37,6 +37,12 @@ local layout_setup = {
     ["7"] = {  0, 1/2, "+=====7==+--------+"},
     ["8"] = {1/2, 1/2, "+--------+==8=====+"},
 }
+local layout_keys = {
+    maximize = "4",
+    top = "7",
+    bottom = "8",
+    udemy = "6"
+}
 
 local layout = { ["portrait"] = {}, ["landscape"] = {}}
 local layout_info = "Layout: "
