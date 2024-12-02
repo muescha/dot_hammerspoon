@@ -35,25 +35,42 @@ Shortcuts:
 
 ### [PlayerGlobalControl](/Functions/PlayerGlobalControl.lua)
 
-This feature enables the user to control a media player with a standardized set of keyboard shortcuts, regardless of whether the player is the currently active application or not. This is particularly useful when working on a tutorial or coding in an IDE, where the user may need to switch between the player and the IDE frequently. This feature currently supports controlling the IINA and Chrome media players, as well as providing special shortcuts for certain websites.
+This feature enables the user to control a media player with a standardized set of keyboard shortcuts, regardless of whether the player is the currently active application or not. 
+
+This is particularly useful when working on a tutorial or coding in an IDE, where the user may need to switch between the player and the IDE frequently. But with this there is no need to switch the focus to chrome because it sends commands via JXA to chrome and no switch is needed.
+
+Set the focus to a specific window with hyper + o - then it switches also between tabs when you have a localhost open (currently it sends JXA to the current active tab when you not set the focus).
+
+This feature currently supports controlling the IINA and Chrome media players, as well as providing special shortcuts for certain websites.
+
 
 Shortcuts:
 
-- hyper + u -> Start
-- hyper + p -> Pause
+- hyper + u -> Start (see note 1)
+- hyper + p -> Play/Pause
 - hyper + k -> Reset Speed
 - hyper + l -> Decrease Speed
 - hyper + ; -> Increase Speed
+- hyper + 9 -> Max 16x Speed or press adskip button (see note 2)
 - hyper + ' -> Jump Backward
 - hyper + \ -> Jump Forward
-- hyper + j -> Max Quality (1080)
+- hyper + j -> Max Quality (1080)  (see Note 3)
+
+> Note 1: on some places it needs this special start: on youtube when you use a plugin which autostop the playing (YouTube™ No Buffer - Stop Auto-playing 0.4.6), or in Udemy to start a section) - see it as the start as a first command. If you click on youtube page on links to other videos which not complete refresh the page: then you need manualy refresh the page to have the play button detected.
+
+> Note 2: the button click not works out of the box - you need install some Chrome Plugin so that it works again (
+YouTube Ad Auto-skipper
+2.2.0)
+
+> Note 3: currently not used so much, because I can set this with a Chrome TamperMonkey Script: [Nova YouTube (Plugin for TamperMonkey)](https://github.com/raingart/Nova-YouTube-extension)
 
 Supported Apps:
 - [IINA](https://iina.io/)
 - Google Chrome
 
 Shortcuts available for this websites:
-- https://youtube.com
+- Gerneric Video (mostly this works)
+- https://youtube.com (disabled - I now use GenericVideo)
 - https://twitch.tv
 - https://udemy.com
 - https://wdr.de
