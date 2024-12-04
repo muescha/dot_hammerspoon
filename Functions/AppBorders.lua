@@ -19,7 +19,7 @@ local global_border = nil
 function initBorder()
     win = hs.window.focusedWindow()
     if win ~= nil then
-        frame = hs.window.focusedWindow():frame()
+        frame = win:frame()
     else
         frame = hs.geometry.new(0, 0, 0, 0)
     end
