@@ -642,6 +642,7 @@ end
 local function checkSwitch()
 
     local win = hs.window.focusedWindow()
+    if win == nil then debugInfo("checkSwitch: no focused window available") return end
     local bundleID = win:application():bundleID()
 
     local returnSwitchBacks = { win }
