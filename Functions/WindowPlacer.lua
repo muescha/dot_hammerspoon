@@ -44,6 +44,13 @@ local layout_keys = {
     udemy = "6"
 }
 
+-- TODO make this as config
+local screens = {
+    internal = "Built%-in",
+    monitor_1 = 'Thunderbolt',
+    monitor_2 = '5120x1440'
+}
+
 local layout = { ["portrait"] = {}, ["landscape"] = {}}
 local layout_info = "Layout: "
 
@@ -55,7 +62,8 @@ for i, v in sortedLayoutSetupIterator do
 end
 
 local function windowMoveToKey(screenId, key)
-    local screen = hs.screen.allScreens()[screenId]
+    local screen = hs.screen.find(screenId)
+    if screen == nil then hs.alert.show('No screen available for keyword: ' .. screenId) return end
     local window = hs.window.focusedWindow()
     local direction = (screen:rotate()==0) and "landscape" or "portrait"
     local newUnit = layout[direction][key]
@@ -80,7 +88,7 @@ local hkbm = hotkeybindmodal(hyper, "w", keyInfo("place on Big Monitor "), start
 for key, _ in pairs(layout_setup) do
 
     local move = function()
-        windowMoveToKey(3, key)
+        windowMoveToKey(screens.monitor_2, key)
         hkbm:exit()
     end
 
@@ -89,21 +97,21 @@ for key, _ in pairs(layout_setup) do
 end
 
 hs.hotkey.bind(hyper, "3", keyInfo("place on main screen"), function()
-    windowMoveToKey(1,layout_keys.maximize)
+    windowMoveToKey(screens.internal,layout_keys.maximize)
 end)
 
 hs.hotkey.bind(hyper, "4", keyInfo("place fullscreen on monitor"), function()
-    windowMoveToKey(2,layout_keys.maximize)
+    windowMoveToKey(screens.monitor_1,layout_keys.maximize)
 end)
 
 hs.hotkey.bind(hyper, "8", keyInfo("place 2/3 on monitor (Udemy Mode)"), function()
-    windowMoveToKey(2,layout_keys.udemy)
+    windowMoveToKey(screens.monitor_1,layout_keys.udemy)
 end)
 
 hs.hotkey.bind(hyper, "1", keyInfo("place on one half of monitor"), function()
-    windowMoveToKey(2,layout_keys.top)
+    windowMoveToKey(screens.monitor_1,layout_keys.top)
 end)
 
 hs.hotkey.bind(hyper, "2", keyInfo("place on other half of monitor"), function()
-    windowMoveToKey(2,layout_keys.bottom)
+    windowMoveToKey(screens.monitor_1,layout_keys.bottom)
 end)
