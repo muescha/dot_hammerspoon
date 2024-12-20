@@ -20,7 +20,7 @@ local function blackOff()
 end
 
 function blackOn(all)
-    p = hs.screen.primaryScreen()
+    local p = hs.screen.primaryScreen()
     movieblocks = {}
     for k, v in pairs(hs.screen.allScreens()) do
         if v:name() ~= p:name() or all == true then
