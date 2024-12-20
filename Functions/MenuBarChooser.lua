@@ -103,8 +103,8 @@ local function getSelection(appItems)
                         table.insert(selection,
                                 {
                                     --text = hs.styledtext.new(p(menu.app:name())..":"..p(item.AXTitle) .. p(item.AXValue) .. p(item.AXDescription).. p(item.AXHelp)),
-                                    text = p(menu.app:name())..":"..p(item.AXTitle) .. p(item.AXValue) .. p(item.AXDescription).. p(item.AXHelp),
-                                    subText = p(item:actionDescription(name)),
+                                    text = defaultStr(menu.app:name())..":".. defaultStr(item.AXTitle) .. defaultStr(item.AXValue) .. defaultStr(item.AXDescription).. defaultStr(item.AXHelp),
+                                    subText = defaultStr(item:actionDescription(name)),
                                     image = hs.image.imageFromAppBundle(menu.app:bundleID()),
                                     element = {
                                         key = key,

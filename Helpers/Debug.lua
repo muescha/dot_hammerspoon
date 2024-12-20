@@ -6,7 +6,7 @@
 
 -- Helper Functions
 
-function p(value)
+function defaultStr(value)
     return value and " " .. value or ""
 end
 
@@ -14,7 +14,7 @@ function debugMenuItem(application, element, description)
     local names = element:actionNames()
     if names then
         for i, name in ipairs(names) do
-            print(p(application:name()) .. " " .. i ..". ".. p(element.AXTitle) .. p(element.AXValue) .. p(element.AXDescription).. p(element.AXHelp).. ' - "' .. name .. '": ' .. element:actionDescription(name))
+            print(defaultStr(application:name()) .. " " .. i ..". ".. defaultStr(element.AXTitle) .. defaultStr(element.AXValue) .. defaultStr(element.AXDescription).. defaultStr(element.AXHelp).. ' - "' .. name .. '": ' .. element:actionDescription(name))
         end
     end
 
