@@ -8,7 +8,7 @@ fileInfo()
 
 
 hs.hotkey.bind(hyper, "0", keyInfo("Zoom on/off"),function()
-    hs.eventtap.keyStroke({"cmd","alt"}, "0")
+    hs.eventtap.keyStroke({"cmd","alt"}, "8")
 end)
 
 hs.hotkey.bind(hyper, "-", keyInfo("Zoom -"),function()
