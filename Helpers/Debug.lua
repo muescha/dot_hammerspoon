@@ -170,7 +170,7 @@ end
 function debugTracePrint (event, line)
     local info = debug.getinfo(2)
     local s = info.short_src
-    if info.source:startswith("@/Application") then
+    if info.source:startsWith("@/Application") then
         return
     end
 
