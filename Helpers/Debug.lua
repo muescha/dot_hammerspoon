@@ -10,6 +10,32 @@ function defaultStr(value)
     return value and " " .. value or ""
 end
 
+function debugUnicode(str, varName)
+    varName = varName or "Unicode string"  -- Default to "Unicode string" if no varName is provided
+
+    if not str then
+        print(varName .. ": nil (No string provided)")
+        return
+    end
+
+    if #str == 0 then
+        print(varName .. ": (Empty string)")
+        return
+    end
+
+    print(varName .. ": " .. str)
+    for i = 1, #str do
+        local byte = string.byte(str, i)
+
+        -- Handle invalid byte, e.g., for multi-byte characters
+        if byte then
+            print(string.format("Unicode Codepoint %d: U+%04X", i, byte))
+        else
+            print(string.format("Unicode Codepoint %d: Invalid byte", i))
+        end
+    end
+end
+
 function debugMenuItem(application, element, description)
     local names = element:actionNames()
     if names then
