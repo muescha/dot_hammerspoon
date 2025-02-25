@@ -19,6 +19,10 @@ local units = require("hs.geometry").rect
 
 debugTable(hs.screen.allScreens())
 
+for k, v in pairs(hs.screen.allScreens()) do
+    print(v:currentMode().desc  .. ": " .. v:name())
+end
+
 local function to_unit(values, rotate)
     if rotate then
         return units(values[1], 0, values[2], 1 )
