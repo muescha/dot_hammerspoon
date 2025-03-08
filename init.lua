@@ -57,6 +57,7 @@ require('Functions.ChromeNewWindow')
 -- i don't use Iina anymore
 --require('Functions.ChromeTabToIina')
 require('Functions.ChromeTabAudioActivate')
+require('Functions.ChromeTabCopyLink')
 require('Functions.ChromeTabToNewWindow')
 require('Functions.ChromeTabDomainCounter')
 require('Functions.CheatSheet')
