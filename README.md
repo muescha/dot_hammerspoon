@@ -92,7 +92,7 @@ Shortcuts:
 
 ### [WindowPlacer](/Functions/WindowPlacer.lua)
 
-This functionality allows the user to move windows to pre-defined locations on either their MacBook or an external monitor in portrait orientation. Specifically, there are three designated locations: the upper half of the monitor (designated as hyper+1), the lower half of the monitor (designated as hyper+2), and the MacBook itself (designated as hyper+3). By using this feature, users can more quickly and easily arrange their windows to best suit their workflow and preferences.
+This functionality allows the user to move windows to pre-defined locations on either their MacBook or an external monitor in portrait orientation. Specifically, there are three designated locations: the upper half of the monitor (designated as hyper+1), the lower half of the monitor (designated as hyper+2), and the MacBook itself (designated as hyper+3). By using this feature, users can more quickly and easily arrange their windows to best suit their workflow and preferences. The Modal mode allow also place the windows in different columns.
 
 Shortcuts:
 - hyper + 1 -> External Monitor Top
@@ -100,9 +100,9 @@ Shortcuts:
 - hyper + 3 -> Main Monitor
 - hyper + 4 -> External Monitor FullScreen
 - hyper + 8 -> External Monitor 2/3 screen
-- hyper + w -> Modal Mode for different placements on big monitor
+- hyper + w -> Modal Mode for different placements on big monitor (see screenshot)
 
-![Modal Mode](./assets/readme/WindowPlacer-Modal-Options.png)
+![Modal Mode](./assets/readme/WindowPlacer-Modal-Options-2025-05-29.png)
 
 ### [MultiDisplayBlack](/Functions/MultiDisplayBlack.lua)
 
