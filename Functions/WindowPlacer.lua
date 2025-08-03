@@ -70,6 +70,31 @@ for i, v in sortedLayoutSetupIterator do
     layout_info = layout_info .. "\n key "..i..": " .. v[3]:gsub("-"," "):gsub("+"," ")
 end
 
+local function framesEqual(f1, f2, tolerance)
+    tolerance = tolerance or 1
+    return math.abs(f1.x - f2.x) < tolerance and
+            math.abs(f1.y - f2.y) < tolerance and
+            math.abs(f1.w - f2.w) < tolerance and
+            math.abs(f1.h - f2.h) < tolerance
+end
+
+local function windowMoveToUnit(window, screen, newUnit)
+
+    if window:screen() ~= screen then return end
+
+    local expectedFrame = screen:fromUnitRect(newUnit)
+    local actualFrame = window:frame()
+
+    if framesEqual(actualFrame, expectedFrame) then
+        debugInfo('No Adjustment needed...')
+        return false
+    else
+        debugInfo('Adjustment needed...')
+        window:moveToUnit(newUnit)
+        return true
+    end
+end
+
 local function windowMoveToKey(screenId, key)
     local screen = hs.screen.find(screenId)
     if screen == nil then hs.alert.show('No screen available for keyword: ' .. screenId) return end
@@ -78,7 +103,20 @@ local function windowMoveToKey(screenId, key)
     local newUnit = layout[direction][key]
 
     window:moveToScreen(screen)
-    window:moveToUnit(newUnit)
+
+    local windowMoved = windowMoveToUnit(window, screen, newUnit)
+    if windowMoved then
+
+        hs.timer.doAfter(0.1, function()
+
+            local windowMoved = windowMoveToUnit(window, screen, newUnit)
+            if windowMoved then
+                hs.timer.doAfter(0.1, function()
+                    windowMoveToUnit(window, screen, newUnit)
+                end)
+            end
+        end)
+    end
 end
 
 debugInfo(layout_info)
