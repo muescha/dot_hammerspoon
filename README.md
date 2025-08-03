@@ -232,6 +232,15 @@ local umlauts = {
 
 ## Tools & Spoons
 
+### HotKeySheet.spoon
+
+replacement for `hs.hotkey.showHotkeys`
+
+if you add a scriptname to the description then it is grouped by scriptname. Example: `MaximizeApp: Maximize App`
+
+![ScreenShot HotKeySheet](./assets/readme/HotKeySheet.png)
+
+
 ### EmmyLua.spoon
 
 - i added Timestamps to speed up and skip unchanged files
@@ -290,14 +299,6 @@ Examples:
 
 for patterns see:
 https://www.lua.org/manual/5.1/manual.html#5.4.1
-
-### HotKeySheet.spoon
-
-replacement for `hs.hotkey.showHotkeys`
-
-if you add a scriptname to the description then it is grouped by scriptname. Example: `MaximizeApp: Maximize App`
-
-![ScreenShot HotKeySheet](./assets/readme/HotKeySheet.png)
 
 
 ### DebugFunction
