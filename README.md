@@ -1,5 +1,7 @@
 # Hammerspoon 
 
+## Functions
+
 This are my collection of my Hammerspoon Scripts
 
 ### [WindowAxHotfix](/Helpers/Extensions/WindowAxHotfix.lua)
@@ -228,11 +230,19 @@ local umlauts = {
 
 ```
 
+## Tools & Spoons
+
 ### EmmyLua.spoon
 
 - i added Timestamps to speed up and skip unchanged files
 - interesting when you use IntelliJ IDEA to show complettions
 - NOTE: load this spoon before other an reload watcher to avoid reloads while this spoon writes the annotation files
+
+## Helpers
+
+### [ErrorCatcher](/Helpers/ErrorCatcher.lua)
+
+This helper catches errors and prints them to the console. It is useful for debugging purposes, as it allows you to see the source of an error when it is crashing your script.
 
 ### [BindHotkey only to some apps](/Helpers/SendKeysOnlyInApp.lua)
 
