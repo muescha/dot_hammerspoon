@@ -134,22 +134,19 @@ for key, _ in pairs(layout_setup) do
     hkbm:bind(hyper, key, move)
 end
 
-hs.hotkey.bind(hyper, "3", keyInfo("place on main screen"), function()
-    windowMoveToKey(screens.internal,layout_keys.maximize)
-end)
+local opts_keys = { SCREEN = 1, LAYOUT = 2, DESC = 3, }
 
-hs.hotkey.bind(hyper, "4", keyInfo("place fullscreen on monitor"), function()
-    windowMoveToKey(screens.monitor_1,layout_keys.maximize)
-end)
+local layout_non_modal = {
+    ["1"] = { screens.monitor_1, layout_keys.top,      "place on one half of monitor" },
+    ["2"] = { screens.monitor_1, layout_keys.bottom,   "place on other half of monitor" },
+    ["3"] = { screens.internal,  layout_keys.maximize, "place on main screen" },
+    ["4"] = { screens.monitor_1, layout_keys.maximize, "place fullscreen on monitor" },
+    ["8"] = { screens.monitor_1, layout_keys.udemy,    "place 2/3 on monitor (Udemy Mode)" },
+}
 
-hs.hotkey.bind(hyper, "8", keyInfo("place 2/3 on monitor (Udemy Mode)"), function()
-    windowMoveToKey(screens.monitor_1,layout_keys.udemy)
-end)
+for key, opts in pairs(layout_non_modal) do
+    hs.hotkey.bind(hyper, key, keyInfo(opts[opts_keys.DESC]), function()
+        windowMoveToKey(opts[opts_keys.SCREEN], opts[opts_keys.LAYOUT])
+    end)
+end
 
-hs.hotkey.bind(hyper, "1", keyInfo("place on one half of monitor"), function()
-    windowMoveToKey(screens.monitor_1,layout_keys.top)
-end)
-
-hs.hotkey.bind(hyper, "2", keyInfo("place on other half of monitor"), function()
-    windowMoveToKey(screens.monitor_1,layout_keys.bottom)
-end)
