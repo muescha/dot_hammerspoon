@@ -1,11 +1,11 @@
---- RetryWhileOnComplete: Keep retrying while conditionFn returns true, with optional completion callback.
+--- retryWhileOnComplete: Keep retrying while conditionFn returns true, with optional completion callback.
 --- Supports either positional arguments or a single options table.
 ---
 --- Usage (positional):
---- RetryWhileOnComplete(conditionFn, [onComplete], [delay], [maxTries])
+--- retryWhileOnComplete(conditionFn, [onComplete], [delay], [maxTries])
 ---
 --- Usage (named args table):
---- RetryWhileOnComplete{
+--- retryWhileOnComplete{
 ---   conditionFn = function() ... end,
 ---   onComplete = function(success) ... end,  -- optional
 ---   delay = 0.1,                              -- optional, default 0.1 seconds
@@ -16,7 +16,7 @@
 --- @param onComplete function Optional. Called once with boolean success when retry ends.
 --- @param delay number Optional. Seconds between retries. Defaults to 0.1.
 --- @param maxTries number Optional. Max retry attempts. Defaults to 3.
-function RetryWhileOnComplete(...)
+function retryWhileOnComplete(...)
     local args = {...}
     local conditionFn, onComplete, delay, maxTries
 
