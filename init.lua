@@ -1,3 +1,6 @@
+-- Load global error catcher FIRST
+require("Helpers.ErrorCatcher")
+
 hs.notify.show("Hammerspoon", "Starting Hammerspoon: ", hs.screen.mainScreen():name())
 require("Helpers.Base")
 require("Helpers.Util")
