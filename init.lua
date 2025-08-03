@@ -32,6 +32,7 @@ require("Helpers.Debug")
 require("Helpers.DebugFunction")
 
 require("Helpers.Enum")
+require("Helpers.RetryWhile")
 
 require("Helpers.HotkeySilence")
 require("Helpers.SendKeysOnlyInApp")

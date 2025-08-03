@@ -104,19 +104,8 @@ local function windowMoveToKey(screenId, key)
 
     window:moveToScreen(screen)
 
-    local windowMoved = windowMoveToUnit(window, screen, newUnit)
-    if windowMoved then
+    retryWhile(function() return windowMoveToUnit(window, screen, newUnit) end)
 
-        hs.timer.doAfter(0.1, function()
-
-            local windowMoved = windowMoveToUnit(window, screen, newUnit)
-            if windowMoved then
-                hs.timer.doAfter(0.1, function()
-                    windowMoveToUnit(window, screen, newUnit)
-                end)
-            end
-        end)
-    end
 end
 
 debugInfo(layout_info)

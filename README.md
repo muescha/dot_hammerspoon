@@ -315,6 +315,11 @@ for patterns see:
 https://www.lua.org/manual/5.1/manual.html#5.4.1
 
 
+### [RetryWhile](/Helpers/RetryWhile.lua)
+
+This helper function allows you to retry a function until it returns true or the maximum number of retries is reached. It is useful for situations where you need to wait for a condition to be met before proceeding with your script.
+
+
 ### DebugFunction
 
 - [debugFunction](/Helpers/DebugFunction.lua) show source code of a function in console
