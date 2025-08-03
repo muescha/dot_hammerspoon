@@ -104,7 +104,21 @@ Shortcuts:
 - hyper + 8 -> External Monitor 2/3 screen
 - hyper + w -> Modal Mode for different placements on big monitor (see screenshot)
 
-![Modal Mode](./assets/readme/WindowPlacer-Modal-Options-2025-05-29.png)
+```text
+Layout: 
+ key 1:  ==1==             
+ key 2:        ==2==       
+ key 3:              ==3== 
+ key 4:  ========4======== 
+ key 5:  =====5=====       
+ key 6:        =====6==    
+ key 7:        =====7===== 
+ key 8:           ==8===== 
+ key a:  =====a==          
+ key b:           ==b==    
+ key c:                =c= 
+ key d:  =======d======    
+```
 
 ### [MultiDisplayBlack](/Functions/MultiDisplayBlack.lua)
 
