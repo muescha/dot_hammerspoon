@@ -104,7 +104,8 @@ local function windowMoveToKey(screenId, key)
 
     window:moveToScreen(screen)
 
-    retryWhile(function() return windowMoveToUnit(window, screen, newUnit) end)
+    --retryWhile(function() return windowMoveToUnit(window, screen, newUnit) end)
+    retryWhileOnComplete(function() return windowMoveToUnit(window, screen, newUnit) end, function(success) print(success and "Success: placed the window on right place!" or "Failed to place windows!") end)
 
 end
 
