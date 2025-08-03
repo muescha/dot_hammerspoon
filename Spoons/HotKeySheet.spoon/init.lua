@@ -70,22 +70,21 @@ local function groupedHotKeys()
 
         local index, fullDescription = split_on_first_colon(value.msg)
         local scriptName, description = split_on_first_colon(fullDescription)
+        if fullDescription ~= "~~~~~hide~~~~~" then
+            if description == "" then
+                description = scriptName
+                scriptName = "Others"
+            end
 
-        if description == "" then
-            description = scriptName
-            scriptName = "Others"
-        end
+            if not result[scriptName] then
+                result[scriptName] = {};
+            end
 
-        if not result[scriptName] then
-            result[scriptName] = {};
-        end
-
-        local newValue = {
-            script = scriptName,
-            hotkey = index:gsub('RETURN','↩'),
-            description = description
-        }
-        if description ~= "~~~~~hide~~~~~" then
+            local newValue = {
+                script = scriptName,
+                hotkey = index:gsub('RETURN','↩'),
+                description = description
+            }
             table.insert(result[scriptName], newValue);
         end
     end
