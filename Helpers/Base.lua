@@ -3,22 +3,39 @@
 --- Created by muescha.
 --- DateTime: 06.12.22 14:45
 ---
+---
+---
+
+FilePathStackLevel = {
+    THIS         = 2,  -- current file
+    CALLER       = 3,  -- source file
+}
+
 function path(level)
-    return debug.getinfo(level or 2).source:match("@?(.*/)")
+    return debug.getinfo(level or FilePathStackLevel.THIS).source:match("@?(.*/)")
 end
 
+function filepath(level)
+    local info = debug.getinfo(level or FilePathStackLevel.THIS, "S")
+    local fullPath = info and info.source and info.source:sub(2) -- Remove the "@" prefix
+    return fullPath
+end
+
+
+
 function filename(level)
-    local str = debug.getinfo(level or 2, "S").source:sub(2)
+    local str = debug.getinfo(level or FilePathStackLevel.THIS, "S").source:sub(2)
     return str:match("^.*/(.*).lua$") or str
 end
 
 function superfilename()
-    return filename(3)
+    return filename(FilePathStackLevel.CALLER)
 end
 
 function fileInfo()
     local file = superfilename()
-    print("Init ".. file)
+    print("Init: ".. file)
+    print("-- File: " .. filepath(FilePathStackLevel.CALLER))
     return file  .. ': '
 end
 
