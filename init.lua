@@ -9,6 +9,16 @@ require("Helpers.Util")
 -- enable local patches
 hs.window.filter = require("Helpers.Extensions.window_filter")
 hs.alert = require("Helpers.Extensions.alert")
+hs.hotkey = require("Helpers.Extensions.hotkey")
+
+--hs.logger = require("Helpers.Extensions.logger")
+
+-- Test overwrite modalKey isActive
+--local modalKey = hs.hotkey.modal.new({'ctrl', 'alt', 'cmd','shift'}, 'return', 'WM mode enter')
+--print('modalKey:isActive()')
+--print(modalKey._isActive)
+--print(modalKey:isActive())
+
 
 -- Note: Setup this hyper Key with Karabiner ELements
 hyper = { "shift", "ctrl", "alt", "cmd" }
