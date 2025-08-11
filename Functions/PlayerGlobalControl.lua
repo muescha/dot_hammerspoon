@@ -15,11 +15,15 @@
 ---      -> [x] spotify
 ---      -> Spiegel
 ---      -> Netflix
+---      -> Facebook https://www.facebook.com/watch/?v=816103793764263
 ---      -> twitter (Example: https://twitter.com/jnybgr/status/1688423139330469888?s=12&t=UKgH_3wb-W7rBipFV7CKXg)
 ---      -> Loom https://www.loom.com/share/8771f24615e04735a00de927bb6fde99?t=277
 ---      -> https://podcasts.google.com/ (TODO)
 ---      -> https://www.linkedin.com/learning/small-talk-und-netzwerken-2-unterschatzte-karriere-booster/gutes-small-talk-thema-wie-findet-man-das?autoSkip=true&resume=false
 ---   -> TODO: add qualitiy selector for YT
+---         Audio Player:
+---         - Soundcloud
+---
 --- reduce Chromoim like apps to Chrome - and Safari like to WebKit
 --- add fullscreen shortcut
 
@@ -281,7 +285,7 @@ local ControlKeys = {
             speedDec = { {}, "," }, -- '<'
             moveForward = { {}, "right" },
             moveBackward = { {}, "left" },
-            info = "Twitch Player"
+            info = "Twitch Player (Speed only on Videos)"
         },
         ["udemy.com"] = {
             --selector = "[class*='app--body-container--']",
@@ -658,8 +662,8 @@ local function checkSwitch()
     debugInfo("checkSwitch: saved app focused is NOT the same window as saved")
 
     if win ~= savedWindowFocused then
-        debugInfo("checkSwitch: add currentWinFocused to return table")
-        table.insert(returnSwitchBacks, 1, savedWindowFocused)
+    debugInfo("checkSwitch: add currentWinFocused to return table")
+    table.insert(returnSwitchBacks, 1, savedWindowFocused)
     end
 
     debugInfo("checkSwitch: switch to ", savedWindow)
@@ -751,6 +755,10 @@ end
 local function setSavedWindow()
     local win = hs.window.focusedWindow()
     local bundleID = win:application():bundleID()
+
+    debugInfo("Cache Size:", helper.table.count(cache))
+    debugInfo("reset cache")
+    cache = {}
 
     if ControlKeys[bundleID] == nil then
         if savedWindow then
