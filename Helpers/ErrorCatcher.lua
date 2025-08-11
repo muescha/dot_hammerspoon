@@ -12,7 +12,7 @@ fileInfo()
 debug._traceback = debug._traceback or debug.traceback
 
 -- Config (adjust cooldownSeconds later to 180 for 3 minutes)
-local longDurationSec = 15       -- long alert for first/after-cooldown occurrences
+local longDurationSec = 5.0       -- long alert for first/after-cooldown occurrences
 local repeatDurationSec = 2.0    -- short alert for repeated occurrences during cooldown
 local cooldownSeconds = 30       -- show long alert again after this cooldown
 
