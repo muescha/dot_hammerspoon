@@ -3,9 +3,18 @@
 
 fileInfo()
 
--- Function to fetch URLs from Chrome tabs
+function countTabDomains()
+    showInfoStart()
+    -- pause the loop to display the alert
+    hs.timer.doAfter(0.1, function()
+        local info_text = fetchURLsFromChrome()
+        hs.alert.closeAll()
+        showInfo(info_text)
+    end)
+end
+
 function fetchURLsFromChrome()
-    print("Starting to fetch URLs from Google Chrome...")  -- Log the start of the fetch process
+    print("Starting to fetch URLs from Google Chrome...")
 
     local script = [[
         (function() {
@@ -22,55 +31,43 @@ function fetchURLsFromChrome()
         })();
     ]]
 
-    -- Execute the JavaScript in the context of Google Chrome
-    --hs.osascript.javascript(script, function(success, result)
-    --    if success then
-    --        print("Successfully fetched URLs from Chrome.")  -- Log success
-    --        processURLs(result)  -- Call the Lua function to process URLs
-    --    else
-    --        print("Error fetching URLs from Chrome: " .. tostring(result))  -- Log any errors encountered
-    --    end
-    --end)
-
     local ok, output, message = hs.osascript.javascript(script)
     --debugInfo("runActionCode -      ok: ", ok)
     --debugInfo("runActionCode -  Output: ", output)
     --debugInfo("runActionCode - Message: ", message)
     if ok then
-        print("Successfully fetched URLs from Chrome.")  -- Log success
-        processURLs(output)  -- Call the Lua function to process URLs
+        print("Successfully fetched URLs from Chrome.")
+        return processURLs(output)
+
     else
-        print("Error fetching URLs from Chrome: " .. tostring(output))  -- Log any errors encountered
+        print("Error fetching URLs from Chrome: " .. tostring(output))
+        return "Error fetching URLs from Chrome: " .. tostring(output)
     end
 
 end
 
--- Function to process the URLs and count TLDs
 function processURLs(urls)
-    print("Processing URLs...")  -- Log the start of processing
+    print("Processing URLs...")
     local tldCounts = {}
 
     for _, url in ipairs(urls) do
-        --print("Processing URL: " .. url)  -- Log each URL being processed
+        --print("Processing URL: " .. url)
         local tld = getTLD(url)
         if tld then
             tldCounts[tld] = (tldCounts[tld] or 0) + 1
-            --print("Found TLD: " .. tld .. ", Count: " .. tldCounts[tld])  -- Log found TLD and count
+            --print("Found TLD: " .. tld .. ", Count: " .. tldCounts[tld])
         else
-            print("No valid TLD found for URL: " .. url)  -- Log if no TLD is found
+            print("No valid TLD found for URL: " .. url)
         end
     end
 
-    -- Function to sort TLDs by count in descending order
     local function sortTLDsByCount(tldCounts)
         local sortedTLDs = {}
 
-        -- Create a sorted table
         for tld, count in pairs(tldCounts) do
             table.insert(sortedTLDs, {tld = tld, count = count})
         end
 
-        -- Sort the table by count in descending order
         table.sort(sortedTLDs, function(a, b)
             return a.count > b.count
         end)
@@ -78,33 +75,42 @@ function processURLs(urls)
         return sortedTLDs
     end
 
-    -- Call the sorting function
     local sortedTLDs = sortTLDsByCount(tldCounts)
 
-    print("Final TLD Counts:")  -- Log the final counts
+    print("Final TLD Counts:")
 
-    -- Print the sorted TLDs and their counts
+    local info_text = "Found domains:\n"
+
     for _, entry in ipairs(sortedTLDs) do
         if entry.count > 1 then
-            print(entry.tld .. ": " .. entry.count)  -- Log each TLD and its count
+            print(entry.tld .. ": " .. entry.count)
+            info_text = info_text .. "\n-  " .. entry.tld .. ": " .. entry.count
         end
     end
+
+    return info_text
 end
 
--- Function to extract TLD from a URL
+function showInfoStart()
+    local window = hs.window.frontmostWindow()
+    hs.alert.show("Fetch urls ...", { textFont = "Menlo", atScreenEdge = 1}, window, 'do-not-close')
+end
+
+function showInfo(info_text)
+    local window = hs.window.frontmostWindow()
+    hs.alert.show(info_text, { textFont = "Menlo", atScreenEdge = 1}, window, 10)
+end
+
 function getTLD(url)
     if not url or url == "" then
-        print("Invalid URL: " .. tostring(url))  -- Log invalid URL
+        print("Invalid URL: " .. tostring(url))
         return nil
     end
-    local hostname = url:match("://(.-)/") or url  -- Extract hostname from URL
-    hostname = hostname:gsub("^www%.", "")  -- Replace 'www.' at the start of the hostname
+    local hostname = url:match("://(.-)/") or url
+    hostname = hostname:gsub("^www%.", "")
     return hostname
 end
 
-print("Press Command + Option + Control + T to count TLDs in Chrome.")
-
--- Bind a hotkey to trigger the TLD counting
-hs.hotkey.bind(hyper, "f", keyInfo("Count Tab Domains"), function()
-    fetchURLsFromChrome()
+hs.hotkey.bind(hyper, "f", keyInfo(     "Count Tab Domains"), function()
+    countTabDomains()
 end)
