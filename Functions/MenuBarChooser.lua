@@ -99,15 +99,34 @@ local function getSelection(appItems)
             if names then
                 for i, name in ipairs(names) do
                     if name == 'AXPress' then
-                        local key = addMenuItem(item)
+                        local appText = defaultStr(menu.app:name())..":"..
+                                defaultStr(item.AXTitle) ..
+                                defaultStr(item.AXValue) ..
+                                defaultStr(item.AXDescription)..
+                                defaultStr(item.AXHelp)
+
+                        local appSubText = defaultStr(item:actionDescription(name))
+
+                        local appKey = addMenuItem(item)
+                        local bundleID = menu.app:bundleID()
+                        local appImage = nil
+                        if bundleID then
+                            appImage = hs.image.imageFromAppBundle(bundleID)
+                        else
+                            local path = menu.app:path()
+                            if path then
+                                appImage = hs.image.iconForFile(path)
+                            end
+                        end
+
                         table.insert(selection,
                                 {
                                     --text = hs.styledtext.new(p(menu.app:name())..":"..p(item.AXTitle) .. p(item.AXValue) .. p(item.AXDescription).. p(item.AXHelp)),
-                                    text = defaultStr(menu.app:name())..":".. defaultStr(item.AXTitle) .. defaultStr(item.AXValue) .. defaultStr(item.AXDescription).. defaultStr(item.AXHelp),
-                                    subText = defaultStr(item:actionDescription(name)),
-                                    image = hs.image.imageFromAppBundle(menu.app:bundleID()),
+                                    text = appText,
+                                    subText = appSubText,
+                                    image = appImage,
                                     element = {
-                                        key = key,
+                                        key = appKey,
                                         action = name
                                     }
                                 }
@@ -132,19 +151,9 @@ function MenuBarChooser()
         end
     end
 
-    --for i = 1,#keys do
-    --    table.insert(help, {
-    --        --text = keys[i].msg,
-    --        text = hs.styledtext.new(keys[i].msg),
-    --        --subText = hs.styledtext.new('a little text')
-    --        subText = 'a little text'
-    --    })
-    --end
-
     local choices = selectionMap.chooserItems
 
     chooser = hs.chooser.new(chooserCallback)
-    --chooser:choices(choices)
 
     FuzzyMatcher.setChoices(choices, chooser, false, FuzzyMatcher.Sorter.asc)
 
