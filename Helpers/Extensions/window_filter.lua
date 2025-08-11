@@ -68,6 +68,8 @@
 --   on space changes.
 -- * window(un)maximized could be implemented, or merged into window(un)fullscreened (but currently isn't either)
 
+fileInfo()
+
 local pairs,ipairs,type,smatch,sformat,ssub = pairs,ipairs,type,string.match,string.format,string.sub
 local next,tsort,setmetatable,pcall = next,table.sort,setmetatable,pcall
 local timer,geometry,screen = require'hs.timer',require'hs.geometry',require'hs.screen'
