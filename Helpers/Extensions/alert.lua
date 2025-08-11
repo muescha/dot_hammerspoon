@@ -4,6 +4,8 @@ local module = {}
 ---
 --- Simple on-screen alerts
 
+fileInfo()
+
 local drawing = require("hs.drawing")
 local timer   = require("hs.timer")
 local screen  = require("hs.screen")
@@ -109,7 +111,7 @@ local showAlert = function(message, image, style, screenObj, duration)
         if #module._visibleAlerts > 0 then
             -- we're looking for the latest on the same screen
             for i = #module._visibleAlerts, 1, -1 do
-                if screenObj == module._visibleAlerts[i].screen and module._visibleAlerts[i].atScreenEdge == 0 then
+                if screenFrame == module._visibleAlerts[i].screenFrame and module._visibleAlerts[i].atScreenEdge == 0 then
                     absoluteTop = module._visibleAlerts[i].frame.y + module._visibleAlerts[i].frame.h + 3
                     break
                 end
@@ -123,7 +125,7 @@ local showAlert = function(message, image, style, screenObj, duration)
 
     local alertEntry = {
         drawings = {},
-        screen = screenObj,
+        screenFrame = screenFrame,
         atScreenEdge = thisAlertStyle.atScreenEdge
     }
     local UUID = uuid()
