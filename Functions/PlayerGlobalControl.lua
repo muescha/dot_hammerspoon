@@ -499,7 +499,16 @@ ControlKeys[bundleIdChrome]["ardmediathek.de"] = helper.table.assigned(ControlKe
 function getChromeUrl()
     --local _,url = hs.osascript.applescript('tell application "Google Chrome" to return URL of active tab of front window')
     --_, title, _ = hs.osascript.javascript("Application('Google Chrome').windows[0].activeTab().title()")
-    _, url, _ = hs.osascript.javascript("Application('Google Chrome').windows[0].activeTab().url()")
+    --_, url, _ = hs.osascript.javascript("Application('Google Chrome').windows[0].activeTab().url()")
+    local ok, url, err = hs.osascript.javascript("Application('Google Chrome').windows[0].activeTab().url()")
+    if not ok then
+        debugInfo("getChromeUrl: AppleScript-JS call failed: ", err)
+        return nil
+    end
+    if type(url) ~= "string" or url == "" then
+        debugInfo("getChromeUrl: no URL for active tab (window missing or internal page).")
+        return nil
+    end
     return url
 end
 
@@ -517,7 +526,16 @@ end
 function getChromeUrlDomain()
     local url = getChromeUrl()
     debugInfo("current url: ", url)
-    local host = hs.http.urlParts(url).host
+    if not url then
+        debugInfo("getChromeUrlDomain: url is nil")
+        return nil
+    end
+    local parts = hs.http.urlParts(url)
+    if not parts or not parts.host then
+        debugInfo("getChromeUrlDomain: no host parsed (likely non-http(s) url). parts=", parts)
+        return nil
+    end
+    local host = parts.host
     debugInfo("current host: ", host)
     --local domain = url:match("[%w%.]*%.(%w+%.%w+)")
     local domain = tld(host)
@@ -654,6 +672,7 @@ local function checkSwitch()
     --if bundleIdChrome ~= bundleID then debugInfo("checkSwitch: current app no Chrome") return end
     if bundleIdChrome ~= savedBundleId then debugInfo("checkSwitch: saved window is not chrome") return end
     if savedWindow==nil then debugInfo("checkSwitch: no window saved") return end
+    if savedWindow:application()==nil then debugInfo("checkSwitch: savedWindow has no Application") return end
     if win == savedWindow then debugInfo("checkSwitch: current app focused is same window as saved") return end
 
     local savedWindowFocused = savedWindow:application():focusedWindow()
@@ -691,6 +710,10 @@ local function getAppActions()
     if savedBundleId == bundleIdChrome then
         --local domain = savedDomain or getChromeUrlDomain()
         local domain = getChromeUrlDomain()
+        if domain == nil then
+            debugInfo("No domain detected for current Chrome tab (likely internal/blank page).")
+            return nil
+        end
         appActions = ControlKeys[savedBundleId][domain]
         if appActions == nil then
             --local generic = ControlKeys[savedBundleId]["genieric.video"]
@@ -782,7 +805,7 @@ local function setSavedWindow()
     local appActions = getAppActions()
 
     if appActions == nil then
-        local msg = "no player actions defined for current domain: " .. savedDomain
+        local msg = "no player actions defined for current domain: " .. (savedDomain or "(none)")
         debugInfo(msg)
         hs.alert.show(msg)
         return
