@@ -750,7 +750,17 @@ local function createHotkey(sourceKey, action, description)
     hs.hotkey.bind(hyper, sourceKey, keyInfo(description), function()
 
         functionMemory = {}
-        debugInfo("reset functionMemory")
+        debugInfo("")
+        debugInfo("-----------------------------")
+        debugInfo("HotKey")
+        debugInfo("-----------------------------")
+        debugInfo("hyper: ", hyper)
+        debugInfo("sourceKey: ", sourceKey)
+        debugInfo("description: ", keyInfo(description))
+        debugInfo("Key: ", hyper,  " + '", sourceKey, "' => ", keyInfo(description))
+        debugInfo("Action ", action)
+        debugInfo("-----------------------------")
+        debugInfo("step: reset functionMemory")
         print("collectgarbage(count)")
         print(collectgarbage("count"))
         --         collectgarbage("collect")
@@ -771,6 +781,10 @@ local function createHotkey(sourceKey, action, description)
 
         print("collectgarbage(count)")
         print(collectgarbage("count"))
+        debugInfo("-----------------------------")
+        debugInfo("HotKey: End")
+        debugInfo("-----------------------------")
+
     end)
 
 end
