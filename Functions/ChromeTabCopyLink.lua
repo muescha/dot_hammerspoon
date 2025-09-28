@@ -21,10 +21,14 @@ local function processTitleAndURL(output)
         return
     end
 
+    local info_template = "Copied to clipboard:\n\n- Domain: %s\n-  Title: %s\n-    URL: %s"
+
     -- TODO make as config
     local markdown = string.format("%s: [%s](%s)", tld, json.title, json.url)
+    local info = string.format(info_template, tld, json.title, json.url)
     hs.pasteboard.setContents(markdown)
     print("Copied to clipboard:\n" .. markdown)
+    hs.alert.show(info, { textFont = "Menlo"}, 4)
 end
 
 local function fetchTitleAndURLFromChrome()
