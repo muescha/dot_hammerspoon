@@ -59,6 +59,7 @@ print("hs.logger.defaultLogLevel: " .. hs.logger.defaultLogLevel)
 helper = {
     table = require('Helpers.Table'),
     window = require('Helpers.Window'),
+    url = require('Helpers.UrlHelper')
 }
 
 hs.loadSpoon("EmmyLua")
