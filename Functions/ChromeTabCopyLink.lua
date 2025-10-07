@@ -2,11 +2,14 @@
 
 fileInfo()
 
-local function getTLD(url)
-    local hostname = url:match("://(.-)/") or url
-    hostname = hostname:gsub("^www%.", "")
-    return hostname:match("([^%.]+%.[^%.]+)$") -- Holt das letzte Domain-Level
-end
+-- Configuration: domains mapped to a set (table with true values) of parameters to keep
+local PARAM_WHITELIST_BY_DOMAIN = {
+    ["google.com"] = { q = true },
+    -- add more:
+    -- ["example.com"] = { id = true }
+}
+
+
 
 local function processTitleAndURL(output)
     local json = hs.json.decode(output)
@@ -15,17 +18,18 @@ local function processTitleAndURL(output)
         return
     end
 
-    local tld = getTLD(json.url)
+    local tld = helper.url.getTld(json.url)
     if not tld then
         print("Could not determine TLD for URL: " .. json.url)
         return
     end
 
-    local info_template = "Copied to clipboard:\n\n- Domain: %s\n-  Title: %s\n-    URL: %s"
+    local filteredUrl = helper.url.filterUrlParams(json.url, tld, PARAM_WHITELIST_BY_DOMAIN)
 
     -- TODO make as config
-    local markdown = string.format("%s: [%s](%s)", tld, json.title, json.url)
-    local info = string.format(info_template, tld, json.title, json.url)
+    local info_template = "Copied to clipboard:\n\n- Domain: %s\n-  Title: %s\n-    URL: %s"
+    local markdown = string.format("%s: [%s](%s)", tld, json.title, filteredUrl)
+    local info = string.format(info_template, tld, json.title, filteredUrl)
     hs.pasteboard.setContents(markdown)
     print("Copied to clipboard:\n" .. markdown)
     hs.alert.show(info, { textFont = "Menlo"}, 4)
