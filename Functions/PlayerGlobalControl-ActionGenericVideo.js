@@ -23,6 +23,12 @@
             ? `${hours}:${minutes}:${seconds}.${milliseconds}`
             : `${hours}:${minutes}:${seconds}`;
     }
+
+    function computeJumpSeconds(rate, base = 4, minJump = 3, maxJump = 30) {
+        const safeRate = Math.max(0.1, rate || 1);
+        return Math.min(maxJump, Math.max(minJump, base * safeRate));
+    }
+
     const speedSteps = {
         speedInc: function(currentSpeed){
             if(currentSpeed >= 1){
@@ -83,12 +89,16 @@
             return player.playbackRate;
         },
         moveForward: function () {
-            player.currentTime += 5; // jump 5 seconds
-            return formatTime(player.currentTime)
+            const jump = computeJumpSeconds(player.playbackRate);
+            var info = formatTime(player.currentTime) + " + " + jump + " = ";
+            player.currentTime += jump;
+            return info + formatTime(player.currentTime)
         },
         moveBackward: function () {
-            player.currentTime -= 5; // jump 5 seconds backwards
-            return formatTime(player.currentTime)
+            const jump = computeJumpSeconds(player.playbackRate);
+            var info = formatTime(player.currentTime) + " - " + jump + " = ";
+            player.currentTime -= jump;
+            return info + formatTime(player.currentTime)
         },
         nil: function () {
             return 'function not defined in params.action';
