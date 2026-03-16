@@ -9,6 +9,13 @@ local PARAM_WHITELIST_BY_DOMAIN = {
     -- ["example.com"] = { id = true }
 }
 
+local function escapeMarkdownLabel(text)
+    local s = tostring(text or "")
+    s = s:gsub("\\", "\\\\")
+    s = s:gsub("%]", "\\]")
+    s = s:gsub("%[", "\\[")
+    return s
+end
 
 
 local function processTitleAndURL(output)
@@ -18,21 +25,22 @@ local function processTitleAndURL(output)
         return
     end
 
-    local tld = helper.url.getTld(json.url)
-    if not tld then
-        print("Could not determine TLD for URL: " .. json.url)
-        return
+    local tld = helper.url.getTld(json.url) or "link"
+    if tld == "link" then
+        print("Could not determine TLD for URL, using fallback: " .. tostring(json.url))
     end
 
-    local filteredUrl = helper.url.filterUrlParams(json.url, tld, PARAM_WHITELIST_BY_DOMAIN)
+    local filteredUrl = helper.url.filterUrlParams(json.url, tld, PARAM_WHITELIST_BY_DOMAIN) or json.url
+    local safeTitle = escapeMarkdownLabel(json.title)
 
     -- TODO make as config
     local info_template = "Copied to clipboard:\n\n- Domain: %s\n-  Title: %s\n-    URL: %s"
-    local markdown = string.format("%s: [%s](%s)", tld, json.title, filteredUrl)
+    local markdown = string.format("%s: [%s](%s)", tld, safeTitle, filteredUrl)
     local info = string.format(info_template, tld, json.title, filteredUrl)
-    hs.pasteboard.setContents(markdown)
-    print("Copied to clipboard:\n" .. markdown)
-    hs.alert.show(info, { textFont = "Menlo"}, 4)
+    return {
+        markdown = markdown,
+        info = info
+    }
 end
 
 local function fetchTitleAndURLFromChrome()
@@ -54,13 +62,39 @@ local function fetchTitleAndURLFromChrome()
     ]]
 
     local ok, output, message = hs.osascript.javascript(script)
+    local result
     if ok and output and output ~= "" then
-        processTitleAndURL(output)
+        result = processTitleAndURL(output)
     else
         print("Error fetching data from Chrome: " .. tostring(message))
+    end
+    return result
+end
+
+local function fetchTitleAndURLFromChromeToClipboard()
+    local result = fetchTitleAndURLFromChrome()
+    if result and result.markdown and result.markdown ~= "" then
+        hs.pasteboard.setContents(result.markdown)
+        print("Copied to clipboard:\n" .. result.markdown)
+        hs.alert.show(result.info, { textFont = "Menlo" }, 4)
+    end
+end
+
+local function fetchTitleAndURLFromChromeAndPaste()
+    local result = fetchTitleAndURLFromChrome()
+    if result and result.markdown and result.markdown ~= "" then
+        -- too slow
+        -- hs.eventtap.keyStrokes(result.markdown)
+        hs.pasteboard.setContents(result.markdown)
+        hs.timer.usleep(10000) -- 10ms
+        hs.eventtap.keyStroke({"cmd"}, "v")
     end
 end
 
 hs.hotkey.bind(hyper, "c", keyInfo("Copy ChromeTab URL"), function()
-    fetchTitleAndURLFromChrome()
+    fetchTitleAndURLFromChromeToClipboard()
+end)
+
+hs.hotkey.bind({ "shift", "ctrl"}, "v", keyInfo("insert ChromeTab URL"), function()
+    fetchTitleAndURLFromChromeAndPaste()
 end)

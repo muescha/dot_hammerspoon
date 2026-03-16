@@ -4,7 +4,7 @@ local UrlHelper = {}
 UrlHelper.__index = UrlHelper
 
 -- Configuration: domains mapped to a set (table with true values) of parameters to keep
-local PARAM_WHITELIST_BY_DOMAIN = {
+local Example_PARAM_WHITELIST_BY_DOMAIN = {
     ["google.com"] = { q = true, rlz = true },
     -- extend as needed:
     -- ["example.com"] = { id = true }
@@ -54,7 +54,7 @@ local function urlEncode(str)
 end
 
 -- Keep-only filter for query parameters based on domain whitelist, using hs.http.urlParts
-function UrlHelper.filterUrlParams(url, tld)
+function UrlHelper.filterUrlParams(url, tld, PARAM_WHITELIST_BY_DOMAIN)
     if not url then return url end
     local _tld = tld or UrlHelper.getTld(url)
     if not _tld then return url end

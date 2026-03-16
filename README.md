@@ -176,10 +176,18 @@ This feature enables users to open a new Chrome window with the same size as an 
 
 ### [ChromeTabCopyLink](/Functions/ChromeTabCopyLink.lua)
 
-With this it is fast to copy the current title and link as markdown text.
+Copies the current Chrome tab's title and URL as formatted Markdown text to the clipboard. Features include:
 
-Shortcut:
-- hyper + c -> Copy ChromeTab URL
+- URL parameter filtering: Removes tracking and unnecessary URL parameters while preserving important ones (e.g., search queries)
+- Domain-specific whitelist: Configure which parameters to keep per domain (see `PARAM_WHITELIST_BY_DOMAIN` in the file)
+- Enhanced clipboard alert: Shows domain (TLD), title, and filtered URL in a detailed notification
+- Direct paste option: Bypass clipboard and paste directly into the active application
+
+The Markdown format is: `domain: [title](url)`
+
+Shortcuts:
+- hyper + c -> Copy ChromeTab URL to clipboard
+- shift + ctrl + v -> Fetch and paste ChromeTab URL directly
 
 ### [ChromeTabToNewWindow](/Functions/ChromeTabToNewWindow.lua)
 
