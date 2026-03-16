@@ -91,10 +91,83 @@ local function fetchTitleAndURLFromChromeAndPaste()
     end
 end
 
+local function fetchAllTabsFromCurrentWindow()
+    print("Fetching all tabs from current Chrome window...")
+
+    local script = [[
+        (function() {
+            const app = Application("Google Chrome");
+            const frontWindow = app.windows[0];
+
+            if (!frontWindow) return JSON.stringify({ error: "No Chrome window found" });
+
+            const allTabs = [];
+            const tabs = frontWindow.tabs;
+
+            for (let i = 0; i < tabs.length; i++) {
+                allTabs.push({
+                    title: tabs[i].title(),
+                    url: tabs[i].url()
+                });
+            }
+
+            return JSON.stringify({ tabs: allTabs });
+        })();
+    ]]
+
+    local ok, output, message = hs.osascript.javascript(script)
+    if ok and output and output ~= "" then
+        return hs.json.decode(output)
+    else
+        print("Error fetching all tabs from Chrome: " .. tostring(message))
+        return nil
+    end
+end
+
+local function formatTabsAsMarkdown(tabsData)
+    if not tabsData or not tabsData.tabs or #tabsData.tabs == 0 then
+        return nil, "No tabs found"
+    end
+
+    local lines = {}
+    table.insert(lines, "Tabs (" .. #tabsData.tabs .. " total):")
+
+    for i, tab in ipairs(tabsData.tabs) do
+        local tld = helper.url.getTld(tab.url) or "link"
+        local filteredUrl = helper.url.filterUrlParams(tab.url, tld, PARAM_WHITELIST_BY_DOMAIN) or tab.url
+        local safeTitle = escapeMarkdownLabel(tab.title)
+        local markdown = string.format("- %s: [%s](%s)", tld, safeTitle, filteredUrl)
+        table.insert(lines, markdown)
+    end
+
+    return table.concat(lines, "\n")
+end
+
+local function fetchAllTabsToClipboardAndPaste()
+    local tabsData = fetchAllTabsFromCurrentWindow()
+    if not tabsData then return end
+
+    local markdown, err = formatTabsAsMarkdown(tabsData)
+    if not markdown then
+        print("Error formatting tabs: " .. err)
+        return
+    end
+
+    hs.pasteboard.setContents(markdown)
+    local info = string.format("Copied %d tabs from current window", #tabsData.tabs)
+    print(info .. ":\n" .. markdown)
+    hs.timer.usleep(10000) -- 10ms
+    hs.eventtap.keyStroke({"cmd"}, "v")
+end
+
 hs.hotkey.bind(hyper, "c", keyInfo("Copy ChromeTab URL"), function()
     fetchTitleAndURLFromChromeToClipboard()
 end)
 
 hs.hotkey.bind({ "shift", "ctrl"}, "v", keyInfo("insert ChromeTab URL"), function()
     fetchTitleAndURLFromChromeAndPaste()
+end)
+
+hs.hotkey.bind({ "cmd", "shift", "ctrl"}, "v", keyInfo("insert all ChromeTabs from window"), function()
+    fetchAllTabsToClipboardAndPaste()
 end)

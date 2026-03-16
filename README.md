@@ -182,12 +182,21 @@ Copies the current Chrome tab's title and URL as formatted Markdown text to the 
 - Domain-specific whitelist: Configure which parameters to keep per domain (see `PARAM_WHITELIST_BY_DOMAIN` in the file)
 - Enhanced clipboard alert: Shows domain (TLD), title, and filtered URL in a detailed notification
 - Direct paste option: Bypass clipboard and paste directly into the active application
+- Copy all tabs: Fetch and paste all tabs from the current Chrome window as a Markdown list
 
-The Markdown format is: `domain: [title](url)`
+The Markdown format for single tab is: `domain: [title](url)`
+
+The Markdown format for all tabs is:
+```
+Tabs (X total):
+- domain: [title](url)
+- domain: [title](url)
+```
 
 Shortcuts:
 - hyper + c -> Copy ChromeTab URL to clipboard
 - shift + ctrl + v -> Fetch and paste ChromeTab URL directly
+- cmd + shift + ctrl + v -> Fetch and paste all ChromeTabs from current window
 
 ### [ChromeTabToNewWindow](/Functions/ChromeTabToNewWindow.lua)
 
