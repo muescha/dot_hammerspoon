@@ -25,29 +25,29 @@ end
 
 local function to_unit(values, rotate)
     if rotate then
-        return units(values[1], 0, values[2], 1 )
+        return units(values[2], 0, values[3], 1 )
     else
-        return units(0, values[1], 1, values[2] )
+        return units(0, values[2], 1, values[3] )
     end
 end
 
 -- TODO make this as setup
 local layout_setup = {
     --key  start, size
-    ["1"] = {   0,  1/3, "+==1==+-----+-----+"},
-    ["2"] = { 1/3,  1/3, "+-----+==2==+-----+"},
-    ["3"] = { 2/3,  1/3, "+-----+-----+==3==+"},
-    ["4"] = {   0,    1, "+========4========+"}, -- max
-    ["5"] = {   0,  2/3, "+=====5=====+-----+"},
-    ["6"] = { 2/6,  3/6, "+-----+===6====+--+"},
-    ["7"] = { 1/3,  2/3, "+-----+=====7=====+"}, -- udemy
-    ["8"] = { 1/2,  1/2, "+--------+====8===+"}, -- bottom
-    ["a"] = {   0,  1/2, "+=====a==+-----+--+"}, -- top
-    ["b"] = { 1/2,  2/6, "+--------+==b==+--+"},
-    ["c"] = { 5/6,  1/6, "+--------+-----+c=+"},
-    ["d"] = {   0,  5/6, "+=======d======+--+"},
-    ["e"] = {6/12, 3/12, "+--------+=e=+-+--+"},
-    ["f"] = {9/12, 1/12, "+--------+---+f+--+"},
+    {"1",   0,  1/3, "+==1==+-----+-----+"},
+    {"2", 1/3,  1/3, "+-----+==2==+-----+"},
+    {"3", 2/3,  1/3, "+-----+-----+==3==+"},
+    {"4",   0,    1, "+========4========+"}, -- max
+    {"5",   0,  2/3, "+=====5=====+-----+"},
+    {"6", 2/6,  3/6, "+-----+===6====+--+"},
+    {"7", 1/3,  2/3, "+-----+=====7=====+"}, -- udemy
+    {"8", 1/2,  1/2, "+--------+====8===+"}, -- bottom
+    {"a",   0,  1/2, "+=====a==+-----+--+"}, -- top
+    {"b", 1/2,  2/6, "+--------+==b==+--+"},
+    {"c", 5/6,  1/6, "+--------+-----+c=+"},
+    {"d",   0,  5/6, "+=======d======+--+"},
+    {"e", 6/12, 3/12, "+--------+=e=+-+--+"},
+    {"f", 9/12, 1/12, "+--------+---+f+--+"},
 }
 local layout_keys = {
     maximize = "4",
@@ -66,11 +66,11 @@ local screens = {
 local layout = { ["portrait"] = {}, ["landscape"] = {}}
 local layout_info = "Layout: "
 
-local sortedLayoutSetupIterator = helper.table.sortByKeyIterator(layout_setup)
-for i, v in sortedLayoutSetupIterator do
+for _, v in ipairs(layout_setup) do
+    local i = v[1]
     layout["portrait"][i] = to_unit(v, false)
     layout["landscape"][i] = to_unit(v, true)
-    layout_info = layout_info .. "\n key "..i..": " .. v[3]
+    layout_info = layout_info .. "\n key "..i..": " .. v[4]
               :gsub("%+([=0-9a-f])", "╞%1") -- ←→ ◄ ► ◂▸ ‹› ╞╡
               :gsub("([=0-9a-f])%+", "%1╡")
               :gsub("%+", "│") -- ·¦│
@@ -130,7 +130,8 @@ end
 
 local hkbm = hotkeybindmodal(hyper, "w", keyInfo("place on Big Monitor "), startFn, exitFn)
 
-for key, _ in pairs(layout_setup) do
+for _, v in ipairs(layout_setup) do
+    local key = v[1]
 
     local move = function()
         windowMoveToKey(screens.monitor_2, key)
