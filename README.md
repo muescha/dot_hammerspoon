@@ -117,7 +117,9 @@ Layout:
  key a:  =====a==          
  key b:           ==b==    
  key c:                =c= 
- key d:  =======d======    
+ key d:  =======d======
+ key e:           =b=    
+ key f:               f    
 ```
 
 ### [MultiDisplayBlack](/Functions/MultiDisplayBlack.lua)
