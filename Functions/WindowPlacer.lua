@@ -20,110 +20,134 @@ local units = require("hs.geometry").rect
 debugTable(hs.screen.allScreens())
 
 for k, v in pairs(hs.screen.allScreens()) do
-    print(v:currentMode().desc  .. ": " .. v:name())
+    print(v:currentMode().desc .. ": " .. v:name())
 end
 
 local function to_unit(values, rotate)
     if rotate then
-        return units(values.start, 0, values.size, 1 )
+        return units(values.start, 0, values.size, 1)
     else
-        return units(0, values.start, 1, values.size )
+        return units(0, values.start, 1, values.size)
     end
 end
 
 -- TODO make this as setup
 local layout_setup = {
     -- key, start, size, info
-    { key = "1", start =    0, size =  1/3, info = "+==1==+-----+-----+" },
-    { key = "2", start =  1/3, size =  1/3, info = "+-----+==2==+-----+" },
-    { key = "3", start =  2/3, size =  1/3, info = "+-----+-----+==3==+" },
-    { key = "4", start =    0, size =    1, info = "+========4========+" }, -- max
-    { key = "5", start =    0, size =  2/3, info = "+=====5=====+-----+" },
-    { key = "6", start =  2/6, size =  3/6, info = "+-----+===6====+--+" },
-    { key = "7", start =  1/3, size =  2/3, info = "+-----+=====7=====+" }, -- udemy
-    { key = "8", start =  1/2, size =  1/2, info = "+--------+====8===+" }, -- bottom
-    { key = "a", start =    0, size =  1/2, info = "+=====a==+-----+--+" }, -- top
-    { key = "b", start =  1/2, size =  2/6, info = "+--------+==b==+--+" },
-    { key = "c", start =  5/6, size =  1/6, info = "+--------+-----+c=+" },
-    { key = "d", start =    0, size =  5/6, info = "+=======d======+--+" },
+    { key = "1", start = 0,    size = 1/3,  info = "+==1==+-----+-----+" },
+    { key = "2", start = 1/3,  size = 1/3,  info = "+-----+==2==+-----+" },
+    { key = "3", start = 2/3,  size = 1/3,  info = "+-----+-----+==3==+" },
+    { key = "4", start = 0,    size = 1,    info = "+========4========+" }, -- max
+    { key = "5", start = 0,    size = 2/3,  info = "+=====5=====+-----+" },
+    { key = "6", start = 2/6,  size = 3/6,  info = "+-----+===6====+--+" },
+    { key = "7", start = 1/3,  size = 2/3,  info = "+-----+=====7=====+" }, -- udemy
+    { key = "8", start = 1/2,  size = 1/2,  info = "+--------+====8===+" }, -- bottom
+    { key = "a", start = 0,    size = 1/2,  info = "+=====a==+-----+--+" }, -- top
+    { key = "b", start = 1/2,  size = 2/6,  info = "+--------+==b==+--+" },
+    { key = "c", start = 5/6,  size = 1/6,  info = "+--------+-----+c=+" },
+    { key = "d", start = 0,    size = 5/6,  info = "+=======d======+--+" },
     { key = "e", start = 6/12, size = 3/12, info = "+--------+=e=+-+--+" },
     { key = "f", start = 9/12, size = 1/12, info = "+--------+---+f+--+" },
 }
+
 local layout_keys = {
     maximize = "4",
     top = "a",
     bottom = "8",
-    udemy = "7"
+    udemy = "7",
 }
 
 -- TODO make this as config
 local screens = {
     internal = "Built%-in",
-    monitor_1 = 'Thunderbolt',
-    monitor_2 = '5120x1440'
+    monitor_1 = "Thunderbolt",
+    monitor_2 = "5120x1440",
 }
 
-local layout = { ["portrait"] = {}, ["landscape"] = {}}
+local layout = {
+    portrait = {},
+    landscape = {},
+}
+
+local function formatLayoutInfo(info)
+    return info
+        :gsub("%+([=0-9a-f])", "╞%1") -- ←→ ◄ ► ◂▸ ‹› ╞╡
+        :gsub("([=0-9a-f])%+", "%1╡")
+        :gsub("%+", "│") -- ·¦│
+        :gsub("%-", " ")
+        :gsub("=", "─")
+end
+
 local layout_info = "Layout: "
 
 for _, v in ipairs(layout_setup) do
-    layout["portrait"][v.key] = to_unit(v, false)
-    layout["landscape"][v.key] = to_unit(v, true)
-    layout_info = layout_info .. "\n key "..v.key..": " .. v.info
-              :gsub("%+([=0-9a-f])", "╞%1") -- ←→ ◄ ► ◂▸ ‹› ╞╡
-              :gsub("([=0-9a-f])%+", "%1╡")
-              :gsub("%+", "│") -- ·¦│
-              :gsub("%-", " ")
-              :gsub("=", "─")
+    layout.portrait[v.key] = to_unit(v, false)
+    layout.landscape[v.key] = to_unit(v, true)
+
+    layout_info = layout_info .. "\n key " .. v.key .. ": " .. formatLayoutInfo(v.info)
 end
 
 local function framesEqual(f1, f2, tolerance)
     tolerance = tolerance or 1
-    return math.abs(f1.x - f2.x) < tolerance and
-            math.abs(f1.y - f2.y) < tolerance and
-            math.abs(f1.w - f2.w) < tolerance and
-            math.abs(f1.h - f2.h) < tolerance
+
+    return math.abs(f1.x - f2.x) < tolerance
+        and math.abs(f1.y - f2.y) < tolerance
+        and math.abs(f1.w - f2.w) < tolerance
+        and math.abs(f1.h - f2.h) < tolerance
 end
 
 local function windowMoveToUnit(window, screen, newUnit)
-
-    if window:screen() ~= screen then return end
+    if window:screen() ~= screen then
+        return
+    end
 
     local expectedFrame = screen:fromUnitRect(newUnit)
     local actualFrame = window:frame()
 
     if framesEqual(actualFrame, expectedFrame) then
-        debugInfo('No Adjustment needed...')
+        debugInfo("No Adjustment needed...")
         return false
-    else
-        debugInfo('Adjustment needed...')
-        window:moveToUnit(newUnit)
-        return true
     end
+
+    debugInfo("Adjustment needed...")
+    window:moveToUnit(newUnit)
+
+    return true
 end
 
 local function windowMoveToKey(screenId, key)
     local screen = hs.screen.find(screenId)
-    if screen == nil then hs.alert.show('No screen available for keyword: ' .. screenId) return end
+
+    if screen == nil then
+        hs.alert.show("No screen available for keyword: " .. screenId)
+        return
+    end
+
     local window = hs.window.focusedWindow()
-    local direction = (screen:rotate()==0) and "landscape" or "portrait"
+    local direction = screen:rotate() == 0 and "landscape" or "portrait"
     local newUnit = layout[direction][key]
 
     window:moveToScreen(screen)
 
-    --retryWhile(function() return windowMoveToUnit(window, screen, newUnit) end)
-    retryWhileOnComplete(function() return windowMoveToUnit(window, screen, newUnit) end, function(success) print(success and "Success: placed the window on right place!" or "Failed to place windows!") end)
-
+    -- retryWhile(function() return windowMoveToUnit(window, screen, newUnit) end)
+    retryWhileOnComplete(
+        function()
+            return windowMoveToUnit(window, screen, newUnit)
+        end,
+        function(success)
+            print(success and "Success: placed the window on right place!" or "Failed to place windows!")
+        end
+    )
 end
 
 debugInfo(layout_info)
 
 local function startFn()
     local window = hs.window.frontmostWindow()
-    hs.alert.show(layout_info, { textFont = "Menlo"}, window, 'do-not-close')
+    hs.alert.show(layout_info, { textFont = "Menlo" }, window, "do-not-close")
 end
 
-local function exitFn ()
+local function exitFn()
     hs.alert.closeAll()
 end
 
@@ -141,7 +165,11 @@ for _, v in ipairs(layout_setup) do
     hkbm:bind(hyper, key, move)
 end
 
-local opts_keys = { SCREEN = 1, LAYOUT = 2, DESC = 3, }
+local opts_keys = {
+    SCREEN = 1,
+    LAYOUT = 2,
+    DESC = 3,
+}
 
 local layout_non_modal = {
     ["1"] = { screens.monitor_1, layout_keys.top,      "place on one half of monitor" },
