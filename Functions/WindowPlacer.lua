@@ -34,20 +34,20 @@ end
 -- TODO make this as setup
 local layout_setup = {
     -- key, start, size, info
-    { key = "1", start = 0,    size = 1/3,  info = "+==1==+-----+-----+" },
-    { key = "2", start = 1/3,  size = 1/3,  info = "+-----+==2==+-----+" },
-    { key = "3", start = 2/3,  size = 1/3,  info = "+-----+-----+==3==+" },
-    { key = "4", start = 0,    size = 1,    info = "+========4========+" }, -- max
-    { key = "5", start = 0,    size = 2/3,  info = "+=====5=====+-----+" },
-    { key = "6", start = 2/6,  size = 3/6,  info = "+-----+===6====+--+" },
-    { key = "7", start = 1/3,  size = 2/3,  info = "+-----+=====7=====+" }, -- udemy
-    { key = "8", start = 1/2,  size = 1/2,  info = "+--------+====8===+" }, -- bottom
-    { key = "a", start = 0,    size = 1/2,  info = "+=====a==+-----+--+" }, -- top
-    { key = "b", start = 1/2,  size = 2/6,  info = "+--------+==b==+--+" },
-    { key = "c", start = 5/6,  size = 1/6,  info = "+--------+-----+c=+" },
-    { key = "d", start = 0,    size = 5/6,  info = "+=======d======+--+" },
-    { key = "e", start = 6/12, size = 3/12, info = "+--------+=e=+-+--+" },
-    { key = "f", start = 9/12, size = 1/12, info = "+--------+---+f+--+" },
+    { key = "4", start = 0,    size = 1,    info = "+========X========+" }, -- max
+    { key = "1", start = 0,    size = 1/3,  info = "+==X==+-----+-----+" },
+    { key = "2", start = 1/3,  size = 1/3,  info = "+-----+==X==+-----+" },
+    { key = "3", start = 2/3,  size = 1/3,  info = "+-----+-----+==X==+" },
+    { key = "5", start = 0,    size = 2/3,  info = "+=====X=====+-----+" },
+    { key = "6", start = 2/6,  size = 3/6,  info = "+-----+===X====+--+" },
+    { key = "7", start = 1/3,  size = 2/3,  info = "+-----+=====X=====+" }, -- udemy
+    { key = "8", start = 1/2,  size = 1/2,  info = "+--------+====X===+" }, -- bottom
+    { key = "a", start = 0,    size = 1/2,  info = "+=====X==+-----+--+" }, -- top
+    { key = "b", start = 1/2,  size = 2/6,  info = "+--------+==X==+--+" },
+    { key = "c", start = 5/6,  size = 1/6,  info = "+--------+-----+X=+" },
+    { key = "d", start = 0,    size = 5/6,  info = "+=======X======+--+" },
+    { key = "e", start = 6/12, size = 3/12, info = "+--------+=X=+-+--+" },
+    { key = "f", start = 9/12, size = 1/12, info = "+--------+---+X+--+" },
 }
 
 local layout_keys = {
@@ -69,22 +69,47 @@ local layout = {
     landscape = {},
 }
 
-local function formatLayoutInfo(info)
-    return info
-        :gsub("%+([=0-9a-f])", "╞%1") -- ←→ ◄ ► ◂▸ ‹› ╞╡
-        :gsub("([=0-9a-f])%+", "%1╡")
-        :gsub("%+", "│") -- ·¦│
+local function formatLayoutInfo(info, key, symbols)
+    return "key " .. key .. ": " .. info
+
+        :gsub("%+([=X])", symbols.left .. "%1") -- ←→ ◄ ► ◂▸ ‹› ╞╡
+        :gsub("([=X])%+", "%1".. symbols.right)
+        :gsub("X", key)
+        :gsub("%+", symbols.middle) -- ·¦│
         :gsub("%-", " ")
         :gsub("=", "─")
 end
 
-local layout_info = "Layout: "
+local function getSymbols(text)
+    local symbol_sets = {
+        { left = "╞", right = "╡", middle = " " },
+        { left = "╞", right = "╡", middle = "·" },
+        { left = "╞", right = "╡", middle = "│" },
+        { left = "←", right = "→", middle = " " },
+        { left = "‹", right = "›", middle = " " },
+    }
+
+    math.randomseed(os.time())
+
+    local layout_number = math.random(#symbol_sets)
+
+    local symbols = symbol_sets[layout_number]
+    return { layout = layout_number, set = symbols }
+end
+
+local function createLayoutInfo(layout_setup)
+  local symbols = getSymbols()
+  local layout_info = "Layout (" .. symbols.layout .."): "
+  for _, v in ipairs(layout_setup) do
+    layout_info = layout_info .. "\n" .. formatLayoutInfo(v.info, v.key, symbols.set)
+  end
+  return layout_info
+end
+
 
 for _, v in ipairs(layout_setup) do
     layout.portrait[v.key] = to_unit(v, false)
     layout.landscape[v.key] = to_unit(v, true)
-
-    layout_info = layout_info .. "\n key " .. v.key .. ": " .. formatLayoutInfo(v.info)
 end
 
 local function framesEqual(f1, f2, tolerance)
@@ -140,10 +165,11 @@ local function windowMoveToKey(screenId, key)
     )
 end
 
-debugInfo(layout_info)
 
 local function startFn()
     local window = hs.window.frontmostWindow()
+    local layout_info = createLayoutInfo(layout_setup)
+    debugInfo(layout_info)
     hs.alert.show(layout_info, { textFont = "Menlo" }, window, "do-not-close")
 end
 
