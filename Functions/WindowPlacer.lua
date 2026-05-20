@@ -25,29 +25,29 @@ end
 
 local function to_unit(values, rotate)
     if rotate then
-        return units(values[2], 0, values[3], 1 )
+        return units(values.start, 0, values.size, 1 )
     else
-        return units(0, values[2], 1, values[3] )
+        return units(0, values.start, 1, values.size )
     end
 end
 
 -- TODO make this as setup
 local layout_setup = {
-    --key  start, size
-    {"1",   0,  1/3, "+==1==+-----+-----+"},
-    {"2", 1/3,  1/3, "+-----+==2==+-----+"},
-    {"3", 2/3,  1/3, "+-----+-----+==3==+"},
-    {"4",   0,    1, "+========4========+"}, -- max
-    {"5",   0,  2/3, "+=====5=====+-----+"},
-    {"6", 2/6,  3/6, "+-----+===6====+--+"},
-    {"7", 1/3,  2/3, "+-----+=====7=====+"}, -- udemy
-    {"8", 1/2,  1/2, "+--------+====8===+"}, -- bottom
-    {"a",   0,  1/2, "+=====a==+-----+--+"}, -- top
-    {"b", 1/2,  2/6, "+--------+==b==+--+"},
-    {"c", 5/6,  1/6, "+--------+-----+c=+"},
-    {"d",   0,  5/6, "+=======d======+--+"},
-    {"e", 6/12, 3/12, "+--------+=e=+-+--+"},
-    {"f", 9/12, 1/12, "+--------+---+f+--+"},
+    -- key, start, size, info
+    { key = "1", start =    0, size =  1/3, info = "+==1==+-----+-----+" },
+    { key = "2", start =  1/3, size =  1/3, info = "+-----+==2==+-----+" },
+    { key = "3", start =  2/3, size =  1/3, info = "+-----+-----+==3==+" },
+    { key = "4", start =    0, size =    1, info = "+========4========+" }, -- max
+    { key = "5", start =    0, size =  2/3, info = "+=====5=====+-----+" },
+    { key = "6", start =  2/6, size =  3/6, info = "+-----+===6====+--+" },
+    { key = "7", start =  1/3, size =  2/3, info = "+-----+=====7=====+" }, -- udemy
+    { key = "8", start =  1/2, size =  1/2, info = "+--------+====8===+" }, -- bottom
+    { key = "a", start =    0, size =  1/2, info = "+=====a==+-----+--+" }, -- top
+    { key = "b", start =  1/2, size =  2/6, info = "+--------+==b==+--+" },
+    { key = "c", start =  5/6, size =  1/6, info = "+--------+-----+c=+" },
+    { key = "d", start =    0, size =  5/6, info = "+=======d======+--+" },
+    { key = "e", start = 6/12, size = 3/12, info = "+--------+=e=+-+--+" },
+    { key = "f", start = 9/12, size = 1/12, info = "+--------+---+f+--+" },
 }
 local layout_keys = {
     maximize = "4",
@@ -67,10 +67,9 @@ local layout = { ["portrait"] = {}, ["landscape"] = {}}
 local layout_info = "Layout: "
 
 for _, v in ipairs(layout_setup) do
-    local i = v[1]
-    layout["portrait"][i] = to_unit(v, false)
-    layout["landscape"][i] = to_unit(v, true)
-    layout_info = layout_info .. "\n key "..i..": " .. v[4]
+    layout["portrait"][v.key] = to_unit(v, false)
+    layout["landscape"][v.key] = to_unit(v, true)
+    layout_info = layout_info .. "\n key "..v.key..": " .. v.info
               :gsub("%+([=0-9a-f])", "╞%1") -- ←→ ◄ ► ◂▸ ‹› ╞╡
               :gsub("([=0-9a-f])%+", "%1╡")
               :gsub("%+", "│") -- ·¦│
@@ -131,7 +130,7 @@ end
 local hkbm = hotkeybindmodal(hyper, "w", keyInfo("place on Big Monitor "), startFn, exitFn)
 
 for _, v in ipairs(layout_setup) do
-    local key = v[1]
+    local key = v.key
 
     local move = function()
         windowMoveToKey(screens.monitor_2, key)
@@ -157,4 +156,3 @@ for key, opts in pairs(layout_non_modal) do
         windowMoveToKey(opts[opts_keys.SCREEN], opts[opts_keys.LAYOUT])
     end)
 end
-
