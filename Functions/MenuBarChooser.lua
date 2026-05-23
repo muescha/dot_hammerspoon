@@ -6,13 +6,99 @@ local progressHud = nil
 local debugLoggedElementCount = 0
 local SCAN_INTERVAL_SECONDS = 0.002
 local ENABLE_VERBOSE_AX_DUMPS = false
+local DEBUG_CACHE_LOGS = true
+local DEBUG_SCAN_SUMMARY_LOGS = false
+local DEBUG_DISCOVERED_ITEM_LOGS = false
+local DEBUG_AX_TREE_LOGS = false
 local SHOW_CHOOSER_DURING_SCAN = true
 local CHOOSER_WIDTH_PERCENT = 60
 local CHOOSER_ROWS = 20
 local HUD_OVERLAY_ON_CHOOSER = true
 local DEFER_CHOOSER_ITEMS_UNTIL_SCAN_COMPLETE = true
+local NEGATIVE_APP_CACHE_TTL_SECONDS = 180
+
+local function newTTLCache(defaultTTLSeconds)
+    local store = {}
+
+    local function now()
+        return os.time()
+    end
+
+    return {
+        get = function(_, key)
+            local entry = store[key]
+            if not entry then
+                return nil
+            end
+            if entry.expiresAt and entry.expiresAt <= now() then
+                store[key] = nil
+                return nil
+            end
+            return entry.value
+        end,
+        set = function(_, key, value, ttlSeconds)
+            local ttl = ttlSeconds
+            if ttl == nil then
+                ttl = defaultTTLSeconds
+            end
+            store[key] = {
+                value = value,
+                expiresAt = ttl and (now() + ttl) or nil
+            }
+            return value
+        end,
+        delete = function(_, key)
+            store[key] = nil
+        end,
+        clear = function(_)
+            store = {}
+        end
+    }
+end
+
+local negativeAppCache = newTTLCache(NEGATIVE_APP_CACHE_TTL_SECONDS)
+local NEGATIVE_APP_CACHE_MISS = "__no_menu_extras__"
+
+local function debugLog(flag, message, ...)
+    if flag then
+        hs.printf(message, ...)
+    end
+end
+
+local function logCache(message, ...)
+    debugLog(DEBUG_CACHE_LOGS, message, ...)
+end
+
+local function logScan(message, ...)
+    debugLog(DEBUG_SCAN_SUMMARY_LOGS, message, ...)
+end
+
+local function logDiscoveredItem(message, ...)
+    debugLog(DEBUG_DISCOVERED_ITEM_LOGS, message, ...)
+end
+
+local function appCacheKey(app)
+    return app:bundleID() or app:path() or app:name()
+end
+
+local function shouldSkipNegativeAppCache(app)
+    local bundleID = app:bundleID() or ""
+    local appName = app:name() or ""
+
+    return bundleID == "com.apple.controlcenter"
+            or bundleID == "com.apple.systemuiserver"
+            or bundleID == "com.apple.TextInputMenuAgent"
+            or appName == "Kontrollzentrum"
+            or appName == "Control Center"
+            or appName == "SystemUIServer"
+            or appName == "TextInputMenuAgent"
+end
 
 local function printChildren(application, children, recursive)
+    if not DEBUG_AX_TREE_LOGS then
+        return
+    end
+
     for _, child in ipairs(children) do
         debugElement(child,"child")
         print(application:name())
@@ -37,9 +123,20 @@ local function printChildren(application, children, recursive)
 end
 
 local function findMenuExtrasMenuBarForApplication(app)
-
-    if app:bundleID() == "com.apple.WebKit.WebContent" then
+    local bundleID = app:bundleID()
+    if bundleID == "com.apple.WebKit.WebContent" then
         return nil
+    end
+
+    local cacheKey = appCacheKey(app)
+    local canUseNegativeCache = cacheKey and not shouldSkipNegativeAppCache(app)
+    if canUseNegativeCache then
+        local cachedValue = negativeAppCache:get(cacheKey)
+        if cachedValue == NEGATIVE_APP_CACHE_MISS then
+            logCache("[MenuBarChooser][cache] HIT negative %s", cacheKey)
+            return nil
+        end
+        logCache("[MenuBarChooser][cache] MISS %s", cacheKey)
     end
 
     local appElement = axuielement.applicationElement(app)
@@ -49,6 +146,10 @@ local function findMenuExtrasMenuBarForApplication(app)
         local menuBar = appElement:attributeValue("AXExtrasMenuBar")
         --debugElement(menuBar,"menuBar")
         if menuBar then
+            if canUseNegativeCache then
+                negativeAppCache:delete(cacheKey)
+                logCache("[MenuBarChooser][cache] DELETE negative %s", cacheKey)
+            end
             return menuBar
             --local children = menuBar:attributeValue("AXChildren")
             --debugTable(children, "children")
@@ -57,6 +158,11 @@ local function findMenuExtrasMenuBarForApplication(app)
             --end
             --return children
         end
+    end
+
+    if canUseNegativeCache then
+        negativeAppCache:set(cacheKey, NEGATIVE_APP_CACHE_MISS)
+        logCache("[MenuBarChooser][cache] STORE negative %s", cacheKey)
     end
 
     return nil
@@ -558,12 +664,12 @@ end
 
 local function logDiscoveredMenuItem(app, item, choice, names)
     debugLoggedElementCount = debugLoggedElementCount + 1
-    hs.printf("[MenuBarChooser][%03d] %s", debugLoggedElementCount, choice.text)
-    hs.printf("[MenuBarChooser][%03d] actions=%s", debugLoggedElementCount, joinedActionNames(names))
-    hs.printf("[MenuBarChooser][%03d] %s", debugLoggedElementCount, choice.subText)
+    logDiscoveredItem("[MenuBarChooser][%03d] %s", debugLoggedElementCount, choice.text)
+    logDiscoveredItem("[MenuBarChooser][%03d] actions=%s", debugLoggedElementCount, joinedActionNames(names))
+    logDiscoveredItem("[MenuBarChooser][%03d] %s", debugLoggedElementCount, choice.subText)
 
     if shouldDebugFullDump(app) then
-        hs.printf("[MenuBarChooser][%03d] full AX dump follows", debugLoggedElementCount)
+        logDiscoveredItem("[MenuBarChooser][%03d] full AX dump follows", debugLoggedElementCount)
         debugElement(item, string.format("MenuBarChooser %s", choice.text))
     end
 end
@@ -681,7 +787,7 @@ function MenuBarChooser()
         chooser:show()
     end
     updateProgressHud(0, #runningApplications, 0, 0, nil, "Suche startet...")
-    hs.printf("[MenuBarChooser] scan started, apps=%d", #runningApplications)
+    logScan("[MenuBarChooser] scan started, apps=%d", #runningApplications)
 
     scanTimer = hs.timer.doEvery(SCAN_INTERVAL_SECONDS, function()
         if not chooser then
@@ -705,7 +811,7 @@ function MenuBarChooser()
             if not SHOW_CHOOSER_DURING_SCAN then
                 chooser:show()
             end
-            hs.printf("[MenuBarChooser] scan finished, apps=%d, matchedApps=%d, items=%d",
+            logScan("[MenuBarChooser] scan finished, apps=%d, matchedApps=%d, items=%d",
                     scannedCount,
                     foundAppsCount,
                     foundItemsCount)
