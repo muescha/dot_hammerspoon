@@ -18,6 +18,7 @@ local CHOOSER_MAX_WIDTH = 1400
 local CHOOSER_ROWS = 20
 local HUD_OVERLAY_ON_CHOOSER = true
 local CHOOSER_TOP_MARGIN_LANDSCAPE = 120
+local MENU_BAR_SNAPSHOT_ICON_MODE = "all" -- off | all
 
 -- Debug logging
 local ENABLE_VERBOSE_AX_DUMPS = false
@@ -25,6 +26,7 @@ local DEBUG_CACHE_LOGS = false
 local DEBUG_SCAN_SUMMARY_LOGS = false
 local DEBUG_DISCOVERED_ITEM_LOGS = false
 local DEBUG_AX_TREE_LOGS = false
+local DEBUG_ICON_LOGS = true
 
 local function newTTLCache(defaultTTLSeconds)
     local store = {}
@@ -84,6 +86,10 @@ end
 
 local function logDiscoveredItem(message, ...)
     debugLog(DEBUG_DISCOVERED_ITEM_LOGS, message, ...)
+end
+
+local function logIcon(message, ...)
+    debugLog(DEBUG_ICON_LOGS, message, ...)
 end
 
 local function appCacheKey(app)
@@ -594,6 +600,178 @@ local function shouldSkipMenuItem(app, item, names)
     return false
 end
 
+local function screenContainingFrame(frame)
+    if type(frame) ~= "table" then
+        return nil
+    end
+
+    local centerX = (frame.x or 0) + ((frame.w or 0) / 2)
+    local centerY = (frame.y or 0) + ((frame.h or 0) / 2)
+
+    for _, screen in ipairs(hs.screen.allScreens()) do
+        local fullFrame = screen:fullFrame()
+        if centerX >= fullFrame.x and centerX <= (fullFrame.x + fullFrame.w)
+                and centerY >= fullFrame.y and centerY <= (fullFrame.y + fullFrame.h) then
+            return screen, fullFrame
+        end
+    end
+
+    return nil
+end
+
+local backgroundColorForSnapshotImage
+
+local function menuBarSnapshotImageForItem(item, debugLabel)
+    local frame = safeAttributeValue(item, "AXFrame")
+    if type(frame) ~= "table" or (frame.w or 0) <= 0 or (frame.h or 0) <= 0 then
+        logIcon("[MenuBarChooser][icon] snapshot skipped %s reason=invalid-frame", debugLabel or "-")
+        return nil
+    end
+
+    -- Skip wide textual menu bar items like the clock/date because they don't produce a usable icon.
+    if (frame.w or 0) > ((frame.h or 0) * 2.2) then
+        logIcon(
+                "[MenuBarChooser][icon] snapshot skipped %s reason=wide-frame frame=%dx%d",
+                debugLabel or "-",
+                math.floor(frame.w or 0),
+                math.floor(frame.h or 0)
+        )
+        return nil
+    end
+
+    local screen, screenFrame = screenContainingFrame(frame)
+    if not screen then
+        logIcon("[MenuBarChooser][icon] snapshot skipped %s reason=no-screen", debugLabel or "-")
+        return nil
+    end
+
+    local padding = 2
+    local snapshotRect = {
+        x = math.max(0, math.floor((frame.x or 0) - screenFrame.x - padding)),
+        y = math.max(0, math.floor((frame.y or 0) - screenFrame.y - padding)),
+        w = math.floor((frame.w or 0) + (padding * 2)),
+        h = math.floor((frame.h or 0) + (padding * 2))
+    }
+    local snapshot = screen:snapshot(snapshotRect)
+    if not snapshot then
+        logIcon("[MenuBarChooser][icon] snapshot failed %s rect=%dx%d", debugLabel or "-", snapshotRect.w, snapshotRect.h)
+        return nil
+    end
+
+    local sizedSnapshot = snapshot:setSize({ w = 18, h = 18 }, false)
+    local snapshotSize = sizedSnapshot:size()
+    local rawSnapshotSize = snapshot:size()
+    logIcon(
+            "[MenuBarChooser][icon] snapshot ok %s frame=%dx%d rect=%dx%d raw=%dx%d sized=%dx%d",
+            debugLabel or "-",
+            math.floor(frame.w or 0),
+            math.floor(frame.h or 0),
+            snapshotRect.w,
+            snapshotRect.h,
+            math.floor(rawSnapshotSize.w or 0),
+            math.floor(rawSnapshotSize.h or 0),
+            math.floor(snapshotSize.w or 0),
+            math.floor(snapshotSize.h or 0)
+    )
+    return {
+        image = sizedSnapshot,
+        backgroundColor = backgroundColorForSnapshotImage(snapshot)
+    }
+end
+
+local function averageColorForImagePoints(image, points)
+    local redSum = 0
+    local greenSum = 0
+    local blueSum = 0
+    local alphaSum = 0
+    local measuredCount = 0
+
+    for _, point in ipairs(points) do
+        local color = image:colorAt(point)
+        if color then
+            redSum = redSum + (color.red or color.white or 0)
+            greenSum = greenSum + (color.green or color.white or 0)
+            blueSum = blueSum + (color.blue or color.white or 0)
+            alphaSum = alphaSum + (color.alpha or 1)
+            measuredCount = measuredCount + 1
+        end
+    end
+
+    if measuredCount == 0 then
+        return { white = 1, alpha = 1 }
+    end
+
+    return {
+        red = redSum / measuredCount,
+        green = greenSum / measuredCount,
+        blue = blueSum / measuredCount,
+        alpha = alphaSum / measuredCount
+    }
+end
+
+backgroundColorForSnapshotImage = function(image)
+    local size = image:size()
+    local samplePoints = {
+        { x = 1, y = 1 },
+        { x = math.max(1, math.floor(size.w / 2)), y = 1 },
+        { x = math.max(1, math.floor(size.w - 2)), y = 1 },
+        { x = 1, y = math.max(1, math.floor(size.h - 2)) },
+        { x = math.max(1, math.floor(size.w - 2)), y = math.max(1, math.floor(size.h - 2)) }
+    }
+    return averageColorForImagePoints(image, samplePoints)
+end
+
+local function roundedChoiceImage(image, backgroundColor)
+    local iconCanvas = canvas.new({ x = 0, y = 0, w = 18, h = 18 })
+    iconCanvas[1] = {
+        type = "rectangle",
+        action = "clip",
+        roundedRectRadii = { xRadius = 4, yRadius = 4 },
+        frame = { x = 0, y = 0, w = 18, h = 18 }
+    }
+    iconCanvas[2] = {
+        type = "rectangle",
+        action = "fill",
+        fillColor = backgroundColor,
+        frame = { x = 0, y = 0, w = 18, h = 18 }
+    }
+    iconCanvas[3] = {
+        type = "image",
+        image = image,
+        frame = { x = 0, y = 0, w = 18, h = 18 },
+        imageScaling = "scaleProportionally"
+    }
+
+    local roundedImage = iconCanvas:imageFromCanvas()
+    iconCanvas:delete()
+    return roundedImage
+end
+
+local function preferredChoiceImage(app, item, debugLabel)
+    if MENU_BAR_SNAPSHOT_ICON_MODE ~= "off" and (isControlCenterApp(app) or isGenericHostApp(app)) then
+        local snapshotInfo = menuBarSnapshotImageForItem(item, debugLabel)
+        if snapshotInfo then
+            logIcon("[MenuBarChooser][icon] using snapshot %s", debugLabel or "-")
+            return roundedChoiceImage(snapshotInfo.image, snapshotInfo.backgroundColor)
+        end
+    end
+
+    local bundleID = app:bundleID()
+    if bundleID then
+        logIcon("[MenuBarChooser][icon] using bundle fallback %s bundle=%s", debugLabel or "-", bundleID)
+        return hs.image.imageFromAppBundle(bundleID)
+    end
+
+    local path = app:path()
+    if path then
+        logIcon("[MenuBarChooser][icon] using file fallback %s path=%s", debugLabel or "-", path)
+        return hs.image.iconForFile(path)
+    end
+
+    logIcon("[MenuBarChooser][icon] no image %s", debugLabel or "-")
+    return nil
+end
+
 local function buildMenuChoice(app, item, actionName, selectionMap)
     local identifier = firstNonEmpty(item.AXIdentifier, safeAttributeValue(item, "AXIdentifier"))
     local title = firstNonEmpty(item.AXTitle, safeAttributeValue(item, "AXTitle"))
@@ -662,16 +840,7 @@ local function buildMenuChoice(app, item, actionName, selectionMap)
     local debugText = table.concat(detailParts, " | ")
 
     local appKey = addMenuItem(selectionMap, item)
-    local bundleID = app:bundleID()
-    local appImage = nil
-    if bundleID then
-        appImage = hs.image.imageFromAppBundle(bundleID)
-    else
-        local path = app:path()
-        if path then
-            appImage = hs.image.iconForFile(path)
-        end
-    end
+    local appImage = preferredChoiceImage(app, item, appText)
 
     return {
         text = appText,
