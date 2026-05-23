@@ -158,15 +158,11 @@ local function isControlCenterApp(app)
             or appName == "Control Center"
 end
 
-local function isGenericHostBundle(bundleID)
-    return bundleID == "com.apple.TextInputMenuAgent"
-            or bundleID == "com.apple.systemuiserver"
-end
-
 local function isGenericHostApp(app)
     local bundleID = app:bundleID() or ""
     local appName = app:name() or ""
-    return isGenericHostBundle(bundleID)
+    return bundleID == "com.apple.TextInputMenuAgent"
+            or bundleID == "com.apple.systemuiserver"
             or appName == "TextInputMenuAgent"
             or appName == "SystemUIServer"
 end
@@ -345,6 +341,7 @@ local function buildMenuChoice(app, item, actionName, selectionMap)
     local subrole = firstNonEmpty(item.AXSubrole, safeAttributeValue(item, "AXSubrole"))
     local roleDescription = firstNonEmpty(item.AXRoleDescription, safeAttributeValue(item, "AXRoleDescription"))
     local label = preferredLabelValue(description, title, valueDescription, help)
+    local derivedLabel = deriveGenericNameFromMenuLabel(label)
     local isGenericHost = isGenericHostApp(app)
     local appName = fallbackDisplayAppName(app)
     local rawAppName = app:name()
@@ -352,7 +349,6 @@ local function buildMenuChoice(app, item, actionName, selectionMap)
     if isGenericHost then
         appText = inferSemanticNameFromMenu(item) or appName
     else
-        local derivedLabel = deriveGenericNameFromMenuLabel(label)
         if derivedLabel then
             appText = derivedLabel
         end
@@ -365,7 +361,6 @@ local function buildMenuChoice(app, item, actionName, selectionMap)
     if rawAppName and rawAppName ~= appName and not isGenericHost then
         table.insert(summaryParts, rawAppName)
     end
-    local derivedLabel = deriveGenericNameFromMenuLabel(label)
     if not isGenericHost and label and label ~= appText and not derivedLabel then
         appendSummaryDetail(summaryParts, label)
     elseif not isGenericHost and label and label ~= appText and derivedLabel ~= appText then
