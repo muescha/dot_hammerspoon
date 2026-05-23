@@ -1,9 +1,16 @@
 local axuielement = require("hs.axuielement")
+local canvas = require("hs.canvas")
 local chooser = nil
 local scanTimer = nil
+local progressHud = nil
 local debugLoggedElementCount = 0
 local SCAN_INTERVAL_SECONDS = 0.002
 local ENABLE_VERBOSE_AX_DUMPS = false
+local SHOW_CHOOSER_DURING_SCAN = true
+local CHOOSER_WIDTH_PERCENT = 60
+local CHOOSER_ROWS = 20
+local HUD_OVERLAY_ON_CHOOSER = true
+local DEFER_CHOOSER_ITEMS_UNTIL_SCAN_COMPLETE = true
 
 local function printChildren(application, children, recursive)
     for _, child in ipairs(children) do
@@ -72,6 +79,108 @@ local function stopScanTimer()
         scanTimer:stop()
         scanTimer = nil
     end
+end
+
+local function hideProgressHud()
+    if progressHud then
+        progressHud:hide()
+        progressHud:delete()
+        progressHud = nil
+    end
+end
+
+local function progressHudFrame()
+    local screenFrame = hs.screen.mainScreen():frame()
+    local chooserWidth = math.floor(screenFrame.w * (CHOOSER_WIDTH_PERCENT / 100))
+    local chooserX = math.floor(screenFrame.x + (screenFrame.w - chooserWidth) / 2)
+    local chooserY = math.floor(screenFrame.y + 120)
+    local chooserHeight = 88 + (CHOOSER_ROWS * 22)
+
+    return {
+        x = chooserX,
+        y = chooserY,
+        w = chooserWidth,
+        h = chooserHeight
+    }
+end
+
+local function ensureProgressHud()
+    if progressHud then
+        return progressHud
+    end
+
+    local frame = progressHudFrame()
+    local innerWidth = frame.w - 48
+    local barY = frame.h - 54
+    local outerFillAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.985
+    local outerStrokeAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.14
+    local searchFillAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.98
+    local searchStrokeAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.10
+    local placeholderAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 1
+
+    progressHud = canvas.new(frame)
+    progressHud:level(HUD_OVERLAY_ON_CHOOSER and hs.canvas.windowLevels.overlay or hs.canvas.windowLevels.modalPanel)
+    progressHud[1] = {
+        type = "rectangle",
+        action = "fill",
+        roundedRectRadii = { xRadius = 16, yRadius = 16 },
+        fillColor = { alpha = outerFillAlpha, white = 0.94 },
+        strokeColor = { alpha = outerStrokeAlpha, white = 0.45 },
+        strokeWidth = 1
+    }
+    progressHud[2] = {
+        type = "rectangle",
+        action = "fill",
+        roundedRectRadii = { xRadius = 10, yRadius = 10 },
+        fillColor = { alpha = searchFillAlpha, white = 0.985 },
+        strokeColor = { alpha = searchStrokeAlpha, white = 0.45 },
+        strokeWidth = 1,
+        frame = { x = 20, y = 18, w = frame.w - 40, h = 44 }
+    }
+    progressHud[3] = {
+        type = "text",
+        text = "Menu-Bar-Items werden geladen ...",
+        textSize = 20,
+        textColor = { white = 0.48, alpha = placeholderAlpha },
+        frame = { x = 34, y = 28, w = innerWidth - 20, h = 22 }
+    }
+    progressHud[4] = {
+        type = "text",
+        text = "",
+        textSize = 30,
+        textColor = { white = 0.10, alpha = 1 },
+        frame = { x = 24, y = 84, w = innerWidth, h = 40 }
+    }
+    progressHud[5] = {
+        type = "text",
+        text = "",
+        textSize = 18,
+        textColor = { white = 0.34, alpha = 1 },
+        frame = { x = 24, y = 136, w = innerWidth, h = math.max(84, frame.h - 220) }
+    }
+    progressHud[6] = {
+        type = "rectangle",
+        action = "fill",
+        roundedRectRadii = { xRadius = 9, yRadius = 9 },
+        fillColor = { white = 0.72, alpha = 0.32 },
+        frame = { x = 24, y = barY, w = innerWidth, h = 16 }
+    }
+    progressHud[7] = {
+        type = "rectangle",
+        action = "fill",
+        roundedRectRadii = { xRadius = 9, yRadius = 9 },
+        fillColor = { red = 0.24, green = 0.48, blue = 0.98, alpha = 0.95 },
+        frame = { x = 24, y = barY, w = 0, h = 16 }
+    }
+    progressHud[8] = {
+        type = "text",
+        text = "0%",
+        textSize = 15,
+        textColor = { white = 0.38, alpha = 1 },
+        frame = { x = frame.w - 92, y = barY - 28, w = 68, h = 20 }
+    }
+    progressHud:show()
+    return progressHud
 end
 
 local function addMenuItem(selectionMap, value)
@@ -458,18 +567,34 @@ local function applyChoices(selectionMap)
     FuzzyMatcher.setChoices(selectionMap.chooserItems, chooser, false, FuzzyMatcher.Sorter.asc)
 end
 
-local function updateProgressPlaceholder(scannedCount, totalCount, foundAppsCount, foundItemsCount)
-    chooser:placeholderText(string.format(
-            "Suche laeuft ... %d/%d Apps, %d Apps mit Menueleiste, %d Eintraege",
+local function updateProgressHud(scannedCount, totalCount, foundAppsCount, foundItemsCount, lastAppName, state)
+    local hud = ensureProgressHud()
+    local progress = 0
+    if totalCount > 0 then
+        progress = math.min(1, scannedCount / totalCount)
+    end
+    local currentFrame = hud:frame()
+    local barWidth = math.floor((currentFrame.w - 48) * progress)
+
+    hud[4].text = string.format(
+            "%s  %d/%d",
+            state,
             scannedCount,
-            totalCount,
+            totalCount
+    )
+    hud[5].text = string.format(
+            "%d Apps mit Menueleiste\n%d Eintraege\n%s",
             foundAppsCount,
-            foundItemsCount
-    ))
+            foundItemsCount,
+            lastAppName or "-"
+    )
+    hud[7].frame = { x = 24, y = currentFrame.h - 54, w = barWidth, h = 16 }
+    hud[8].text = string.format("%d%%", math.floor(progress * 100))
 end
 
 function MenuBarChooser()
     stopScanTimer()
+    hideProgressHud()
     debugLoggedElementCount = 0
 
     if chooser then
@@ -488,6 +613,7 @@ function MenuBarChooser()
     local foundItemsCount = 0
     local scanIndex = 1
     local lastStatusAppName = nil
+    local scanComplete = false
 
     local chooserCallback = function(selection)
         if selection and selection.element and selection.element.key then
@@ -506,38 +632,55 @@ function MenuBarChooser()
     end
 
     chooser = hs.chooser.new(chooserCallback)
-    chooser:placeholderText("Menu-Bar-Items werden geladen ...")
     chooser:hideCallback(function()
         stopScanTimer()
+        hideProgressHud()
     end)
 
-    applyChoices(selectionMap)
+    if not DEFER_CHOOSER_ITEMS_UNTIL_SCAN_COMPLETE then
+        applyChoices(selectionMap)
+    end
 
     chooser:queryChangedCallback(function()
-        applyChoices(selectionMap)
+        if scanComplete or not DEFER_CHOOSER_ITEMS_UNTIL_SCAN_COMPLETE then
+            applyChoices(selectionMap)
+        end
     end)
 
     --chooser:rows(#choices)
-    chooser:rows(20)
-    chooser:width(60)
+    chooser:rows(CHOOSER_ROWS)
+    chooser:width(CHOOSER_WIDTH_PERCENT)
     --chooser:bgDark(true)
     --chooser:fgColor(hs.drawing.color.x11.orange)
     --chooser:subTextColor(hs.drawing.color.x11.chocolate)
-    chooser:show()
+    if SHOW_CHOOSER_DURING_SCAN then
+        chooser:show()
+    end
+    updateProgressHud(0, #runningApplications, 0, 0, nil, "Suche startet...")
     hs.printf("[MenuBarChooser] scan started, apps=%d", #runningApplications)
 
     scanTimer = hs.timer.doEvery(SCAN_INTERVAL_SECONDS, function()
-        if not chooser or not chooser:isVisible() then
+        if not chooser then
             stopScanTimer()
+            return
+        end
+        if SHOW_CHOOSER_DURING_SCAN and not chooser:isVisible() then
+            stopScanTimer()
+            hideProgressHud()
             return
         end
 
         local app = runningApplications[scanIndex]
         if not app then
             stopScanTimer()
+            scanComplete = true
             lastStatusAppName = "fertig"
-            chooser:placeholderText(string.format("%d Menu-Bar-Eintraege geladen", foundItemsCount))
+            updateProgressHud(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, lastStatusAppName, "Suche abgeschlossen")
+            hideProgressHud()
             applyChoices(selectionMap)
+            if not SHOW_CHOOSER_DURING_SCAN then
+                chooser:show()
+            end
             hs.printf("[MenuBarChooser] scan finished, apps=%d, matchedApps=%d, items=%d",
                     scannedCount,
                     foundAppsCount,
@@ -561,8 +704,8 @@ function MenuBarChooser()
 
         lastStatusAppName = lastAppName
         scanIndex = scanIndex + 1
-        updateProgressPlaceholder(scannedCount, #runningApplications, foundAppsCount, foundItemsCount)
-        if foundItemsCount ~= foundItemsAtStart then
+        updateProgressHud(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, lastAppName, "Suche laeuft...")
+        if foundItemsCount ~= foundItemsAtStart and not DEFER_CHOOSER_ITEMS_UNTIL_SCAN_COMPLETE then
             applyChoices(selectionMap)
         end
     end)
