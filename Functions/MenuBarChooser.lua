@@ -21,12 +21,12 @@ local CHOOSER_TOP_MARGIN_LANDSCAPE = 120
 local MENU_BAR_SNAPSHOT_ICON_MODE = "all" -- off | all
 
 -- Debug logging
-local ENABLE_VERBOSE_AX_DUMPS = false
+local DEBUG_VERBOSE_AX_DUMPS = false
 local DEBUG_CACHE_LOGS = false
 local DEBUG_SCAN_SUMMARY_LOGS = false
 local DEBUG_DISCOVERED_ITEM_LOGS = false
 local DEBUG_AX_TREE_LOGS = false
-local DEBUG_ICON_LOGS = true
+local DEBUG_ICON_LOGS = false
 
 local function newTTLCache(defaultTTLSeconds)
     local store = {}
@@ -438,7 +438,7 @@ local function isGenericHostApp(app)
 end
 
 local function shouldDebugFullDump(app)
-    return ENABLE_VERBOSE_AX_DUMPS and isControlCenterApp(app)
+    return DEBUG_VERBOSE_AX_DUMPS and isControlCenterApp(app)
 end
 
 local function choosePrimaryAction(names)
