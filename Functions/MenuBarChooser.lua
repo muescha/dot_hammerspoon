@@ -163,6 +163,18 @@ local function choosePrimaryAction(names)
     return sortedNames[1], sortedNames
 end
 
+local function isGenericDescription(value)
+    local cleaned = cleanValue(value)
+    if not cleaned then
+        return true
+    end
+
+    local normalized = string.lower(cleaned)
+    return normalized == "statusmenü"
+            or normalized == "status menu"
+            or normalized == "menu extra"
+end
+
 local function isZeroSizedFrame(item)
     local frame = safeAttributeValue(item, "AXFrame")
     if type(frame) ~= "table" then
@@ -209,7 +221,8 @@ local function buildMenuChoice(app, item, actionName, selectionMap)
     local role = firstNonEmpty(item.AXRole, safeAttributeValue(item, "AXRole"))
     local subrole = firstNonEmpty(item.AXSubrole, safeAttributeValue(item, "AXSubrole"))
     local roleDescription = firstNonEmpty(item.AXRoleDescription, safeAttributeValue(item, "AXRoleDescription"))
-    local label = firstNonEmpty(identifier, title, valueDescription, description, help, roleDescription, value, "Unbenanntes Element")
+    local preferredDescription = isGenericDescription(description) and nil or description
+    local label = firstNonEmpty(preferredDescription, title, valueDescription, help, value, identifier, roleDescription, "Unbenanntes Element")
 
     local textParts = { app:name() .. ": " .. label }
     if actionName ~= "AXPress" then
