@@ -1,10 +1,23 @@
 local axuielement = require("hs.axuielement")
 local canvas = require("hs.canvas")
+
 local chooser = nil
 local scanTimer = nil
 local progressHud = nil
 local debugLoggedElementCount = 0
+
+-- Scan behavior
 local SCAN_INTERVAL_SECONDS = 0.002
+local SHOW_CHOOSER_DURING_SCAN = true
+local DEFER_CHOOSER_ITEMS_UNTIL_SCAN_COMPLETE = true
+local NEGATIVE_APP_CACHE_TTL_SECONDS = 180
+
+-- Chooser / HUD layout
+local CHOOSER_WIDTH_PERCENT = 60
+local CHOOSER_ROWS = 20
+local HUD_OVERLAY_ON_CHOOSER = true
+
+-- Debug logging
 local ENABLE_VERBOSE_AX_DUMPS = false
 local DEBUG_CACHE_LOGS = false
 local DEBUG_SCAN_SUMMARY_LOGS = false
