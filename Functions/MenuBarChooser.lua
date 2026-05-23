@@ -158,6 +158,23 @@ local function isControlCenterApp(app)
             or appName == "Control Center"
 end
 
+local function isGenericHostBundle(bundleID)
+    return bundleID == "com.apple.TextInputMenuAgent"
+            or bundleID == "com.apple.systemuiserver"
+end
+
+local function isGenericHostApp(app)
+    local bundleID = app:bundleID() or ""
+    local appName = app:name() or ""
+    return isGenericHostBundle(bundleID)
+            or appName == "TextInputMenuAgent"
+            or appName == "SystemUIServer"
+end
+
+local function shouldDebugFullDump(app)
+    return isControlCenterApp(app) or isGenericHostApp(app)
+end
+
 local function choosePrimaryAction(names)
     local sortedNames = sortActionNames(names)
     return sortedNames[1], sortedNames
@@ -173,6 +190,197 @@ local function isGenericDescription(value)
     return normalized == "statusmenü"
             or normalized == "status menu"
             or normalized == "menu extra"
+end
+
+local function isWeakLabelValue(value)
+    local cleaned = cleanValue(value)
+    if not cleaned then
+        return true
+    end
+
+    local normalized = string.lower(cleaned)
+    if isGenericDescription(cleaned) then
+        return true
+    end
+
+    if normalized == "<none>" or normalized == "= <none>" then
+        return true
+    end
+
+    return false
+end
+
+local function preferredLabelValue(...)
+    for i = 1, select("#", ...) do
+        local value = cleanValue(select(i, ...))
+        if value and not isWeakLabelValue(value) then
+            return value
+        end
+    end
+    return nil
+end
+
+local function appendSummaryDetail(parts, value)
+    local cleaned = cleanValue(value)
+    if cleaned and not isGenericDescription(cleaned) then
+        table.insert(parts, cleaned)
+    end
+end
+
+local function childLabel(element)
+    return firstNonEmpty(
+            safeAttributeValue(element, "AXTitle"),
+            safeAttributeValue(element, "AXDescription"),
+            safeAttributeValue(element, "AXValue"),
+            safeAttributeValue(element, "AXRoleDescription"),
+            safeAttributeValue(element, "AXRole"),
+            "<unbenannt>"
+    )
+end
+
+local function stripTrailingDots(value)
+    local cleaned = cleanValue(value)
+    if not cleaned then
+        return nil
+    end
+
+    cleaned = cleaned:gsub("%s*[%.…]+$", "")
+    return cleanValue(cleaned)
+end
+
+local function stripTrailingSeparators(value)
+    local cleaned = cleanValue(value)
+    if not cleaned then
+        return nil
+    end
+
+    cleaned = cleaned:gsub("[%s%-%–%—%:%·]+$", "")
+    return cleanValue(cleaned)
+end
+
+local function deriveGenericNameFromMenuLabel(label)
+    local cleaned = stripTrailingDots(label)
+    if not cleaned then
+        return nil
+    end
+
+    local lower = string.lower(cleaned)
+
+    if lower:match("^open%s+.+%s+settings$") then
+        local subject = cleaned:match("^[Oo]pen%s+(.+)%s+[Ss]ettings$")
+        return stripTrailingSeparators(subject)
+    end
+
+    if lower:match("^open%s+.+%s+preferences$") then
+        local subject = cleaned:match("^[Oo]pen%s+(.+)%s+[Pp]references$")
+        return stripTrailingSeparators(subject)
+    end
+
+    local germanNeedle = "einstellungen öffnen"
+    local germanStart = lower:find(germanNeedle, 1, true)
+    if germanStart and germanStart > 1 then
+        local subject = cleaned:sub(1, germanStart - 1)
+        return stripTrailingSeparators(subject)
+    end
+
+    return nil
+end
+
+local function collectChildMenuLabels(element, labels, depth, maxDepth)
+    if not element or depth > maxDepth then
+        return
+    end
+
+    local label = childLabel(element)
+    if label then
+        table.insert(labels, label)
+    end
+
+    local children = safeAttributeValue(element, "AXChildren")
+    if not children or #children == 0 then
+        return
+    end
+
+    for _, child in ipairs(children) do
+        collectChildMenuLabels(child, labels, depth + 1, maxDepth)
+    end
+end
+
+local function inferredGenericAppName(app, item)
+    if not isGenericHostApp(app) then
+        return nil
+    end
+
+    local labels = {}
+    collectChildMenuLabels(item, labels, 1, 4)
+    for index = #labels, 1, -1 do
+        local label = labels[index]
+        local genericName = deriveGenericNameFromMenuLabel(label)
+        if genericName then
+            return genericName
+        end
+    end
+
+    return nil
+end
+
+local function fallbackDisplayAppName(app)
+    local bundleID = app:bundleID() or ""
+    local appName = app:name() or ""
+    if bundleID == "com.apple.TextInputMenuAgent" or appName == "TextInputMenuAgent" then
+        return "Tastatur"
+    end
+    if bundleID == "com.apple.systemuiserver" or appName == "SystemUIServer" then
+        return "Systemstatus"
+    end
+    return app:name()
+end
+
+local function logMenuTree(element, prefix, depth, maxDepth)
+    if not element or depth > maxDepth then
+        return
+    end
+
+    local role = cleanValue(safeAttributeValue(element, "AXRole")) or "-"
+    local subrole = cleanValue(safeAttributeValue(element, "AXSubrole")) or "-"
+    local label = childLabel(element)
+    local value = cleanValue(safeAttributeValue(element, "AXValue"))
+    local actions = joinedActionNames(sortActionNames(element:actionNames()))
+
+    local info = string.format("%srole=%s subrole=%s label=%s actions=%s",
+            prefix,
+            role,
+            subrole,
+            label,
+            actions)
+    if value then
+        info = info .. " value=" .. value
+    end
+    hs.printf("%s", info)
+
+    local children = safeAttributeValue(element, "AXChildren")
+    if children and #children > 0 then
+        for index, child in ipairs(children) do
+            logMenuTree(child, string.format("%s  [%d] ", prefix, index), depth + 1, maxDepth)
+        end
+    end
+end
+
+local function inspectAttachedMenu(app, item, choice)
+    if not isGenericHostApp(app) then
+        return
+    end
+
+    local children = safeAttributeValue(item, "AXChildren")
+    if not children or #children == 0 then
+        hs.printf("[MenuBarChooser][Inspector] %s has no AXChildren", choice.text)
+        return
+    end
+
+    hs.printf("[MenuBarChooser][Inspector] %s AXChildren=%d", choice.text, #children)
+    for index, child in ipairs(children) do
+        logMenuTree(child, string.format("[MenuBarChooser][Inspector] child[%d] ", index), 1, 3)
+    end
 end
 
 local function isZeroSizedFrame(item)
@@ -221,14 +429,45 @@ local function buildMenuChoice(app, item, actionName, selectionMap)
     local role = firstNonEmpty(item.AXRole, safeAttributeValue(item, "AXRole"))
     local subrole = firstNonEmpty(item.AXSubrole, safeAttributeValue(item, "AXSubrole"))
     local roleDescription = firstNonEmpty(item.AXRoleDescription, safeAttributeValue(item, "AXRoleDescription"))
-    local preferredDescription = isGenericDescription(description) and nil or description
-    local label = firstNonEmpty(preferredDescription, title, valueDescription, help, value, identifier, roleDescription, "Unbenanntes Element")
-
-    local textParts = { app:name() .. ": " .. label }
-    if actionName ~= "AXPress" then
-        table.insert(textParts, "[" .. actionName .. "]")
+    local label = preferredLabelValue(description, title, valueDescription, help)
+    local labelDerivedName = deriveGenericNameFromMenuLabel(label)
+    local inferredAppName = inferredGenericAppName(app, item)
+    local isGenericHost = isGenericHostApp(app)
+    local appName = labelDerivedName or inferredAppName or fallbackDisplayAppName(app)
+    local rawAppName = app:name()
+    local appText = label and (label ~= appName) and (appName .. ": " .. label) or appName
+    if isGenericHost or labelDerivedName then
+        appText = appName
     end
-    local appText = table.concat(textParts, " ")
+    if isControlCenterApp(app) and value then
+        appText = appText .. " - " .. value
+    end
+
+    local summaryParts = {}
+    if rawAppName and rawAppName ~= appName and not isGenericHost then
+        table.insert(summaryParts, rawAppName)
+    end
+    if not isGenericHost and label and label ~= appText and not labelDerivedName then
+        appendSummaryDetail(summaryParts, label)
+    elseif not isGenericHost and label and label ~= appText and labelDerivedName ~= appName then
+        appendSummaryDetail(summaryParts, label)
+    end
+    if identifier and isControlCenterApp(app) then
+        table.insert(summaryParts, identifier)
+    else
+        appendSummaryDetail(summaryParts, value)
+    end
+    if #summaryParts == 0 then
+        appendSummaryDetail(summaryParts, help)
+    end
+    if #summaryParts == 0 then
+        appendSummaryDetail(summaryParts, valueDescription)
+    end
+    local appSubText = table.concat(summaryParts, " | ")
+
+    if actionName ~= "AXPress" then
+        appText = appText .. " [" .. actionName .. "]"
+    end
 
     local detailParts = {}
     appendDetail(detailParts, "action", actionName)
@@ -242,10 +481,9 @@ local function buildMenuChoice(app, item, actionName, selectionMap)
     appendDetail(detailParts, "roleDesc", roleDescription)
     appendDetail(detailParts, "help", help)
     appendDetail(detailParts, "bundle", app:bundleID())
-    local appSubText = table.concat(detailParts, " | ")
+    local debugText = table.concat(detailParts, " | ")
 
     local appKey = addMenuItem(selectionMap, item)
-    local bundleID = app:bundleID()
     local appImage = nil
     if bundleID then
         appImage = hs.image.imageFromAppBundle(bundleID)
@@ -264,7 +502,7 @@ local function buildMenuChoice(app, item, actionName, selectionMap)
             key = appKey,
             action = actionName
         },
-        debugText = appSubText
+        debugText = debugText
     }
 end
 
@@ -274,9 +512,10 @@ local function logDiscoveredMenuItem(app, item, choice, names)
     hs.printf("[MenuBarChooser][%03d] actions=%s", debugLoggedElementCount, joinedActionNames(names))
     hs.printf("[MenuBarChooser][%03d] %s", debugLoggedElementCount, choice.subText)
 
-    if isControlCenterApp(app) then
-        hs.printf("[MenuBarChooser][%03d] full AX dump for Control Center item follows", debugLoggedElementCount)
+    if shouldDebugFullDump(app) then
+        hs.printf("[MenuBarChooser][%03d] full AX dump follows", debugLoggedElementCount)
         debugElement(item, string.format("MenuBarChooser %s", choice.text))
+        inspectAttachedMenu(app, item, choice)
     end
 end
 
