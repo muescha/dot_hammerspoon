@@ -14,8 +14,10 @@ local NEGATIVE_APP_CACHE_TTL_SECONDS = 180
 
 -- Chooser / HUD layout
 local CHOOSER_WIDTH_PERCENT = 60
+local CHOOSER_MAX_WIDTH = 1400
 local CHOOSER_ROWS = 20
 local HUD_OVERLAY_ON_CHOOSER = true
+local CHOOSER_TOP_MARGIN_LANDSCAPE = 120
 
 -- Debug logging
 local ENABLE_VERBOSE_AX_DUMPS = false
@@ -204,10 +206,19 @@ end
 
 local function progressHudFrame()
     local screenFrame = hs.screen.mainScreen():frame()
-    local chooserWidth = math.floor(screenFrame.w * (CHOOSER_WIDTH_PERCENT / 100))
+    local chooserWidth = math.min(
+            math.floor(screenFrame.w * (CHOOSER_WIDTH_PERCENT / 100)),
+            CHOOSER_MAX_WIDTH
+    )
     local chooserHeight = 88 + (CHOOSER_ROWS * 22)
     local chooserX = math.floor(screenFrame.x + (screenFrame.w - chooserWidth) / 2)
-    local chooserY = math.floor(screenFrame.y + (screenFrame.h - chooserHeight) / 2)
+    local chooserY = nil
+
+    if screenFrame.h > screenFrame.w then
+        chooserY = math.floor(screenFrame.y + (screenFrame.h - chooserHeight) / 2)
+    else
+        chooserY = math.floor(screenFrame.y + CHOOSER_TOP_MARGIN_LANDSCAPE)
+    end
 
     return {
         x = chooserX,
@@ -215,6 +226,11 @@ local function progressHudFrame()
         w = chooserWidth,
         h = chooserHeight
     }
+end
+
+local function chooserWidthPercentForScreen(screenFrame)
+    local cappedPercent = (CHOOSER_MAX_WIDTH / screenFrame.w) * 100
+    return math.min(CHOOSER_WIDTH_PERCENT, cappedPercent)
 end
 
 local function ensureProgressHud()
@@ -785,8 +801,9 @@ function MenuBarChooser()
     end)
 
     --chooser:rows(#choices)
+    local chooserScreenFrame = hs.screen.mainScreen():frame()
     chooser:rows(CHOOSER_ROWS)
-    chooser:width(CHOOSER_WIDTH_PERCENT)
+    chooser:width(chooserWidthPercentForScreen(chooserScreenFrame))
     --chooser:bgDark(true)
     --chooser:fgColor(hs.drawing.color.x11.orange)
     --chooser:subTextColor(hs.drawing.color.x11.chocolate)
