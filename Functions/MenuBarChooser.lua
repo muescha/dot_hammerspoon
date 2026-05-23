@@ -111,12 +111,18 @@ local function ensureProgressHud()
 
     local frame = progressHudFrame()
     local innerWidth = frame.w - 48
-    local barY = frame.h - 54
+    local barY = 76
     local outerFillAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.985
     local outerStrokeAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.14
     local searchFillAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.98
     local searchStrokeAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.10
     local placeholderAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 1
+    local rowFillAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.88
+    local rowStrokeAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.12
+    local detailFillAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.80
+    local detailStrokeAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.10
+    local rowInset = 14
+    local rowWidth = frame.w - (rowInset * 2)
 
     progressHud = canvas.new(frame)
     progressHud:level(HUD_OVERLAY_ON_CHOOSER and hs.canvas.windowLevels.overlay or hs.canvas.windowLevels.modalPanel)
@@ -145,39 +151,57 @@ local function ensureProgressHud()
         frame = { x = 34, y = 28, w = innerWidth - 20, h = 22 }
     }
     progressHud[4] = {
-        type = "text",
-        text = "",
-        textSize = 30,
-        textColor = { white = 0.10, alpha = 1 },
-        frame = { x = 24, y = 84, w = innerWidth, h = 40 }
+        type = "rectangle",
+        action = "fill",
+        roundedRectRadii = { xRadius = 8, yRadius = 8 },
+        fillColor = { white = 0.97, alpha = rowFillAlpha },
+        strokeColor = { white = 0.62, alpha = rowStrokeAlpha },
+        strokeWidth = 1,
+        frame = { x = rowInset, y = 96, w = rowWidth, h = 40 }
     }
     progressHud[5] = {
         type = "text",
         text = "",
-        textSize = 18,
-        textColor = { white = 0.34, alpha = 1 },
-        frame = { x = 24, y = 136, w = innerWidth, h = math.max(84, frame.h - 220) }
+        textSize = 26,
+        textColor = { white = 0.10, alpha = 1 },
+        frame = { x = 28, y = 100, w = innerWidth - 110, h = 30 }
     }
     progressHud[6] = {
-        type = "rectangle",
-        action = "fill",
-        roundedRectRadii = { xRadius = 9, yRadius = 9 },
-        fillColor = { white = 0.72, alpha = 0.32 },
-        frame = { x = 24, y = barY, w = innerWidth, h = 16 }
+        type = "text",
+        text = "0%",
+        textSize = 17,
+        textColor = { white = 0.36, alpha = 1 },
+        frame = { x = frame.w - 96, y = 104, w = 64, h = 24 }
     }
     progressHud[7] = {
         type = "rectangle",
         action = "fill",
-        roundedRectRadii = { xRadius = 9, yRadius = 9 },
-        fillColor = { red = 0.24, green = 0.48, blue = 0.98, alpha = 0.95 },
-        frame = { x = 24, y = barY, w = 0, h = 16 }
+        roundedRectRadii = { xRadius = 8, yRadius = 8 },
+        fillColor = { white = 0.965, alpha = detailFillAlpha },
+        strokeColor = { white = 0.62, alpha = detailStrokeAlpha },
+        strokeWidth = 1,
+        frame = { x = rowInset, y = 128, w = rowWidth, h = 64 }
     }
     progressHud[8] = {
         type = "text",
-        text = "0%",
-        textSize = 15,
-        textColor = { white = 0.38, alpha = 1 },
-        frame = { x = frame.w - 92, y = barY - 28, w = 68, h = 20 }
+        text = "",
+        textSize = 19,
+        textColor = { white = 0.30, alpha = 1 },
+        frame = { x = 28, y = 156, w = innerWidth - 12, h = 40 }
+    }
+    progressHud[9] = {
+        type = "rectangle",
+        action = "fill",
+        roundedRectRadii = { xRadius = 5, yRadius = 5 },
+        fillColor = { white = 0.72, alpha = 0.20 },
+        frame = { x = 20, y = barY, w = frame.w - 40, h = 10 }
+    }
+    progressHud[10] = {
+        type = "rectangle",
+        action = "fill",
+        roundedRectRadii = { xRadius = 5, yRadius = 5 },
+        fillColor = { red = 0.24, green = 0.48, blue = 0.98, alpha = 0.92 },
+        frame = { x = 20, y = barY, w = 0, h = 10 }
     }
     progressHud:show()
     return progressHud
@@ -574,22 +598,22 @@ local function updateProgressHud(scannedCount, totalCount, foundAppsCount, found
         progress = math.min(1, scannedCount / totalCount)
     end
     local currentFrame = hud:frame()
-    local barWidth = math.floor((currentFrame.w - 48) * progress)
+    local barWidth = math.floor((currentFrame.w - 40) * progress)
 
-    hud[4].text = string.format(
+    hud[5].text = string.format(
             "%s  %d/%d",
             state,
             scannedCount,
             totalCount
     )
-    hud[5].text = string.format(
-            "%d Apps mit Menueleiste\n%d Eintraege\n%s",
+    hud[6].text = string.format("%d%%", math.floor(progress * 100))
+    hud[8].text = string.format(
+            "%d Apps mit Menueleiste   %d Eintraege\nZuletzt: %s",
             foundAppsCount,
             foundItemsCount,
             lastAppName or "-"
     )
-    hud[7].frame = { x = 24, y = currentFrame.h - 54, w = barWidth, h = 16 }
-    hud[8].text = string.format("%d%%", math.floor(progress * 100))
+    hud[10].frame = { x = 20, y = 76, w = barWidth, h = 10 }
 end
 
 function MenuBarChooser()
