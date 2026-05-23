@@ -23,12 +23,6 @@ local DEBUG_CACHE_LOGS = false
 local DEBUG_SCAN_SUMMARY_LOGS = false
 local DEBUG_DISCOVERED_ITEM_LOGS = false
 local DEBUG_AX_TREE_LOGS = false
-local SHOW_CHOOSER_DURING_SCAN = true
-local CHOOSER_WIDTH_PERCENT = 60
-local CHOOSER_ROWS = 20
-local HUD_OVERLAY_ON_CHOOSER = true
-local DEFER_CHOOSER_ITEMS_UNTIL_SCAN_COMPLETE = true
-local NEGATIVE_APP_CACHE_TTL_SECONDS = 180
 
 local function newTTLCache(defaultTTLSeconds)
     local store = {}
@@ -211,9 +205,9 @@ end
 local function progressHudFrame()
     local screenFrame = hs.screen.mainScreen():frame()
     local chooserWidth = math.floor(screenFrame.w * (CHOOSER_WIDTH_PERCENT / 100))
-    local chooserX = math.floor(screenFrame.x + (screenFrame.w - chooserWidth) / 2)
-    local chooserY = math.floor(screenFrame.y + 120)
     local chooserHeight = 88 + (CHOOSER_ROWS * 22)
+    local chooserX = math.floor(screenFrame.x + (screenFrame.w - chooserWidth) / 2)
+    local chooserY = math.floor(screenFrame.y + (screenFrame.h - chooserHeight) / 2)
 
     return {
         x = chooserX,
@@ -796,8 +790,10 @@ function MenuBarChooser()
     --chooser:bgDark(true)
     --chooser:fgColor(hs.drawing.color.x11.orange)
     --chooser:subTextColor(hs.drawing.color.x11.chocolate)
+    local chooserFrame = progressHudFrame()
+    local chooserTopLeft = hs.geometry.point(chooserFrame.x, chooserFrame.y)
     if SHOW_CHOOSER_DURING_SCAN then
-        chooser:show()
+        chooser:show(chooserTopLeft)
     end
     updateProgressHud(0, #runningApplications, 0, 0, nil, "Suche startet...")
     logScan("[MenuBarChooser] scan started, apps=%d", #runningApplications)
@@ -822,7 +818,7 @@ function MenuBarChooser()
             hideProgressHud()
             applyChoices(selectionMap)
             if not SHOW_CHOOSER_DURING_SCAN then
-                chooser:show()
+                chooser:show(chooserTopLeft)
             end
             logScan("[MenuBarChooser] scan finished, apps=%d, matchedApps=%d, items=%d",
                     scannedCount,
