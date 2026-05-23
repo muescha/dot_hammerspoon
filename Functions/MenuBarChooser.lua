@@ -249,47 +249,10 @@ local function buildMenuChoice(app, item, actionName, selectionMap)
         image = appImage,
         element = {
             key = appKey,
-            action = actionName,
-            bundleID = app:bundleID(),
-            appName = app:name()
+            action = actionName
         },
         debugText = appSubText
     }
-end
-
-local function isControlCenterSelection(selection)
-    if not selection or not selection.element then
-        return false
-    end
-
-    local bundleID = selection.element.bundleID or ""
-    local appName = selection.element.appName or ""
-    return bundleID == "com.apple.controlcenter"
-            or appName == "Kontrollzentrum"
-            or appName == "Control Center"
-end
-
-local function clickActivationPoint(menuItem)
-    local activationPoint = safeAttributeValue(menuItem, "AXActivationPoint")
-    if type(activationPoint) ~= "table" or activationPoint.x == nil or activationPoint.y == nil then
-        return false, "missing activation point"
-    end
-
-    local mouseOrigin = hs.mouse.absolutePosition()
-    local focusedWindow = hs.window.focusedWindow()
-
-    hs.mouse.absolutePosition(activationPoint)
-    hs.timer.usleep(120000)
-    hs.eventtap.event.newMouseEvent(hs.eventtap.event.types.leftMouseDown, activationPoint):post()
-    hs.eventtap.event.newMouseEvent(hs.eventtap.event.types.leftMouseUp, activationPoint):post()
-    hs.timer.usleep(120000)
-    hs.mouse.absolutePosition(mouseOrigin)
-
-    if focusedWindow then
-        focusedWindow:focus()
-    end
-
-    return true
 end
 
 local function logDiscoveredMenuItem(app, item, choice, names)
@@ -377,20 +340,9 @@ function MenuBarChooser()
         if selection and selection.element and selection.element.key then
             local menuItem = selectionMap.menuItems[selection.element.key]
             if menuItem then
-                local ok = false
-                local result = false
-
-                if isControlCenterSelection(selection) and selection.element.action == "AXPress" then
-                    ok, result = clickActivationPoint(menuItem)
-                else
-                    ok, result = pcall(function()
-                        return menuItem:performAction(selection.element.action)
-                    end)
-                    if (not ok or result == false) and selection.element.action == "AXPress" then
-                        ok, result = clickActivationPoint(menuItem)
-                    end
-                end
-
+                local ok, result = pcall(function()
+                    return menuItem:performAction(selection.element.action)
+                end)
                 if not ok or result == false then
                     hs.printf("MenuBarChooser action failed: %s", selection.debugText or selection.text or "<unknown>")
                     debugElement(menuItem, selection.text or "MenuBarChooser selection")
