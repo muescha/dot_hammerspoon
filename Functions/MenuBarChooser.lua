@@ -2,6 +2,8 @@ local axuielement = require("hs.axuielement")
 local chooser = nil
 local scanTimer = nil
 local debugLoggedElementCount = 0
+local SCAN_BATCH_SIZE = 8
+local ENABLE_VERBOSE_AX_DUMPS = false
 
 local function printChildren(application, children, recursive)
     for _, child in ipairs(children) do
@@ -168,7 +170,7 @@ local function isGenericHostApp(app)
 end
 
 local function shouldDebugFullDump(app)
-    return isControlCenterApp(app)
+    return ENABLE_VERBOSE_AX_DUMPS and isControlCenterApp(app)
 end
 
 local function choosePrimaryAction(names)
@@ -541,43 +543,48 @@ function MenuBarChooser()
     hs.printf("[MenuBarChooser] scan started, apps=%d", #runningApplications)
 
     scanTimer = hs.timer.doEvery(0.01, function()
-        local app = runningApplications[scanIndex]
-
         if not chooser or not chooser:isVisible() then
             stopScanTimer()
             return
         end
 
-        if not app then
-            stopScanTimer()
-            lastStatusAppName = "fertig"
-            chooser:placeholderText(string.format("%d Menu-Bar-Eintraege geladen", foundItemsCount))
-            applyChoices(selectionMap, buildStatusChoice(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, lastStatusAppName, "Suche abgeschlossen"))
-            hs.printf("[MenuBarChooser] scan finished, apps=%d, matchedApps=%d, items=%d",
-                    scannedCount,
-                    foundAppsCount,
-                    foundItemsCount)
-            return
-        end
+        local processedInBatch = 0
+        local lastAppName = lastStatusAppName
 
-        scannedCount = scannedCount + 1
-
-        local children = findMenuExtrasMenuBarForApplication(app)
-        local lastAppName = app:name()
-        if children then
-            local addedChoices = appendChoicesForApp(app, children, selectionMap)
-            if addedChoices > 0 then
-                foundAppsCount = foundAppsCount + 1
-                foundItemsCount = foundItemsCount + addedChoices
-                lastAppName = string.format("%s (+%d)", lastAppName, addedChoices)
+        while processedInBatch < SCAN_BATCH_SIZE do
+            local app = runningApplications[scanIndex]
+            if not app then
+                stopScanTimer()
+                lastStatusAppName = "fertig"
+                chooser:placeholderText(string.format("%d Menu-Bar-Eintraege geladen", foundItemsCount))
+                applyChoices(selectionMap, buildStatusChoice(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, lastStatusAppName, "Suche abgeschlossen"))
+                hs.printf("[MenuBarChooser] scan finished, apps=%d, matchedApps=%d, items=%d",
+                        scannedCount,
+                        foundAppsCount,
+                        foundItemsCount)
+                return
             end
+
+            scannedCount = scannedCount + 1
+
+            local children = findMenuExtrasMenuBarForApplication(app)
+            lastAppName = app:name()
+            if children then
+                local addedChoices = appendChoicesForApp(app, children, selectionMap)
+                if addedChoices > 0 then
+                    foundAppsCount = foundAppsCount + 1
+                    foundItemsCount = foundItemsCount + addedChoices
+                    lastAppName = string.format("%s (+%d)", lastAppName, addedChoices)
+                end
+            end
+
+            lastStatusAppName = lastAppName
+            scanIndex = scanIndex + 1
+            processedInBatch = processedInBatch + 1
         end
 
-        lastStatusAppName = lastAppName
         chooser:placeholderText(string.format("Suche laeuft ... %d/%d Apps", scannedCount, #runningApplications))
         applyChoices(selectionMap, buildStatusChoice(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, lastAppName, "Suche laeuft..."))
-
-        scanIndex = scanIndex + 1
     end)
 end
 
