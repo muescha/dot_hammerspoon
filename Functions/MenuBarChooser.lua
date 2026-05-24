@@ -6,27 +6,37 @@ local scanTimer = nil
 local progressHud = nil
 local debugLoggedElementCount = 0
 
--- Scan behavior
-local SCAN_INTERVAL_SECONDS = 0.002
-local SHOW_CHOOSER_DURING_SCAN = true
-local DEFER_CHOOSER_ITEMS_UNTIL_SCAN_COMPLETE = true
-local NEGATIVE_APP_CACHE_TTL_SECONDS = 180
+local SCAN_CONFIG = {
+    intervalSeconds = 0.002,
+    showChooserDuringScan = true,
+    deferChooserItemsUntilScanComplete = true,
+    negativeAppCacheTtlSeconds = 180
+}
 
--- Chooser / HUD layout
-local CHOOSER_WIDTH_PERCENT = 60
-local CHOOSER_MAX_WIDTH = 1400
-local CHOOSER_ROWS = 20
-local HUD_OVERLAY_ON_CHOOSER = true
-local CHOOSER_TOP_MARGIN_LANDSCAPE = 120
-local MENU_BAR_SNAPSHOT_ICON_MODE = "all" -- off | all
+local CHOOSER_LAYOUT = {
+    widthPercent = 60,
+    maxWidth = 1400,
+    rows = 20,
+    hudOverlayOnChooser = true,
+    topMarginLandscape = 120
+}
 
--- Debug logging
-local DEBUG_VERBOSE_AX_DUMPS = false
-local DEBUG_CACHE_LOGS = false
-local DEBUG_SCAN_SUMMARY_LOGS = false
-local DEBUG_DISCOVERED_ITEM_LOGS = false
-local DEBUG_AX_TREE_LOGS = false
-local DEBUG_ICON_LOGS = false
+local ICON_CONFIG = {
+    snapshotMode = "all", -- off | all
+    snapshotPadding = 2,
+    snapshotSize = 18,
+    snapshotWideAspectLimit = 2.2,
+    snapshotCornerRadius = 4
+}
+
+local DEBUG = {
+    verboseAxDumps = false,
+    cacheLogs = false,
+    scanSummaryLogs = false,
+    discoveredItemLogs = false,
+    axTreeLogs = false,
+    iconLogs = false
+}
 
 local function newTTLCache(defaultTTLSeconds)
     local store = {}
@@ -67,7 +77,7 @@ local function newTTLCache(defaultTTLSeconds)
     }
 end
 
-local negativeAppCache = newTTLCache(NEGATIVE_APP_CACHE_TTL_SECONDS)
+local negativeAppCache = newTTLCache(SCAN_CONFIG.negativeAppCacheTtlSeconds)
 local NEGATIVE_APP_CACHE_MISS = "__no_menu_extras__"
 
 local function debugLog(flag, message, ...)
@@ -77,40 +87,47 @@ local function debugLog(flag, message, ...)
 end
 
 local function logCache(message, ...)
-    debugLog(DEBUG_CACHE_LOGS, message, ...)
+    debugLog(DEBUG.cacheLogs, message, ...)
 end
 
 local function logScan(message, ...)
-    debugLog(DEBUG_SCAN_SUMMARY_LOGS, message, ...)
+    debugLog(DEBUG.scanSummaryLogs, message, ...)
 end
 
 local function logDiscoveredItem(message, ...)
-    debugLog(DEBUG_DISCOVERED_ITEM_LOGS, message, ...)
+    debugLog(DEBUG.discoveredItemLogs, message, ...)
 end
 
 local function logIcon(message, ...)
-    debugLog(DEBUG_ICON_LOGS, message, ...)
+    debugLog(DEBUG.iconLogs, message, ...)
 end
 
 local function appCacheKey(app)
     return app:bundleID() or app:path() or app:name()
 end
 
-local function shouldSkipNegativeAppCache(app)
-    local bundleID = app:bundleID() or ""
-    local appName = app:name() or ""
-
-    return bundleID == "com.apple.controlcenter"
-            or bundleID == "com.apple.systemuiserver"
-            or bundleID == "com.apple.TextInputMenuAgent"
-            or appName == "Kontrollzentrum"
-            or appName == "Control Center"
-            or appName == "SystemUIServer"
-            or appName == "TextInputMenuAgent"
+local function appIdentity(app)
+    return {
+        bundleID = app:bundleID() or "",
+        appName = app:name() or ""
+    }
 end
 
+local function shouldSkipNegativeAppCache(app)
+    local identity = appIdentity(app)
+
+    return identity.bundleID == "com.apple.controlcenter"
+            or identity.bundleID == "com.apple.systemuiserver"
+            or identity.bundleID == "com.apple.TextInputMenuAgent"
+            or identity.appName == "Kontrollzentrum"
+            or identity.appName == "Control Center"
+            or identity.appName == "SystemUIServer"
+            or identity.appName == "TextInputMenuAgent"
+end
+
+-- Legacy / exploratory debug helpers
 local function printChildren(application, children, recursive)
-    if not DEBUG_AX_TREE_LOGS then
+    if not DEBUG.axTreeLogs then
         return
     end
 
@@ -210,33 +227,44 @@ local function hideProgressHud()
     end
 end
 
-local function progressHudFrame()
-    local screenFrame = hs.screen.mainScreen():frame()
-    local chooserWidth = math.min(
-            math.floor(screenFrame.w * (CHOOSER_WIDTH_PERCENT / 100)),
-            CHOOSER_MAX_WIDTH
-    )
-    local chooserHeight = 88 + (CHOOSER_ROWS * 22)
-    local chooserX = math.floor(screenFrame.x + (screenFrame.w - chooserWidth) / 2)
-    local chooserY = nil
+local function chooserWidthPercentForScreen(screenFrame)
+    local cappedPercent = (CHOOSER_LAYOUT.maxWidth / screenFrame.w) * 100
+    return math.min(CHOOSER_LAYOUT.widthPercent, cappedPercent)
+end
 
+local function chooserWidthForScreen(screenFrame)
+    return math.min(
+            math.floor(screenFrame.w * (CHOOSER_LAYOUT.widthPercent / 100)),
+            CHOOSER_LAYOUT.maxWidth
+    )
+end
+
+local function chooserHeight()
+    return 88 + (CHOOSER_LAYOUT.rows * 22)
+end
+
+local function chooserYForScreen(screenFrame, currentChooserHeight)
     if screenFrame.h > screenFrame.w then
-        chooserY = math.floor(screenFrame.y + (screenFrame.h - chooserHeight) / 2)
-    else
-        chooserY = math.floor(screenFrame.y + CHOOSER_TOP_MARGIN_LANDSCAPE)
+        return math.floor(screenFrame.y + (screenFrame.h - currentChooserHeight) / 2)
     end
 
+    return math.floor(screenFrame.y + CHOOSER_LAYOUT.topMarginLandscape)
+end
+
+local function chooserFrameForScreen(screenFrame)
+    local width = chooserWidthForScreen(screenFrame)
+    local height = chooserHeight()
+
     return {
-        x = chooserX,
-        y = chooserY,
-        w = chooserWidth,
-        h = chooserHeight
+        x = math.floor(screenFrame.x + (screenFrame.w - width) / 2),
+        y = chooserYForScreen(screenFrame, height),
+        w = width,
+        h = height
     }
 end
 
-local function chooserWidthPercentForScreen(screenFrame)
-    local cappedPercent = (CHOOSER_MAX_WIDTH / screenFrame.w) * 100
-    return math.min(CHOOSER_WIDTH_PERCENT, cappedPercent)
+local function progressHudFrame()
+    return chooserFrameForScreen(hs.screen.mainScreen():frame())
 end
 
 local function ensureProgressHud()
@@ -247,20 +275,20 @@ local function ensureProgressHud()
     local frame = progressHudFrame()
     local innerWidth = frame.w - 48
     local barY = 76
-    local outerFillAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.985
-    local outerStrokeAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.14
-    local searchFillAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.98
-    local searchStrokeAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.10
-    local placeholderAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 1
-    local rowFillAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.88
-    local rowStrokeAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.12
-    local detailFillAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.80
-    local detailStrokeAlpha = HUD_OVERLAY_ON_CHOOSER and 0 or 0.10
+    local outerFillAlpha = CHOOSER_LAYOUT.hudOverlayOnChooser and 0 or 0.985
+    local outerStrokeAlpha = CHOOSER_LAYOUT.hudOverlayOnChooser and 0 or 0.14
+    local searchFillAlpha = CHOOSER_LAYOUT.hudOverlayOnChooser and 0 or 0.98
+    local searchStrokeAlpha = CHOOSER_LAYOUT.hudOverlayOnChooser and 0 or 0.10
+    local placeholderAlpha = CHOOSER_LAYOUT.hudOverlayOnChooser and 0 or 1
+    local rowFillAlpha = CHOOSER_LAYOUT.hudOverlayOnChooser and 0 or 0.88
+    local rowStrokeAlpha = CHOOSER_LAYOUT.hudOverlayOnChooser and 0 or 0.12
+    local detailFillAlpha = CHOOSER_LAYOUT.hudOverlayOnChooser and 0 or 0.80
+    local detailStrokeAlpha = CHOOSER_LAYOUT.hudOverlayOnChooser and 0 or 0.10
     local rowInset = 14
     local rowWidth = frame.w - (rowInset * 2)
 
     progressHud = canvas.new(frame)
-    progressHud:level(HUD_OVERLAY_ON_CHOOSER and hs.canvas.windowLevels.overlay or hs.canvas.windowLevels.modalPanel)
+    progressHud:level(CHOOSER_LAYOUT.hudOverlayOnChooser and hs.canvas.windowLevels.overlay or hs.canvas.windowLevels.modalPanel)
     progressHud[1] = {
         type = "rectangle",
         action = "fill",
@@ -421,24 +449,22 @@ local function joinedActionNames(names)
 end
 
 local function isControlCenterApp(app)
-    local bundleID = app:bundleID() or ""
-    local appName = app:name() or ""
-    return bundleID == "com.apple.controlcenter"
-            or appName == "Kontrollzentrum"
-            or appName == "Control Center"
+    local identity = appIdentity(app)
+    return identity.bundleID == "com.apple.controlcenter"
+            or identity.appName == "Kontrollzentrum"
+            or identity.appName == "Control Center"
 end
 
 local function isGenericHostApp(app)
-    local bundleID = app:bundleID() or ""
-    local appName = app:name() or ""
-    return bundleID == "com.apple.TextInputMenuAgent"
-            or bundleID == "com.apple.systemuiserver"
-            or appName == "TextInputMenuAgent"
-            or appName == "SystemUIServer"
+    local identity = appIdentity(app)
+    return identity.bundleID == "com.apple.TextInputMenuAgent"
+            or identity.bundleID == "com.apple.systemuiserver"
+            or identity.appName == "TextInputMenuAgent"
+            or identity.appName == "SystemUIServer"
 end
 
 local function shouldDebugFullDump(app)
-    return DEBUG_VERBOSE_AX_DUMPS and isControlCenterApp(app)
+    return DEBUG.verboseAxDumps and isControlCenterApp(app)
 end
 
 local function choosePrimaryAction(names)
@@ -527,12 +553,11 @@ local function deriveGenericNameFromMenuLabel(label)
 end
 
 local function fallbackDisplayAppName(app)
-    local bundleID = app:bundleID() or ""
-    local appName = app:name() or ""
-    if bundleID == "com.apple.TextInputMenuAgent" or appName == "TextInputMenuAgent" then
+    local identity = appIdentity(app)
+    if identity.bundleID == "com.apple.TextInputMenuAgent" or identity.appName == "TextInputMenuAgent" then
         return "Tastatur"
     end
-    if bundleID == "com.apple.systemuiserver" or appName == "SystemUIServer" then
+    if identity.bundleID == "com.apple.systemuiserver" or identity.appName == "SystemUIServer" then
         return "Systemstatus"
     end
     return app:name()
@@ -621,6 +646,21 @@ end
 
 local backgroundColorForSnapshotImage
 
+local function shouldUseSnapshotForApp(app)
+    return ICON_CONFIG.snapshotMode ~= "off" and (isControlCenterApp(app) or isGenericHostApp(app))
+end
+
+local function snapshotRectForMenuBarFrame(frame, screenFrame)
+    local padding = ICON_CONFIG.snapshotPadding
+
+    return {
+        x = math.max(0, math.floor((frame.x or 0) - screenFrame.x - padding)),
+        y = math.max(0, math.floor((frame.y or 0) - screenFrame.y - padding)),
+        w = math.floor((frame.w or 0) + (padding * 2)),
+        h = math.floor((frame.h or 0) + (padding * 2))
+    }
+end
+
 local function menuBarSnapshotImageForItem(item, debugLabel)
     local frame = safeAttributeValue(item, "AXFrame")
     if type(frame) ~= "table" or (frame.w or 0) <= 0 or (frame.h or 0) <= 0 then
@@ -629,7 +669,7 @@ local function menuBarSnapshotImageForItem(item, debugLabel)
     end
 
     -- Skip wide textual menu bar items like the clock/date because they don't produce a usable icon.
-    if (frame.w or 0) > ((frame.h or 0) * 2.2) then
+    if (frame.w or 0) > ((frame.h or 0) * ICON_CONFIG.snapshotWideAspectLimit) then
         logIcon(
                 "[MenuBarChooser][icon] snapshot skipped %s reason=wide-frame frame=%dx%d",
                 debugLabel or "-",
@@ -645,20 +685,14 @@ local function menuBarSnapshotImageForItem(item, debugLabel)
         return nil
     end
 
-    local padding = 2
-    local snapshotRect = {
-        x = math.max(0, math.floor((frame.x or 0) - screenFrame.x - padding)),
-        y = math.max(0, math.floor((frame.y or 0) - screenFrame.y - padding)),
-        w = math.floor((frame.w or 0) + (padding * 2)),
-        h = math.floor((frame.h or 0) + (padding * 2))
-    }
+    local snapshotRect = snapshotRectForMenuBarFrame(frame, screenFrame)
     local snapshot = screen:snapshot(snapshotRect)
     if not snapshot then
         logIcon("[MenuBarChooser][icon] snapshot failed %s rect=%dx%d", debugLabel or "-", snapshotRect.w, snapshotRect.h)
         return nil
     end
 
-    local sizedSnapshot = snapshot:setSize({ w = 18, h = 18 }, false)
+    local sizedSnapshot = snapshot:setSize({ w = ICON_CONFIG.snapshotSize, h = ICON_CONFIG.snapshotSize }, false)
     local snapshotSize = sizedSnapshot:size()
     local rawSnapshotSize = snapshot:size()
     logIcon(
@@ -722,23 +756,23 @@ backgroundColorForSnapshotImage = function(image)
 end
 
 local function roundedChoiceImage(image, backgroundColor)
-    local iconCanvas = canvas.new({ x = 0, y = 0, w = 18, h = 18 })
+    local iconCanvas = canvas.new({ x = 0, y = 0, w = ICON_CONFIG.snapshotSize, h = ICON_CONFIG.snapshotSize })
     iconCanvas[1] = {
         type = "rectangle",
         action = "clip",
-        roundedRectRadii = { xRadius = 4, yRadius = 4 },
-        frame = { x = 0, y = 0, w = 18, h = 18 }
+        roundedRectRadii = { xRadius = ICON_CONFIG.snapshotCornerRadius, yRadius = ICON_CONFIG.snapshotCornerRadius },
+        frame = { x = 0, y = 0, w = ICON_CONFIG.snapshotSize, h = ICON_CONFIG.snapshotSize }
     }
     iconCanvas[2] = {
         type = "rectangle",
         action = "fill",
         fillColor = backgroundColor,
-        frame = { x = 0, y = 0, w = 18, h = 18 }
+        frame = { x = 0, y = 0, w = ICON_CONFIG.snapshotSize, h = ICON_CONFIG.snapshotSize }
     }
     iconCanvas[3] = {
         type = "image",
         image = image,
-        frame = { x = 0, y = 0, w = 18, h = 18 },
+        frame = { x = 0, y = 0, w = ICON_CONFIG.snapshotSize, h = ICON_CONFIG.snapshotSize },
         imageScaling = "scaleProportionally"
     }
 
@@ -747,15 +781,21 @@ local function roundedChoiceImage(image, backgroundColor)
     return roundedImage
 end
 
-local function preferredChoiceImage(app, item, debugLabel)
-    if MENU_BAR_SNAPSHOT_ICON_MODE ~= "off" and (isControlCenterApp(app) or isGenericHostApp(app)) then
-        local snapshotInfo = menuBarSnapshotImageForItem(item, debugLabel)
-        if snapshotInfo then
-            logIcon("[MenuBarChooser][icon] using snapshot %s", debugLabel or "-")
-            return roundedChoiceImage(snapshotInfo.image, snapshotInfo.backgroundColor)
-        end
+local function snapshotChoiceImageForHostApp(app, item, debugLabel)
+    if not shouldUseSnapshotForApp(app) then
+        return nil
     end
 
+    local snapshotInfo = menuBarSnapshotImageForItem(item, debugLabel)
+    if snapshotInfo then
+        logIcon("[MenuBarChooser][icon] using snapshot %s", debugLabel or "-")
+        return roundedChoiceImage(snapshotInfo.image, snapshotInfo.backgroundColor)
+    end
+
+    return nil
+end
+
+local function fallbackChoiceImageForApp(app, debugLabel)
     local bundleID = app:bundleID()
     if bundleID then
         logIcon("[MenuBarChooser][icon] using bundle fallback %s bundle=%s", debugLabel or "-", bundleID)
@@ -772,73 +812,109 @@ local function preferredChoiceImage(app, item, debugLabel)
     return nil
 end
 
-local function buildMenuChoice(app, item, actionName, selectionMap)
-    local identifier = firstNonEmpty(item.AXIdentifier, safeAttributeValue(item, "AXIdentifier"))
-    local title = firstNonEmpty(item.AXTitle, safeAttributeValue(item, "AXTitle"))
-    local valueDescription = firstNonEmpty(item.AXValueDescription, safeAttributeValue(item, "AXValueDescription"))
-    local description = firstNonEmpty(item.AXDescription, safeAttributeValue(item, "AXDescription"))
-    local help = firstNonEmpty(item.AXHelp, safeAttributeValue(item, "AXHelp"))
-    local value = firstNonEmpty(item.AXValue, safeAttributeValue(item, "AXValue"))
-    local role = firstNonEmpty(item.AXRole, safeAttributeValue(item, "AXRole"))
-    local subrole = firstNonEmpty(item.AXSubrole, safeAttributeValue(item, "AXSubrole"))
-    local roleDescription = firstNonEmpty(item.AXRoleDescription, safeAttributeValue(item, "AXRoleDescription"))
-    local label = preferredLabelValue(description, title, valueDescription, help)
-    local derivedLabel = deriveGenericNameFromMenuLabel(label)
+local function preferredChoiceImage(app, item, debugLabel)
+    return snapshotChoiceImageForHostApp(app, item, debugLabel) or fallbackChoiceImageForApp(app, debugLabel)
+end
+
+local function itemMetadataValue(item, attributeName)
+    return firstNonEmpty(item[attributeName], safeAttributeValue(item, attributeName))
+end
+
+local function collectMenuItemMetadata(item)
+    local metadata = {
+        identifier = itemMetadataValue(item, "AXIdentifier"),
+        title = itemMetadataValue(item, "AXTitle"),
+        valueDescription = itemMetadataValue(item, "AXValueDescription"),
+        description = itemMetadataValue(item, "AXDescription"),
+        help = itemMetadataValue(item, "AXHelp"),
+        value = itemMetadataValue(item, "AXValue"),
+        role = itemMetadataValue(item, "AXRole"),
+        subrole = itemMetadataValue(item, "AXSubrole"),
+        roleDescription = itemMetadataValue(item, "AXRoleDescription")
+    }
+    metadata.label = preferredLabelValue(metadata.description, metadata.title, metadata.valueDescription, metadata.help)
+    metadata.derivedLabel = deriveGenericNameFromMenuLabel(metadata.label)
+    return metadata
+end
+
+local function buildBaseMenuChoiceText(app, item, metadata)
     local isGenericHost = isGenericHostApp(app)
     local appName = fallbackDisplayAppName(app)
-    local rawAppName = app:name()
-    local appText = label and (label ~= appName) and (appName .. ": " .. label) or appName
+    local appText = metadata.label and (metadata.label ~= appName) and (appName .. ": " .. metadata.label) or appName
+
     if isGenericHost then
         appText = inferSemanticNameFromMenu(item) or appName
-    else
-        if derivedLabel then
-            appText = derivedLabel
-        end
-    end
-    if isControlCenterApp(app) and value then
-        appText = appText .. " - " .. value
+    elseif metadata.derivedLabel then
+        appText = metadata.derivedLabel
     end
 
-    local summaryParts = {}
-    if rawAppName and rawAppName ~= appName and not isGenericHost then
-        table.insert(summaryParts, rawAppName)
+    if isControlCenterApp(app) and metadata.value then
+        appText = appText .. " - " .. metadata.value
     end
-    if not isGenericHost and label and label ~= appText and not derivedLabel then
-        appendSummaryDetail(summaryParts, label)
-    elseif not isGenericHost and label and label ~= appText and derivedLabel ~= appText then
-        appendSummaryDetail(summaryParts, label)
-    end
-    if identifier and isControlCenterApp(app) then
-        table.insert(summaryParts, identifier)
-    else
-        appendSummaryDetail(summaryParts, value)
-    end
-    if #summaryParts == 0 then
-        appendSummaryDetail(summaryParts, help)
-    end
-    if #summaryParts == 0 then
-        appendSummaryDetail(summaryParts, valueDescription)
-    end
-    local appSubText = table.concat(summaryParts, " | ")
 
+    return appText
+end
+
+local function buildMenuChoiceText(baseText, actionName)
+    local appText = baseText
     if actionName ~= "AXPress" then
         appText = appText .. " [" .. actionName .. "]"
     end
 
+    return appText
+end
+
+local function buildMenuChoiceSubText(app, metadata, appText)
+    local isGenericHost = isGenericHostApp(app)
+    local appName = fallbackDisplayAppName(app)
+    local rawAppName = app:name()
+    local summaryParts = {}
+
+    if rawAppName and rawAppName ~= appName and not isGenericHost then
+        table.insert(summaryParts, rawAppName)
+    end
+    if not isGenericHost and metadata.label and metadata.label ~= appText and not metadata.derivedLabel then
+        appendSummaryDetail(summaryParts, metadata.label)
+    elseif not isGenericHost and metadata.label and metadata.label ~= appText and metadata.derivedLabel ~= appText then
+        appendSummaryDetail(summaryParts, metadata.label)
+    end
+    if metadata.identifier and isControlCenterApp(app) then
+        table.insert(summaryParts, metadata.identifier)
+    else
+        appendSummaryDetail(summaryParts, metadata.value)
+    end
+    if #summaryParts == 0 then
+        appendSummaryDetail(summaryParts, metadata.help)
+    end
+    if #summaryParts == 0 then
+        appendSummaryDetail(summaryParts, metadata.valueDescription)
+    end
+
+    return table.concat(summaryParts, " | ")
+end
+
+local function buildMenuChoiceDebugText(app, item, metadata, actionName)
     local detailParts = {}
     appendDetail(detailParts, "action", actionName)
     appendDetail(detailParts, "desc", item:actionDescription(actionName))
-    appendDetail(detailParts, "id", identifier)
-    appendDetail(detailParts, "title", title)
-    appendDetail(detailParts, "valueDesc", valueDescription)
-    appendDetail(detailParts, "value", value)
-    appendDetail(detailParts, "role", role)
-    appendDetail(detailParts, "subrole", subrole)
-    appendDetail(detailParts, "roleDesc", roleDescription)
-    appendDetail(detailParts, "help", help)
+    appendDetail(detailParts, "id", metadata.identifier)
+    appendDetail(detailParts, "title", metadata.title)
+    appendDetail(detailParts, "valueDesc", metadata.valueDescription)
+    appendDetail(detailParts, "value", metadata.value)
+    appendDetail(detailParts, "role", metadata.role)
+    appendDetail(detailParts, "subrole", metadata.subrole)
+    appendDetail(detailParts, "roleDesc", metadata.roleDescription)
+    appendDetail(detailParts, "help", metadata.help)
     appendDetail(detailParts, "bundle", app:bundleID())
-    local debugText = table.concat(detailParts, " | ")
+    return table.concat(detailParts, " | ")
+end
 
+local function buildMenuChoice(app, item, actionName, selectionMap)
+    local metadata = collectMenuItemMetadata(item)
+    local baseText = buildBaseMenuChoiceText(app, item, metadata)
+    local appText = buildMenuChoiceText(baseText, actionName)
+    local appSubText = buildMenuChoiceSubText(app, metadata, baseText)
+    local debugText = buildMenuChoiceDebugText(app, item, metadata, actionName)
     local appKey = addMenuItem(selectionMap, item)
     local appImage = preferredChoiceImage(app, item, appText)
 
@@ -959,37 +1035,37 @@ function MenuBarChooser()
         hideProgressHud()
     end)
 
-    if not DEFER_CHOOSER_ITEMS_UNTIL_SCAN_COMPLETE then
+    if not SCAN_CONFIG.deferChooserItemsUntilScanComplete then
         applyChoices(selectionMap)
     end
 
     chooser:queryChangedCallback(function()
-        if scanComplete or not DEFER_CHOOSER_ITEMS_UNTIL_SCAN_COMPLETE then
+        if scanComplete or not SCAN_CONFIG.deferChooserItemsUntilScanComplete then
             applyChoices(selectionMap)
         end
     end)
 
     --chooser:rows(#choices)
     local chooserScreenFrame = hs.screen.mainScreen():frame()
-    chooser:rows(CHOOSER_ROWS)
+    local chooserFrame = chooserFrameForScreen(chooserScreenFrame)
+    chooser:rows(CHOOSER_LAYOUT.rows)
     chooser:width(chooserWidthPercentForScreen(chooserScreenFrame))
     --chooser:bgDark(true)
     --chooser:fgColor(hs.drawing.color.x11.orange)
     --chooser:subTextColor(hs.drawing.color.x11.chocolate)
-    local chooserFrame = progressHudFrame()
     local chooserTopLeft = hs.geometry.point(chooserFrame.x, chooserFrame.y)
-    if SHOW_CHOOSER_DURING_SCAN then
+    if SCAN_CONFIG.showChooserDuringScan then
         chooser:show(chooserTopLeft)
     end
     updateProgressHud(0, #runningApplications, 0, 0, nil, "Suche startet...")
     logScan("[MenuBarChooser] scan started, apps=%d", #runningApplications)
 
-    scanTimer = hs.timer.doEvery(SCAN_INTERVAL_SECONDS, function()
+    scanTimer = hs.timer.doEvery(SCAN_CONFIG.intervalSeconds, function()
         if not chooser then
             stopScanTimer()
             return
         end
-        if SHOW_CHOOSER_DURING_SCAN and not chooser:isVisible() then
+        if SCAN_CONFIG.showChooserDuringScan and not chooser:isVisible() then
             stopScanTimer()
             hideProgressHud()
             return
@@ -1003,7 +1079,7 @@ function MenuBarChooser()
             updateProgressHud(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, lastStatusAppName, "Suche abgeschlossen")
             hideProgressHud()
             applyChoices(selectionMap)
-            if not SHOW_CHOOSER_DURING_SCAN then
+            if not SCAN_CONFIG.showChooserDuringScan then
                 chooser:show(chooserTopLeft)
             end
             logScan("[MenuBarChooser] scan finished, apps=%d, matchedApps=%d, items=%d",
@@ -1030,7 +1106,7 @@ function MenuBarChooser()
         lastStatusAppName = lastAppName
         scanIndex = scanIndex + 1
         updateProgressHud(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, lastAppName, "Suche laeuft...")
-        if foundItemsCount ~= foundItemsAtStart and not DEFER_CHOOSER_ITEMS_UNTIL_SCAN_COMPLETE then
+        if foundItemsCount ~= foundItemsAtStart and not SCAN_CONFIG.deferChooserItemsUntilScanComplete then
             applyChoices(selectionMap)
         end
     end)
