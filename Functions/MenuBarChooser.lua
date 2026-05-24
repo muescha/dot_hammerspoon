@@ -962,7 +962,7 @@ local function appendChoicesForApp(app, children, selectionMap)
 end
 
 local function applyChoices(selectionMap)
-    FuzzyMatcher.setChoices(selectionMap.chooserItems, chooser, false, FuzzyMatcher.Sorter.asc)
+    FuzzyMatcher.setChoices(selectionMap.chooserItems, chooser, false, FuzzyMatcher.Sorter.byScore)
 end
 
 local function updateProgressHud(scannedCount, totalCount, foundAppsCount, foundItemsCount, lastAppName, state)
