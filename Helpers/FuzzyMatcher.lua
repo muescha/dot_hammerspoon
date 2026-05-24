@@ -7,6 +7,27 @@
 -- NOTE: text/subText can be created as: hs.styledtext.new() or as string
 -- additional: preserve previous values and not strip down to { text,subtext}
 
+local SCORE = {
+    baseMatch = 5,
+    wordStartBonus = 20,
+    earlyStartBonus = 25,
+    contiguousBonus = 18,
+    exactRunBonus = 120,
+    maxGapPenalty = 30,
+    subTextOnlyPenalty = 40,
+    targetLengthPenaltyDivisor = 12
+}
+
+local function getText(text)
+    if text == nil then
+        return ""
+    end
+    if type(text) == "string" then
+        return text
+    end
+    return text:getString()
+end
+
 local function normalizeForMatch(target, query)
     if not string.match(query, "%u") then
         return string.lower(target), string.lower(query)
@@ -24,23 +45,11 @@ local function isWordStart(text, idx)
     return previous:match("[%s%p%-%_]") ~= nil
 end
 
-local function transitionScore(target, matchedIdx, previousIdx, isFirst)
-    local score = 5
-
-    if isWordStart(target, matchedIdx) then
-        score = score + 20
-    end
-
-    if isFirst then
-        return score + math.max(0, 25 - matchedIdx)
-    end
-
-    local gap = matchedIdx - previousIdx - 1
-    if gap == 0 then
-        return score + 18
-    end
-
-    return score - math.min(gap * 3, 30) - gap
+local function emptyMatch()
+    return {
+        matched_idxs = {},
+        score = 0
+    }
 end
 
 local function matchSpan(matched_idxs)
@@ -51,6 +60,80 @@ local function matchSpan(matched_idxs)
     return matched_idxs[#matched_idxs] - matched_idxs[1]
 end
 
+local function buildMemoKey(queryIdx, targetStart, previousIdx, contiguousRun)
+    return table.concat({
+        tostring(queryIdx),
+        tostring(targetStart),
+        tostring(previousIdx or 0),
+        tostring(contiguousRun or 0)
+    }, ":")
+end
+
+local function isContiguousMatch(previousIdx, currentIdx)
+    return previousIdx ~= nil and currentIdx == previousIdx + 1
+end
+
+local function nextContiguousRun(previousIdx, currentIdx, contiguousRun)
+    if isContiguousMatch(previousIdx, currentIdx) then
+        return contiguousRun + 1
+    end
+
+    return 1
+end
+
+local function transitionScore(target, matchedIdx, previousIdx)
+    local score = SCORE.baseMatch
+
+    if isWordStart(target, matchedIdx) then
+        score = score + SCORE.wordStartBonus
+    end
+
+    if previousIdx == nil then
+        return score + math.max(0, SCORE.earlyStartBonus - matchedIdx)
+    end
+
+    local gap = matchedIdx - previousIdx - 1
+    if gap == 0 then
+        return score + SCORE.contiguousBonus
+    end
+
+    return score - math.min(gap * 3, SCORE.maxGapPenalty) - gap
+end
+
+local function exactRunBonus(nextRun, queryIdx, queryLength)
+    if nextRun == queryLength and queryIdx == queryLength then
+        return SCORE.exactRunBonus
+    end
+
+    return 0
+end
+
+local function compareByScore(candidate, best)
+    if candidate.score ~= best.score then
+        return candidate.score > best.score
+    end
+
+    return nil
+end
+
+local function compareBySpan(candidate, best)
+    local candidateSpan = matchSpan(candidate.matched_idxs)
+    local bestSpan = matchSpan(best.matched_idxs)
+    if candidateSpan ~= bestSpan then
+        return candidateSpan < bestSpan
+    end
+
+    return nil
+end
+
+local function compareByStartIndex(candidate, best)
+    if candidate.matched_idxs[1] ~= best.matched_idxs[1] then
+        return candidate.matched_idxs[1] < best.matched_idxs[1]
+    end
+
+    return nil
+end
+
 local function isBetterMatch(candidate, best)
     if candidate == nil then
         return false
@@ -59,21 +142,87 @@ local function isBetterMatch(candidate, best)
         return true
     end
 
-    if candidate.score ~= best.score then
-        return candidate.score > best.score
-    end
+    local comparisons = {
+        compareByScore,
+        compareBySpan,
+        compareByStartIndex
+    }
 
-    local candidateSpan = matchSpan(candidate.matched_idxs)
-    local bestSpan = matchSpan(best.matched_idxs)
-    if candidateSpan ~= bestSpan then
-        return candidateSpan < bestSpan
-    end
-
-    if candidate.matched_idxs[1] ~= best.matched_idxs[1] then
-        return candidate.matched_idxs[1] < best.matched_idxs[1]
+    for _, compare in ipairs(comparisons) do
+        local result = compare(candidate, best)
+        if result ~= nil then
+            return result
+        end
     end
 
     return #candidate.matched_idxs < #best.matched_idxs
+end
+
+local function buildCandidate(target, targetIdx, previousIdx, nextRun, queryIdx, queryLength, suffixMatch)
+    return {
+        matched_idxs = { targetIdx, table.unpack(suffixMatch.matched_idxs) },
+        score = transitionScore(target, targetIdx, previousIdx)
+                + suffixMatch.score
+                + exactRunBonus(nextRun, queryIdx, queryLength)
+    }
+end
+
+local function finalizeMatchScore(target, score)
+    return score - math.floor(string.len(target) / SCORE.targetLengthPenaltyDivisor)
+end
+
+local function buildSearchState(target, query)
+    local normalizedTarget, normalizedQuery = normalizeForMatch(target, query)
+
+    return {
+        target = target,
+        normalizedTarget = normalizedTarget,
+        normalizedQuery = normalizedQuery,
+        targetLength = #normalizedTarget,
+        queryLength = #normalizedQuery,
+        memo = {}
+    }
+end
+
+local function searchBestMatch(state, queryIdx, targetStart, previousIdx, contiguousRun)
+    local memoKey = buildMemoKey(queryIdx, targetStart, previousIdx, contiguousRun)
+    if state.memo[memoKey] ~= nil then
+        return state.memo[memoKey]
+    end
+
+    if queryIdx > state.queryLength then
+        return emptyMatch()
+    end
+
+    local bestMatch = nil
+    local queryChar = string.sub(state.normalizedQuery, queryIdx, queryIdx)
+
+    for targetIdx = targetStart, state.targetLength do
+        local targetChar = string.sub(state.normalizedTarget, targetIdx, targetIdx)
+        if queryChar == targetChar then
+            local nextRun = nextContiguousRun(previousIdx, targetIdx, contiguousRun)
+            local suffixMatch = searchBestMatch(state, queryIdx + 1, targetIdx + 1, targetIdx, nextRun)
+
+            if suffixMatch then
+                local candidate = buildCandidate(
+                    state.target,
+                    targetIdx,
+                    previousIdx,
+                    nextRun,
+                    queryIdx,
+                    state.queryLength,
+                    suffixMatch
+                )
+
+                if isBetterMatch(candidate, bestMatch) then
+                    bestMatch = candidate
+                end
+            end
+        end
+    end
+
+    state.memo[memoKey] = bestMatch
+    return bestMatch
 end
 
 local function findBestMatch(target, query)
@@ -81,70 +230,13 @@ local function findBestMatch(target, query)
         return {}, nil
     end
 
-    local normalizedTarget, normalizedQuery = normalizeForMatch(target, query)
-    local targetLength = #normalizedTarget
-    local queryLength = #normalizedQuery
-    local memo = {}
-
-    local function search(queryIdx, targetStart, previousIdx, contiguousRun)
-        local memoKey = table.concat({
-            tostring(queryIdx),
-            tostring(targetStart),
-            tostring(previousIdx or 0),
-            tostring(contiguousRun or 0)
-        }, ":")
-
-        if memo[memoKey] ~= nil then
-            return memo[memoKey]
-        end
-
-        if queryIdx > queryLength then
-            return {
-                matched_idxs = {},
-                score = 0
-            }
-        end
-
-        local bestMatch = nil
-        local queryChar = string.sub(normalizedQuery, queryIdx, queryIdx)
-
-        for targetIdx = targetStart, targetLength do
-            local targetChar = string.sub(normalizedTarget, targetIdx, targetIdx)
-            if queryChar == targetChar then
-                local nextRun = (previousIdx ~= nil and targetIdx == previousIdx + 1) and (contiguousRun + 1) or 1
-                local suffixMatch = search(queryIdx + 1, targetIdx + 1, targetIdx, nextRun)
-
-                if suffixMatch then
-                    local score = transitionScore(target, targetIdx, previousIdx, previousIdx == nil)
-                            + suffixMatch.score
-
-                    if nextRun == queryLength and queryIdx == queryLength then
-                        score = score + 120
-                    end
-
-                    local candidate = {
-                        matched_idxs = { targetIdx, table.unpack(suffixMatch.matched_idxs) },
-                        score = score
-                    }
-
-                    if isBetterMatch(candidate, bestMatch) then
-                        bestMatch = candidate
-                    end
-                end
-            end
-        end
-
-        memo[memoKey] = bestMatch
-        return bestMatch
-    end
-
-    local bestMatch = search(1, 1, nil, 0)
+    local state = buildSearchState(target, query)
+    local bestMatch = searchBestMatch(state, 1, 1, nil, 0)
     if bestMatch == nil then
         return {}, nil
     end
 
-    local finalScore = bestMatch.score - math.floor(string.len(target) / 12)
-    return bestMatch.matched_idxs, finalScore
+    return bestMatch.matched_idxs, finalizeMatchScore(target, bestMatch.score)
 end
 
 local function highlightMatched(text, matched_idxs)
@@ -155,26 +247,76 @@ local function highlightMatched(text, matched_idxs)
     return new_text
 end
 
-local function getText(text)
-    if text == nil then
-        return ''
+local function createDisplayText(originalText, choiceText, matched_idxs)
+    if #matched_idxs == 0 then
+        return choiceText
     end
-    if type(text) == 'string' then
-        return text
+
+    return highlightMatched(originalText, matched_idxs)
+end
+
+local function matchText(text, query)
+    local matched_idxs, score = findBestMatch(text, query)
+
+    return {
+        matched_idxs = matched_idxs,
+        score = score,
+        matched = #matched_idxs ~= 0
+    }
+end
+
+local function matchSubText(text, query, ignoreSubText)
+    if ignoreSubText then
+        return {
+            matched_idxs = {},
+            score = nil,
+            matched = false
+        }
     end
-    return text:getString()
+
+    return matchText(text, query)
+end
+
+local function choiceScore(textMatch, subTextMatch)
+    local bestScore = math.max(textMatch.score or math.mininteger, subTextMatch.score or math.mininteger)
+    if subTextMatch.matched and not textMatch.matched then
+        return bestScore - SCORE.subTextOnlyPenalty
+    end
+
+    return bestScore
+end
+
+local function buildMatchedChoice(choice, choiceText, choiceSubText, textMatch, subTextMatch)
+    return helper.table.assigned(choice, {
+        text = createDisplayText(choiceText, choice.text, textMatch.matched_idxs),
+        subText = createDisplayText(choiceSubText, choice.subText, subTextMatch.matched_idxs),
+        _fuzzyScore = choiceScore(textMatch, subTextMatch)
+    })
+end
+
+local function filterChoice(choice, query, ignoreSubText)
+    local choiceText = getText(choice.text)
+    local choiceSubText = getText(choice.subText)
+    local textMatch = matchText(choiceText, query)
+    local subTextMatch = matchSubText(choiceSubText, query, ignoreSubText)
+
+    if not textMatch.matched and not subTextMatch.matched then
+        return nil
+    end
+
+    return buildMatchedChoice(choice, choiceText, choiceSubText, textMatch, subTextMatch)
 end
 
 local function lenSorter(a, b)
-    return (string.len(getText(a.text)) < string.len(getText(b.text)))
+    return string.len(getText(a.text)) < string.len(getText(b.text))
 end
 
 local function ascSorter(a, b)
-    return (getText(a.text) < getText(b.text))
+    return getText(a.text) < getText(b.text)
 end
 
 local function descSorter(a, b)
-    return (getText(a.text) > getText(b.text))
+    return getText(a.text) > getText(b.text)
 end
 
 local function scoreSorter(a, b)
@@ -194,60 +336,31 @@ local function scoreSorter(a, b)
     return aText < bText
 end
 
-local function filter(choices, query, ignore_sub_text)
+local function filter(choices, query, ignoreSubText)
     if string.len(query) == 0 then
         return choices
     end
+
     local filtered_choices = {}
     for _, choice in pairs(choices) do
-
-        local choice_text = getText(choice.text)
-        local choice_subText = getText(choice.subText)
-
-        local text_matched_idxs, text_score = findBestMatch(choice_text, query)
-
-        local sub_text_matched_idxs, sub_text_score = {}, nil
-        if not ignore_sub_text then
-            sub_text_matched_idxs, sub_text_score = findBestMatch(choice_subText, query)
-        end
-
-        local is_text_matched = #text_matched_idxs ~= 0
-        local is_sub_text_matched = #sub_text_matched_idxs ~= 0
-
-        if is_text_matched or is_sub_text_matched then
-            local best_score = math.max(text_score or math.mininteger, sub_text_score or math.mininteger)
-            if is_sub_text_matched and not is_text_matched then
-                best_score = best_score - 40
-            end
-
-            local new_text = is_text_matched and
-                    highlightMatched(choice_text,
-                            text_matched_idxs) or
-                    choice.text  -- leave original otherwise formatting is lost
-            local new_sub_text = is_sub_text_matched and
-                    highlightMatched(
-                            choice_subText,
-                            sub_text_matched_idxs) or
-                    choice.subText -- leave original otherwise formatting is lost
-
-            --local new_app = { text = new_text, subText = new_sub_text }
-            -- preserve previous values
-            local new_app = helper.table.assigned(choice,{
-                text = new_text,
-                subText = new_sub_text,
-                _fuzzyScore = best_score
-            })
-            table.insert(filtered_choices, new_app)
+        local filteredChoice = filterChoice(choice, query, ignoreSubText)
+        if filteredChoice then
+            table.insert(filtered_choices, filteredChoice)
         end
     end
+
     return filtered_choices
+end
+
+local function sortChoices(choices, sorter)
+    if sorter ~= nil then
+        table.sort(choices, sorter)
+    end
 end
 
 local function setChoices(choices, chooser, ignoreSubText, sorter)
     local filtered_choices = filter(choices, chooser:query(), ignoreSubText)
-    if sorter ~= nil then
-        table.sort(filtered_choices, sorter)
-    end
+    sortChoices(filtered_choices, sorter)
     chooser:choices(filtered_choices)
     chooser:refreshChoicesCallback(true)
 end
