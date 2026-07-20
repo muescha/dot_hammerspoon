@@ -43,10 +43,6 @@
         }
     };
 
-    function detectNativePlayer() {
-        return document.querySelector("video, audio");
-    }
-
     function createNativeAdapter(player) {
         console.log("Generic Player:");
         console.log(player);
@@ -125,7 +121,10 @@
     }
 
     const nativeAdapter = {
-        detect: detectNativePlayer,
+        detect: function () {
+            return document.querySelector("video, audio");
+        },
+
         create: createNativeAdapter
     };
 
