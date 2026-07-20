@@ -2,8 +2,12 @@
 
 (function () {
 
+    function findNativePlayer() {
+        return document.querySelector("video, audio");
+    }
+
     // TODO: the controls also audio element is possible
-    const player = document.querySelector("video, audio");
+    const player = findNativePlayer();
     console.log("Action: {{ action }}");
     console.log("Generic Player:");
     console.log(player);
