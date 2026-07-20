@@ -44,11 +44,11 @@
     };
 
     const nativeAdapter = {
-        detect: function () {
+        detect() {
             return document.querySelector("video, audio");
         },
 
-        createController: function (player) {
+        createController(player) {
             console.log("Generic Player:");
             console.log(player);
 
