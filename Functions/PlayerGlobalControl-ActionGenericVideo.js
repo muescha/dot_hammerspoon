@@ -126,7 +126,23 @@
         };
     }
 
-    const controller = createNativeAdapter();
+    const adapterFactories = [
+        createNativeAdapter
+    ];
+
+    function createAdapter() {
+        for (const adapterFactory of adapterFactories) {
+            const adapter = adapterFactory();
+
+            if (adapter) {
+                return adapter;
+            }
+        }
+
+        return null;
+    }
+
+    const controller = createAdapter();
 
     function executeAction(controller, action) {
         if (!controller) {
