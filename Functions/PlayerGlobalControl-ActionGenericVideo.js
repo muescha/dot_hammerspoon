@@ -124,11 +124,13 @@
         };
     }
 
+    const nativeAdapter = {
+        detect: detectNativePlayer,
+        create: createNativeAdapter
+    };
+
     const adapters = [
-        {
-            detect: detectNativePlayer,
-            create: createNativeAdapter
-        }
+        nativeAdapter
     ];
 
     function createAdapter() {
