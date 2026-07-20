@@ -48,7 +48,7 @@
             return document.querySelector("video, audio");
         },
 
-        create: function (player) {
+        createController: function (player) {
             console.log("Generic Player:");
             console.log(player);
 
@@ -135,7 +135,7 @@
             const player = adapter.detect();
 
             if (player) {
-                return adapter.create(player);
+                return adapter.createController(player);
             }
         }
 
