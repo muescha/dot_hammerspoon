@@ -130,7 +130,7 @@
         nativeAdapter
     ];
 
-    function findAdapter() {
+    function findController() {
         for (const adapter of adapters) {
             const player = adapter.detect();
 
@@ -142,7 +142,7 @@
         return null;
     }
 
-    const controller = findAdapter();
+    const controller = findController();
 
     function executeAction(controller, action) {
         if (!controller) {
