@@ -146,6 +146,7 @@ function GenericAction(action, defaultParams)
 
         local calc = params.calc or function(v) return v end
 
+        -- TODO add nil check for output
         local result = { [params.property] = calc(output)}
         return ok, result
     end
@@ -208,8 +209,10 @@ local ControlKeys = {
     [bundleIdIINA] = {
         pause = { {}, "p" },
         speedReset = { {}, "0" },
-        speedInc = { {}, "=" }, -- +
-        speedDec = { {}, "-" },
+        -- speedInc = { {}, "=" }, -- +
+        -- speedDec = { {}, "-" },
+        speedInc = { {}, "]" }, -- 2,0
+        speedDec = { {}, "[" }, -- 0,5
         moveForward = { {}, "right" },
         moveBackward = { {}, "left" },
         info = "IINA Player"
@@ -229,7 +232,6 @@ local ControlKeys = {
             info = "Generic Video"
         },
         ["youtube.com"] = {
-            selector = "",
             selector = "",
             start = {
                 ActionClick({ selector = ".ytp-large-play-button" })
@@ -479,7 +481,7 @@ local ControlKeys = {
             },
             moveForward = { { "cmd", "shift"}, "right" },
             moveBackward = { { "cmd", "shift" }, "left" },
-            info = "Spotify Player (no speed controls)"
+            info = "Spotify Player"
         },
     }
 }
@@ -495,6 +497,9 @@ ControlKeys[bundleIdChrome]["ardmediathek.de"] = helper.table.assigned(ControlKe
         selector = ".ardplayer-viewport",
         info = "ardmediathek.de Player"
     })
+
+-- https://www.arte.tv/de/
+-- https://www.zdf.de/dokus
 
 function getChromeUrl()
     --local _,url = hs.osascript.applescript('tell application "Google Chrome" to return URL of active tab of front window')
@@ -665,7 +670,9 @@ local function checkSwitch()
 
     local win = hs.window.focusedWindow()
     if win == nil then debugInfo("checkSwitch: no focused window available") return end
-    local bundleID = win:application():bundleID()
+    local app = win:application()
+    if app == nil then debugInfo("checkSwitch: focused window has no application") return end
+    local bundleID = app:bundleID()
 
     local returnSwitchBacks = { win }
 
@@ -791,7 +798,16 @@ end
 
 local function setSavedWindow()
     local win = hs.window.focusedWindow()
-    local bundleID = win:application():bundleID()
+    if win == nil then
+        debugInfo("setSavedWindow: no focused window available")
+        return
+    end
+    local app = win:application()
+    if app == nil then
+        debugInfo("setSavedWindow: focused window has no application")
+        return
+    end
+    local bundleID = app:bundleID()
 
     debugInfo("Cache Size:", helper.table.count(cache))
     debugInfo("reset cache")
@@ -799,7 +815,7 @@ local function setSavedWindow()
 
     if ControlKeys[bundleID] == nil then
         if savedWindow then
-            local msg = "focus saved window"
+            local msg = "setSavedWindow: focus saved window"
             debugInfo(msg)
             hs.alert.show(msg)
 
@@ -819,7 +835,7 @@ local function setSavedWindow()
     local appActions = getAppActions()
 
     if appActions == nil then
-        local msg = "no player actions defined for current domain: " .. (savedDomain or "(none)")
+        local msg = "setSavedWindow: no player actions defined for current domain: " .. (savedDomain or "(none)")
         debugInfo(msg)
         hs.alert.show(msg)
         return
@@ -827,7 +843,7 @@ local function setSavedWindow()
 
     local enabledInfo = getEnabledInfo(appActions)
 
-    debugInfo("changed savedBundleId to: " .. savedBundleId)
+    debugInfo("setSavedWindow: changed savedBundleId to: " .. savedBundleId)
 
     local infoText = "Detected: "..appActions.info
             .."\n\n"..enabledInfo

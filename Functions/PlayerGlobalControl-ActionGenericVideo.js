@@ -3,7 +3,7 @@
 (function () {
 
     // TODO: the controls also audio element is possible
-    const player = document.querySelector('video');
+    const player = document.querySelector('video, audio');
     console.log("Action: {{ action }}")
     console.log("Generic Player:");
     console.log(player);
@@ -49,7 +49,7 @@
     const controller = {
 
         isGeneric: function () {
-            return player != null;
+            return (player != null)?player.tagName:false;
         },
 
         doPause: function () {
