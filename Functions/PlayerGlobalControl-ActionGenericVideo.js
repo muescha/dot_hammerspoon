@@ -26,7 +26,7 @@
     }
 
     const speedSteps = {
-        speedInc: function (currentSpeed) {
+        speedInc(currentSpeed) {
             if (currentSpeed >= 1) {
                 return 0.5;
             } else {
@@ -34,7 +34,7 @@
             }
         },
 
-        speedDec: function (currentSpeed) {
+        speedDec(currentSpeed) {
             if (currentSpeed <= 1) {
                 return 0.25;
             } else {
@@ -54,11 +54,11 @@
 
             return {
 
-                isGeneric: function () {
+                isGeneric() {
                     return player.tagName;
                 },
 
-                doPause: function () {
+                doPause() {
                     if (player.paused) {
                         player.play();
                     } else {
@@ -68,21 +68,21 @@
                     return player.paused;
                 },
 
-                speedInc: function () {
+                speedInc() {
                     let speedDiff = speedSteps.speedInc(player.playbackRate);
                     console.log(speedDiff);
                     player.playbackRate += speedDiff;
                     return player.playbackRate;
                 },
 
-                speedDec: function () {
+                speedDec() {
                     let speedDiff = speedSteps.speedDec(player.playbackRate);
                     console.log(speedDiff);
                     player.playbackRate -= speedDiff;
                     return player.playbackRate;
                 },
 
-                maxSpeed: function () {
+                maxSpeed() {
                     const skipButton = document.querySelector("button.ytp-skip-ad-button");
 
                     console.log(skipButton);
@@ -96,12 +96,12 @@
                     }
                 },
 
-                speedReset: function () {
+                speedReset() {
                     player.playbackRate = player.defaultPlaybackRate;
                     return player.playbackRate;
                 },
 
-                moveForward: function () {
+                moveForward() {
                     const jump = computeJumpSeconds(player.playbackRate);
                     var info = formatTime(player.currentTime) + " + " + jump + " = ";
 
@@ -110,7 +110,7 @@
                     return info + formatTime(player.currentTime);
                 },
 
-                moveBackward: function () {
+                moveBackward() {
                     const jump = computeJumpSeconds(player.playbackRate);
                     var info = formatTime(player.currentTime) + " - " + jump + " = ";
 
@@ -119,7 +119,7 @@
                     return info + formatTime(player.currentTime);
                 },
 
-                nil: function () {
+                nil() {
                     return "function not defined in params.action";
                 }
             };
