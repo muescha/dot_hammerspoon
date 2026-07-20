@@ -43,15 +43,13 @@
         }
     };
 
-    function createNativeAdapter() {
-        const player = document.querySelector("video, audio");
+    function detectNativePlayer() {
+        return document.querySelector("video, audio");
+    }
 
+    function createNativeAdapter(player) {
         console.log("Generic Player:");
         console.log(player);
-
-        if (!player) {
-            return null;
-        }
 
         return {
 
@@ -126,16 +124,19 @@
         };
     }
 
-    const adapterFactories = [
-        createNativeAdapter
+    const adapters = [
+        {
+            detect: detectNativePlayer,
+            create: createNativeAdapter
+        }
     ];
 
     function createAdapter() {
-        for (const adapterFactory of adapterFactories) {
-            const adapter = adapterFactory();
+        for (const adapter of adapters) {
+            const player = adapter.detect();
 
-            if (adapter) {
-                return adapter;
+            if (player) {
+                return adapter.create(player);
             }
         }
 
