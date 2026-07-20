@@ -43,89 +43,87 @@
         }
     };
 
-    function createNativeAdapter(player) {
-        console.log("Generic Player:");
-        console.log(player);
-
-        return {
-
-            isGeneric: function () {
-                return player.tagName;
-            },
-
-            doPause: function () {
-                if (player.paused) {
-                    player.play();
-                } else {
-                    player.pause();
-                }
-
-                return player.paused;
-            },
-
-            speedInc: function () {
-                let speedDiff = speedSteps.speedInc(player.playbackRate);
-                console.log(speedDiff);
-                player.playbackRate += speedDiff;
-                return player.playbackRate;
-            },
-
-            speedDec: function () {
-                let speedDiff = speedSteps.speedDec(player.playbackRate);
-                console.log(speedDiff);
-                player.playbackRate -= speedDiff;
-                return player.playbackRate;
-            },
-
-            maxSpeed: function () {
-                const skipButton = document.querySelector("button.ytp-skip-ad-button");
-
-                console.log(skipButton);
-                player.playbackRate = 16;
-
-                if (skipButton) {
-                    skipButton.click();
-                    return "16 & skipButton clicked";
-                } else {
-                    return player.playbackRate;
-                }
-            },
-
-            speedReset: function () {
-                player.playbackRate = player.defaultPlaybackRate;
-                return player.playbackRate;
-            },
-
-            moveForward: function () {
-                const jump = computeJumpSeconds(player.playbackRate);
-                var info = formatTime(player.currentTime) + " + " + jump + " = ";
-
-                player.currentTime += jump;
-
-                return info + formatTime(player.currentTime);
-            },
-
-            moveBackward: function () {
-                const jump = computeJumpSeconds(player.playbackRate);
-                var info = formatTime(player.currentTime) + " - " + jump + " = ";
-
-                player.currentTime -= jump;
-
-                return info + formatTime(player.currentTime);
-            },
-
-            nil: function () {
-                return "function not defined in params.action";
-            }
-        };
-    }
-
     const nativeAdapter = {
         detect: function () {
             return document.querySelector("video, audio");
         },
 
-        create: createNativeAdapter
+        create: function (player) {
+            console.log("Generic Player:");
+            console.log(player);
+
+            return {
+
+                isGeneric: function () {
+                    return player.tagName;
+                },
+
+                doPause: function () {
+                    if (player.paused) {
+                        player.play();
+                    } else {
+                        player.pause();
+                    }
+
+                    return player.paused;
+                },
+
+                speedInc: function () {
+                    let speedDiff = speedSteps.speedInc(player.playbackRate);
+                    console.log(speedDiff);
+                    player.playbackRate += speedDiff;
+                    return player.playbackRate;
+                },
+
+                speedDec: function () {
+                    let speedDiff = speedSteps.speedDec(player.playbackRate);
+                    console.log(speedDiff);
+                    player.playbackRate -= speedDiff;
+                    return player.playbackRate;
+                },
+
+                maxSpeed: function () {
+                    const skipButton = document.querySelector("button.ytp-skip-ad-button");
+
+                    console.log(skipButton);
+                    player.playbackRate = 16;
+
+                    if (skipButton) {
+                        skipButton.click();
+                        return "16 & skipButton clicked";
+                    } else {
+                        return player.playbackRate;
+                    }
+                },
+
+                speedReset: function () {
+                    player.playbackRate = player.defaultPlaybackRate;
+                    return player.playbackRate;
+                },
+
+                moveForward: function () {
+                    const jump = computeJumpSeconds(player.playbackRate);
+                    var info = formatTime(player.currentTime) + " + " + jump + " = ";
+
+                    player.currentTime += jump;
+
+                    return info + formatTime(player.currentTime);
+                },
+
+                moveBackward: function () {
+                    const jump = computeJumpSeconds(player.playbackRate);
+                    var info = formatTime(player.currentTime) + " - " + jump + " = ";
+
+                    player.currentTime -= jump;
+
+                    return info + formatTime(player.currentTime);
+                },
+
+                nil: function () {
+                    return "function not defined in params.action";
+                }
+            };
+        }
     };
 
     const adapters = [
