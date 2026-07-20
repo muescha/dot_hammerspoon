@@ -2,15 +2,7 @@
 
 (function () {
 
-    function findNativePlayer() {
-        return document.querySelector("video, audio");
-    }
-
-    // TODO: the controls also audio element is possible
-    const player = findNativePlayer();
     console.log("Action: {{ action }}");
-    console.log("Generic Player:");
-    console.log(player);
 
     function formatTime(timestampInSeconds, showMilliseconds = false) {
         const hoursValue = Math.floor(timestampInSeconds / 3600);
@@ -51,11 +43,20 @@
         }
     };
 
-    function createNativeAdapter(player) {
+    function createNativeAdapter() {
+        const player = document.querySelector("video, audio");
+
+        console.log("Generic Player:");
+        console.log(player);
+
+        if (!player) {
+            return null;
+        }
+
         return {
 
             isGeneric: function () {
-                return (player != null) ? player.tagName : false;
+                return player.tagName;
             },
 
             doPause: function () {
@@ -125,9 +126,15 @@
         };
     }
 
-    const controller = createNativeAdapter(player);
+    const controller = createNativeAdapter();
 
     function executeAction(controller, action) {
+        if (!controller) {
+            const info = "no supported player found";
+            console.log(info);
+            return info;
+        }
+
         if (controller[action]) {
             let info = controller[action]();
             console.log(info);
