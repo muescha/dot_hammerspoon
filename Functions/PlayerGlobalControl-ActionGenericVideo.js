@@ -51,77 +51,81 @@
         }
     };
 
-    const controller = {
+    function createNativeAdapter(player) {
+        return {
 
-        isGeneric: function () {
-            return (player != null) ? player.tagName : false;
-        },
+            isGeneric: function () {
+                return (player != null) ? player.tagName : false;
+            },
 
-        doPause: function () {
-            if (player.paused) {
-                player.play();
-            } else {
-                player.pause();
-            }
+            doPause: function () {
+                if (player.paused) {
+                    player.play();
+                } else {
+                    player.pause();
+                }
 
-            return player.paused;
-        },
+                return player.paused;
+            },
 
-        speedInc: function () {
-            let speedDiff = speedSteps.speedInc(player.playbackRate);
-            console.log(speedDiff);
-            player.playbackRate += speedDiff;
-            return player.playbackRate;
-        },
-
-        speedDec: function () {
-            let speedDiff = speedSteps.speedDec(player.playbackRate);
-            console.log(speedDiff);
-            player.playbackRate -= speedDiff;
-            return player.playbackRate;
-        },
-
-        maxSpeed: function () {
-            const skipButton = document.querySelector("button.ytp-skip-ad-button");
-
-            console.log(skipButton);
-            player.playbackRate = 16;
-
-            if (skipButton) {
-                skipButton.click();
-                return "16 & skipButton clicked";
-            } else {
+            speedInc: function () {
+                let speedDiff = speedSteps.speedInc(player.playbackRate);
+                console.log(speedDiff);
+                player.playbackRate += speedDiff;
                 return player.playbackRate;
+            },
+
+            speedDec: function () {
+                let speedDiff = speedSteps.speedDec(player.playbackRate);
+                console.log(speedDiff);
+                player.playbackRate -= speedDiff;
+                return player.playbackRate;
+            },
+
+            maxSpeed: function () {
+                const skipButton = document.querySelector("button.ytp-skip-ad-button");
+
+                console.log(skipButton);
+                player.playbackRate = 16;
+
+                if (skipButton) {
+                    skipButton.click();
+                    return "16 & skipButton clicked";
+                } else {
+                    return player.playbackRate;
+                }
+            },
+
+            speedReset: function () {
+                player.playbackRate = player.defaultPlaybackRate;
+                return player.playbackRate;
+            },
+
+            moveForward: function () {
+                const jump = computeJumpSeconds(player.playbackRate);
+                var info = formatTime(player.currentTime) + " + " + jump + " = ";
+
+                player.currentTime += jump;
+
+                return info + formatTime(player.currentTime);
+            },
+
+            moveBackward: function () {
+                const jump = computeJumpSeconds(player.playbackRate);
+                var info = formatTime(player.currentTime) + " - " + jump + " = ";
+
+                player.currentTime -= jump;
+
+                return info + formatTime(player.currentTime);
+            },
+
+            nil: function () {
+                return "function not defined in params.action";
             }
-        },
+        };
+    }
 
-        speedReset: function () {
-            player.playbackRate = player.defaultPlaybackRate;
-            return player.playbackRate;
-        },
-
-        moveForward: function () {
-            const jump = computeJumpSeconds(player.playbackRate);
-            var info = formatTime(player.currentTime) + " + " + jump + " = ";
-
-            player.currentTime += jump;
-
-            return info + formatTime(player.currentTime);
-        },
-
-        moveBackward: function () {
-            const jump = computeJumpSeconds(player.playbackRate);
-            var info = formatTime(player.currentTime) + " - " + jump + " = ";
-
-            player.currentTime -= jump;
-
-            return info + formatTime(player.currentTime);
-        },
-
-        nil: function () {
-            return "function not defined in params.action";
-        }
-    };
+    const controller = createNativeAdapter(player);
 
     function executeAction(controller, action) {
         if (controller[action]) {
