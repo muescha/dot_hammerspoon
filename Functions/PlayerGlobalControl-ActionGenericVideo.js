@@ -28,11 +28,6 @@
             : `${hours}:${minutes}:${seconds}`;
     }
 
-    function computeJumpSeconds(rate, base = 4, minJump = 3, maxJump = 30) {
-        const safeRate = Math.max(0.1, rate || 1);
-        return Math.min(maxJump, Math.max(minJump, base * safeRate));
-    }
-
     class MediaController {
 
         static changes = {
@@ -64,6 +59,20 @@
                 }
             }
         };
+
+        static computeJumpSeconds(
+            rate,
+            base = 4,
+            minJump = 3,
+            maxJump = 30
+        ) {
+            const safeRate = Math.max(0.1, rate || 1);
+
+            return Math.min(
+                maxJump,
+                Math.max(minJump, base * safeRate)
+            );
+        }
 
         constructor(mediaAdapter) {
             this.mediaAdapter = mediaAdapter;
@@ -124,7 +133,7 @@
         }
 
         changeTime(calculateTime, operator) {
-            const jump = computeJumpSeconds(
+            const jump = MediaController.computeJumpSeconds(
                 this.mediaAdapter.getPlaybackRate()
             );
             const currentTime = this.mediaAdapter.getCurrentTime();
