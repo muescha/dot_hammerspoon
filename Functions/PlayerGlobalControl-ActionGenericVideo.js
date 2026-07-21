@@ -233,7 +233,17 @@
     }
 
     function executeAction(controller, action) {
-        if (typeof controller[action] !== "function") {
+        const controllerPrototype = Object.getPrototypeOf(controller);
+        const hasAction = Object.prototype.hasOwnProperty.call(
+            controllerPrototype,
+            action
+        );
+
+        if (
+            !hasAction
+            || action === "constructor"
+            || typeof controller[action] !== "function"
+        ) {
             const info = `no function controller.${action}() found - params.action="${action}"`;
 
             console.log(info);
