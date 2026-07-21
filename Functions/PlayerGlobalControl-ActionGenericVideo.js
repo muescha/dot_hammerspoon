@@ -43,6 +43,82 @@
         }
     };
 
+    class NativeController {
+
+        constructor(player) {
+            this.player = player;
+        }
+
+        isGeneric() {
+            return this.player.tagName;
+        }
+
+        doPause() {
+            if (this.player.paused) {
+                this.player.play();
+            } else {
+                this.player.pause();
+            }
+
+            return this.player.paused;
+        }
+
+        speedInc() {
+            let speedDiff = speedSteps.speedInc(this.player.playbackRate);
+            console.log(speedDiff);
+            this.player.playbackRate += speedDiff;
+            return this.player.playbackRate;
+        }
+
+        speedDec() {
+            let speedDiff = speedSteps.speedDec(this.player.playbackRate);
+            console.log(speedDiff);
+            this.player.playbackRate -= speedDiff;
+            return this.player.playbackRate;
+        }
+
+        maxSpeed() {
+            const skipButton = document.querySelector("button.ytp-skip-ad-button");
+
+            console.log(skipButton);
+            this.player.playbackRate = 16;
+
+            if (skipButton) {
+                skipButton.click();
+                return "16 & skipButton clicked";
+            } else {
+                return this.player.playbackRate;
+            }
+        }
+
+        speedReset() {
+            this.player.playbackRate = this.player.defaultPlaybackRate;
+            return this.player.playbackRate;
+        }
+
+        moveForward() {
+            const jump = computeJumpSeconds(this.player.playbackRate);
+            var info = formatTime(this.player.currentTime) + " + " + jump + " = ";
+
+            this.player.currentTime += jump;
+
+            return info + formatTime(this.player.currentTime);
+        }
+
+        moveBackward() {
+            const jump = computeJumpSeconds(this.player.playbackRate);
+            var info = formatTime(this.player.currentTime) + " - " + jump + " = ";
+
+            this.player.currentTime -= jump;
+
+            return info + formatTime(this.player.currentTime);
+        }
+
+        nil() {
+            return "function not defined in params.action";
+        }
+    }
+
     class NativeAdapter {
 
         static detect() {
@@ -53,77 +129,7 @@
             console.log("Generic Player:");
             console.log(player);
 
-            return {
-
-                isGeneric() {
-                    return player.tagName;
-                },
-
-                doPause() {
-                    if (player.paused) {
-                        player.play();
-                    } else {
-                        player.pause();
-                    }
-
-                    return player.paused;
-                },
-
-                speedInc() {
-                    let speedDiff = speedSteps.speedInc(player.playbackRate);
-                    console.log(speedDiff);
-                    player.playbackRate += speedDiff;
-                    return player.playbackRate;
-                },
-
-                speedDec() {
-                    let speedDiff = speedSteps.speedDec(player.playbackRate);
-                    console.log(speedDiff);
-                    player.playbackRate -= speedDiff;
-                    return player.playbackRate;
-                },
-
-                maxSpeed() {
-                    const skipButton = document.querySelector("button.ytp-skip-ad-button");
-
-                    console.log(skipButton);
-                    player.playbackRate = 16;
-
-                    if (skipButton) {
-                        skipButton.click();
-                        return "16 & skipButton clicked";
-                    } else {
-                        return player.playbackRate;
-                    }
-                },
-
-                speedReset() {
-                    player.playbackRate = player.defaultPlaybackRate;
-                    return player.playbackRate;
-                },
-
-                moveForward() {
-                    const jump = computeJumpSeconds(player.playbackRate);
-                    var info = formatTime(player.currentTime) + " + " + jump + " = ";
-
-                    player.currentTime += jump;
-
-                    return info + formatTime(player.currentTime);
-                },
-
-                moveBackward() {
-                    const jump = computeJumpSeconds(player.playbackRate);
-                    var info = formatTime(player.currentTime) + " - " + jump + " = ";
-
-                    player.currentTime -= jump;
-
-                    return info + formatTime(player.currentTime);
-                },
-
-                nil() {
-                    return "function not defined in params.action";
-                }
-            };
+            return new NativeController(player);
         }
     }
 
