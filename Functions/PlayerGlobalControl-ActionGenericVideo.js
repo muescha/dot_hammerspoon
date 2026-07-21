@@ -33,37 +33,37 @@
         return Math.min(maxJump, Math.max(minJump, base * safeRate));
     }
 
-    const changes = {
-        speed: {
-            inc(currentSpeed) {
-                return currentSpeed + (
-                    currentSpeed >= 1
-                        ? 0.5
-                        : 0.25
-                );
-            },
-
-            dec(currentSpeed) {
-                return currentSpeed - (
-                    currentSpeed <= 1
-                        ? 0.25
-                        : 0.5
-                );
-            }
-        },
-
-        time: {
-            forward(currentTime, jump) {
-                return currentTime + jump;
-            },
-
-            backward(currentTime, jump) {
-                return currentTime - jump;
-            }
-        }
-    };
-
     class MediaController {
+
+        static changes = {
+            speed: {
+                inc(currentSpeed) {
+                    return currentSpeed + (
+                        currentSpeed >= 1
+                            ? 0.5
+                            : 0.25
+                    );
+                },
+
+                dec(currentSpeed) {
+                    return currentSpeed - (
+                        currentSpeed <= 1
+                            ? 0.25
+                            : 0.5
+                    );
+                }
+            },
+
+            time: {
+                forward(currentTime, jump) {
+                    return currentTime + jump;
+                },
+
+                backward(currentTime, jump) {
+                    return currentTime - jump;
+                }
+            }
+        };
 
         constructor(mediaAdapter) {
             this.mediaAdapter = mediaAdapter;
@@ -94,11 +94,15 @@
         }
 
         speedInc() {
-            return this.changeSpeed(changes.speed.inc);
+            return this.changeSpeed(
+                MediaController.changes.speed.inc
+            );
         }
 
         speedDec() {
-            return this.changeSpeed(changes.speed.dec);
+            return this.changeSpeed(
+                MediaController.changes.speed.dec
+            );
         }
 
         maxSpeed() {
@@ -143,14 +147,14 @@
 
         moveForward() {
             return this.changeTime(
-                changes.time.forward,
+                MediaController.changes.time.forward,
                 "+"
             );
         }
 
         moveBackward() {
             return this.changeTime(
-                changes.time.backward,
+                MediaController.changes.time.backward,
                 "-"
             );
         }
