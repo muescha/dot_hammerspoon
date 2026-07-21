@@ -171,9 +171,7 @@
         }
 
         speedReset() {
-            this.mediaAdapter.setPlaybackRate(
-                this.mediaAdapter.getDefaultPlaybackRate()
-            );
+            this.mediaAdapter.resetPlaybackRate();
 
             return this.mediaAdapter.getPlaybackRate();
         }
@@ -263,6 +261,12 @@
 
         getDefaultPlaybackRate() {
             return this.player.defaultPlaybackRate;
+        }
+
+        resetPlaybackRate() {
+            this.setPlaybackRate(
+                this.getDefaultPlaybackRate()
+            );
         }
 
         getMaxPlaybackRate() {
