@@ -86,14 +86,9 @@
         }
 
         maxSpeed() {
-            const skipButton = document.querySelector("button.ytp-skip-ad-button");
-
-            console.log(skipButton);
-
             this.mediaAdapter.setPlaybackRate(16);
 
-            if (skipButton) {
-                skipButton.click();
+            if (this.mediaAdapter.skipAd()) {
                 return "16 & skipButton clicked";
             } else {
                 return this.mediaAdapter.getPlaybackRate();
@@ -204,6 +199,21 @@
 
         setCurrentTime(value) {
             this.player.currentTime = value;
+        }
+
+        skipAd() {
+            const skipButton = document.querySelector(
+                "button.ytp-skip-ad-button"
+            );
+
+            console.log(skipButton);
+
+            if (skipButton) {
+                skipButton.click();
+                return true;
+            }
+
+            return false;
         }
     }
 
