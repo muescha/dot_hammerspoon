@@ -112,30 +112,36 @@
             const jump = computeJumpSeconds(
                 this.mediaAdapter.getPlaybackRate()
             );
+            const currentTime = this.mediaAdapter.getCurrentTime();
 
-            var info = formatTime(this.mediaAdapter.currentTime)
+            var info = formatTime(currentTime)
                 + " + "
                 + jump
                 + " = ";
 
-            this.mediaAdapter.currentTime += jump;
+            this.mediaAdapter.setCurrentTime(currentTime + jump);
 
-            return info + formatTime(this.mediaAdapter.currentTime);
+            return info + formatTime(
+                this.mediaAdapter.getCurrentTime()
+            );
         }
 
         moveBackward() {
             const jump = computeJumpSeconds(
                 this.mediaAdapter.getPlaybackRate()
             );
+            const currentTime = this.mediaAdapter.getCurrentTime();
 
-            var info = formatTime(this.mediaAdapter.currentTime)
+            var info = formatTime(currentTime)
                 + " - "
                 + jump
                 + " = ";
 
-            this.mediaAdapter.currentTime -= jump;
+            this.mediaAdapter.setCurrentTime(currentTime - jump);
 
-            return info + formatTime(this.mediaAdapter.currentTime);
+            return info + formatTime(
+                this.mediaAdapter.getCurrentTime()
+            );
         }
 
         nil() {
@@ -192,11 +198,11 @@
             return this.player.defaultPlaybackRate;
         }
 
-        get currentTime() {
+        getCurrentTime() {
             return this.player.currentTime;
         }
 
-        set currentTime(value) {
+        setCurrentTime(value) {
             this.player.currentTime = value;
         }
     }
