@@ -161,13 +161,10 @@
         }
 
         maxSpeed() {
-            const maxPlaybackRate =
-                this.mediaAdapter.getMaxPlaybackRate();
-
-            this.mediaAdapter.setPlaybackRate(maxPlaybackRate);
+            this.mediaAdapter.setMaxPlaybackRate();
 
             if (this.mediaAdapter.skipAd()) {
-                return `${maxPlaybackRate} & skipButton clicked`;
+                return `${this.mediaAdapter.getPlaybackRate()} & skipButton clicked`;
             }
 
             return this.mediaAdapter.getPlaybackRate();
@@ -270,6 +267,12 @@
 
         getMaxPlaybackRate() {
             return 16;
+        }
+
+        setMaxPlaybackRate() {
+            this.setPlaybackRate(
+                this.getMaxPlaybackRate()
+            );
         }
 
         getCurrentTime() {
