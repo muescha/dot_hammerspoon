@@ -16,6 +16,7 @@
 
         static actions = new Set([
             "isGeneric",
+            "play",
             "doPause",
             "speedInc",
             "speedDec",
@@ -134,6 +135,12 @@
             } else {
                 this.mediaAdapter.pause();
             }
+
+            return this.mediaAdapter.isPaused();
+        }
+
+        play() {
+            this.mediaAdapter.play();
 
             return this.mediaAdapter.isPaused();
         }
