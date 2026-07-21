@@ -121,15 +121,59 @@
 
     class NativeMediaAdapter {
 
-        static detect() {
-            return document.querySelector("video, audio");
+        constructor(player) {
+            this.player = player;
         }
 
-        static createController(player) {
-            console.log("Generic Player:");
-            console.log(player);
+        static detect() {
+            const player = document.querySelector("video, audio");
 
-            return new MediaController(player);
+            return player
+                ? new NativeMediaAdapter(player)
+                : null;
+        }
+
+        static createController(mediaAdapter) {
+            console.log("Generic Player:");
+            console.log(mediaAdapter.player);
+
+            return new MediaController(mediaAdapter);
+        }
+
+        get tagName() {
+            return this.player.tagName;
+        }
+
+        get paused() {
+            return this.player.paused;
+        }
+
+        play() {
+            return this.player.play();
+        }
+
+        pause() {
+            return this.player.pause();
+        }
+
+        get playbackRate() {
+            return this.player.playbackRate;
+        }
+
+        set playbackRate(value) {
+            this.player.playbackRate = value;
+        }
+
+        get defaultPlaybackRate() {
+            return this.player.defaultPlaybackRate;
+        }
+
+        get currentTime() {
+            return this.player.currentTime;
+        }
+
+        set currentTime(value) {
+            this.player.currentTime = value;
         }
     }
 
@@ -139,10 +183,10 @@
 
     function findController() {
         for (const adapter of adapters) {
-            const player = adapter.detect();
+            const mediaAdapter = adapter.detect();
 
-            if (player) {
-                return adapter.createController(player);
+            if (mediaAdapter) {
+                return adapter.createController(mediaAdapter);
             }
         }
 
