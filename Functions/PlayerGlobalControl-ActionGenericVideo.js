@@ -227,12 +227,6 @@
     }
 
     function executeAction(controller, action) {
-        if (!controller) {
-            const info = "no supported player found";
-            console.log(info);
-            return info;
-        }
-
         if (controller[action]) {
             let info = controller[action]();
             console.log(info);
@@ -248,7 +242,11 @@
     const mediaAdapter = findMediaAdapter();
 
     if (!mediaAdapter) {
-        return executeAction(null, "{{ action }}");
+        const info = "no supported player found";
+
+        console.log(info);
+
+        return info;
     }
 
     console.log("Generic Player:");
