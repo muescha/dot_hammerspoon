@@ -54,13 +54,13 @@
         }
 
         doPause() {
-            if (this.mediaAdapter.paused) {
+            if (this.mediaAdapter.isPaused()) {
                 this.mediaAdapter.play();
             } else {
                 this.mediaAdapter.pause();
             }
 
-            return this.mediaAdapter.paused;
+            return this.mediaAdapter.isPaused();
         }
 
         speedInc() {
@@ -144,7 +144,7 @@
             return this.player.tagName;
         }
 
-        get paused() {
+        isPaused() {
             return this.player.paused;
         }
 
