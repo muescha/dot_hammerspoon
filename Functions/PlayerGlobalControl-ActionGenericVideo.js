@@ -14,7 +14,7 @@
 
     class MediaController {
 
-        static changes = {
+        static strategies = {
             speed: {
                 inc(currentSpeed) {
                     return currentSpeed + (
@@ -123,13 +123,13 @@
 
         speedInc() {
             return this.changeSpeed(
-                MediaController.changes.speed.inc
+                MediaController.strategies.speed.inc
             );
         }
 
         speedDec() {
             return this.changeSpeed(
-                MediaController.changes.speed.dec
+                MediaController.strategies.speed.dec
             );
         }
 
@@ -175,14 +175,14 @@
 
         moveForward() {
             return this.changeTime(
-                MediaController.changes.time.forward,
+                MediaController.strategies.time.forward,
                 "+"
             );
         }
 
         moveBackward() {
             return this.changeTime(
-                MediaController.changes.time.backward,
+                MediaController.strategies.time.backward,
                 "-"
             );
         }
