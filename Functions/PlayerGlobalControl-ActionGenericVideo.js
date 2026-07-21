@@ -233,7 +233,7 @@
     }
 
     function executeAction(controller, action) {
-        if (!controller[action]) {
+        if (typeof controller[action] !== "function") {
             const info = `no function controller.${action}() found - params.action="${action}"`;
 
             console.log(info);
