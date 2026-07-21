@@ -43,7 +43,7 @@
         }
     };
 
-    class NativeController {
+    class MediaController {
 
         constructor(player) {
             this.player = player;
@@ -129,7 +129,7 @@
             console.log("Generic Player:");
             console.log(player);
 
-            return new NativeController(player);
+            return new MediaController(player);
         }
     }
 
