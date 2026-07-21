@@ -232,18 +232,19 @@
         return null;
     }
 
-    function executeAction(controller, action) {
+    function hasControllerAction(controller, action) {
         const controllerPrototype = Object.getPrototypeOf(controller);
-        const hasAction = Object.prototype.hasOwnProperty.call(
-            controllerPrototype,
-            action
-        );
 
-        if (
-            !hasAction
-            || action === "constructor"
-            || typeof controller[action] !== "function"
-        ) {
+        return action !== "constructor"
+            && Object.prototype.hasOwnProperty.call(
+                controllerPrototype,
+                action
+            )
+            && typeof controller[action] === "function";
+    }
+
+    function executeAction(controller, action) {
+        if (!hasControllerAction(controller, action)) {
             const info = `no function controller.${action}() found - params.action="${action}"`;
 
             console.log(info);
