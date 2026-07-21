@@ -99,39 +99,39 @@
             return this.mediaAdapter.getPlaybackRate();
         }
 
-        moveForward() {
+        changeTime(calculateTime, operator) {
             const jump = computeJumpSeconds(
                 this.mediaAdapter.getPlaybackRate()
             );
             const currentTime = this.mediaAdapter.getCurrentTime();
 
-            var info = formatTime(currentTime)
-                + " + "
+            const info = formatTime(currentTime)
+                + " "
+                + operator
+                + " "
                 + jump
                 + " = ";
 
-            this.mediaAdapter.setCurrentTime(currentTime + jump);
+            this.mediaAdapter.setCurrentTime(
+                calculateTime(currentTime, jump)
+            );
 
             return info + formatTime(
                 this.mediaAdapter.getCurrentTime()
             );
         }
 
-        moveBackward() {
-            const jump = computeJumpSeconds(
-                this.mediaAdapter.getPlaybackRate()
+        moveForward() {
+            return this.changeTime(
+                (currentTime, jump) => currentTime + jump,
+                "+"
             );
-            const currentTime = this.mediaAdapter.getCurrentTime();
+        }
 
-            var info = formatTime(currentTime)
-                + " - "
-                + jump
-                + " = ";
-
-            this.mediaAdapter.setCurrentTime(currentTime - jump);
-
-            return info + formatTime(
-                this.mediaAdapter.getCurrentTime()
+        moveBackward() {
+            return this.changeTime(
+                (currentTime, jump) => currentTime - jump,
+                "-"
             );
         }
 
