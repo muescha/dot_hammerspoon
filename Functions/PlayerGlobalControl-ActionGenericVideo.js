@@ -33,31 +33,33 @@
         return Math.min(maxJump, Math.max(minJump, base * safeRate));
     }
 
-    const speedChanges = {
-        inc(currentSpeed) {
-            return currentSpeed + (
-                currentSpeed >= 1
-                    ? 0.5
-                    : 0.25
-            );
+    const changes = {
+        speed: {
+            inc(currentSpeed) {
+                return currentSpeed + (
+                    currentSpeed >= 1
+                        ? 0.5
+                        : 0.25
+                );
+            },
+
+            dec(currentSpeed) {
+                return currentSpeed - (
+                    currentSpeed <= 1
+                        ? 0.25
+                        : 0.5
+                );
+            }
         },
 
-        dec(currentSpeed) {
-            return currentSpeed - (
-                currentSpeed <= 1
-                    ? 0.25
-                    : 0.5
-            );
-        }
-    };
+        time: {
+            forward(currentTime, jump) {
+                return currentTime + jump;
+            },
 
-    const timeChanges = {
-        forward(currentTime, jump) {
-            return currentTime + jump;
-        },
-
-        backward(currentTime, jump) {
-            return currentTime - jump;
+            backward(currentTime, jump) {
+                return currentTime - jump;
+            }
         }
     };
 
@@ -92,11 +94,11 @@
         }
 
         speedInc() {
-            return this.changeSpeed(speedChanges.inc);
+            return this.changeSpeed(changes.speed.inc);
         }
 
         speedDec() {
-            return this.changeSpeed(speedChanges.dec);
+            return this.changeSpeed(changes.speed.dec);
         }
 
         maxSpeed() {
@@ -141,14 +143,14 @@
 
         moveForward() {
             return this.changeTime(
-                timeChanges.forward,
+                changes.time.forward,
                 "+"
             );
         }
 
         moveBackward() {
             return this.changeTime(
-                timeChanges.backward,
+                changes.time.backward,
                 "-"
             );
         }
