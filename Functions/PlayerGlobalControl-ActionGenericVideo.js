@@ -108,6 +108,16 @@
                 && typeof this[action] === "function";
         }
 
+        executeAction(action) {
+            if (!this.hasAction(action)) {
+                const info = `no function controller.${action}() found - params.action="${action}"`;
+
+                return log(info);
+            }
+
+            return log(this[action]());
+        }
+
         isGeneric() {
             return this.mediaAdapter.getMediaType();
         }
@@ -285,16 +295,6 @@
         return null;
     }
 
-    function executeAction(controller, action) {
-        if (!controller.hasAction(action)) {
-            const info = `no function controller.${action}() found - params.action="${action}"`;
-
-            return log(info);
-        }
-
-        return log(controller[action]());
-    }
-
     const mediaAdapter = findMediaAdapter();
 
     if (!mediaAdapter) {
@@ -306,6 +306,6 @@
 
     const controller = new MediaController(mediaAdapter);
 
-    return executeAction(controller, action);
+    return controller.executeAction(action);
 
 })();
