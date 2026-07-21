@@ -14,8 +14,6 @@
 
     class MediaController {
 
-        static maxPlaybackRate = 16;
-
         static actions = new Set([
             "isGeneric",
             "doPause",
@@ -163,7 +161,8 @@
         }
 
         maxSpeed() {
-            const maxPlaybackRate = MediaController.maxPlaybackRate;
+            const maxPlaybackRate =
+                this.mediaAdapter.getMaxPlaybackRate();
 
             this.mediaAdapter.setPlaybackRate(maxPlaybackRate);
 
@@ -267,6 +266,10 @@
 
         getDefaultPlaybackRate() {
             return this.player.defaultPlaybackRate;
+        }
+
+        getMaxPlaybackRate() {
+            return 16;
         }
 
         getCurrentTime() {
