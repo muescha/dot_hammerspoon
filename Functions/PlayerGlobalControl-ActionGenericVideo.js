@@ -102,7 +102,7 @@
 
         speedReset() {
             this.mediaAdapter.setPlaybackRate(
-                this.mediaAdapter.defaultPlaybackRate
+                this.mediaAdapter.getDefaultPlaybackRate()
             );
 
             return this.mediaAdapter.getPlaybackRate();
@@ -188,7 +188,7 @@
             this.player.playbackRate = value;
         }
 
-        get defaultPlaybackRate() {
+        getDefaultPlaybackRate() {
             return this.player.defaultPlaybackRate;
         }
 
