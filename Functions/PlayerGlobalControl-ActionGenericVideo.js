@@ -97,6 +97,17 @@
             this.mediaAdapter = mediaAdapter;
         }
 
+        hasAction(action) {
+            const controllerPrototype = Object.getPrototypeOf(this);
+
+            return action !== "constructor"
+                && Object.prototype.hasOwnProperty.call(
+                    controllerPrototype,
+                    action
+                )
+                && typeof this[action] === "function";
+        }
+
         isGeneric() {
             return this.mediaAdapter.getMediaType();
         }
@@ -274,19 +285,8 @@
         return null;
     }
 
-    function hasControllerAction(controller, action) {
-        const controllerPrototype = Object.getPrototypeOf(controller);
-
-        return action !== "constructor"
-            && Object.prototype.hasOwnProperty.call(
-                controllerPrototype,
-                action
-            )
-            && typeof controller[action] === "function";
-    }
-
     function executeAction(controller, action) {
-        if (!hasControllerAction(controller, action)) {
+        if (!controller.hasAction(action)) {
             const info = `no function controller.${action}() found - params.action="${action}"`;
 
             return log(info);
