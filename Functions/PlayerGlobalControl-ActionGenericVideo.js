@@ -64,41 +64,59 @@
         }
 
         speedInc() {
-            let speedDiff = speedSteps.speedInc(this.mediaAdapter.playbackRate);
+            const currentSpeed = this.mediaAdapter.getPlaybackRate();
+            const speedDiff = speedSteps.speedInc(currentSpeed);
+
             console.log(speedDiff);
-            this.mediaAdapter.playbackRate += speedDiff;
-            return this.mediaAdapter.playbackRate;
+
+            this.mediaAdapter.setPlaybackRate(currentSpeed + speedDiff);
+
+            return this.mediaAdapter.getPlaybackRate();
         }
 
         speedDec() {
-            let speedDiff = speedSteps.speedDec(this.mediaAdapter.playbackRate);
+            const currentSpeed = this.mediaAdapter.getPlaybackRate();
+            const speedDiff = speedSteps.speedDec(currentSpeed);
+
             console.log(speedDiff);
-            this.mediaAdapter.playbackRate -= speedDiff;
-            return this.mediaAdapter.playbackRate;
+
+            this.mediaAdapter.setPlaybackRate(currentSpeed - speedDiff);
+
+            return this.mediaAdapter.getPlaybackRate();
         }
 
         maxSpeed() {
             const skipButton = document.querySelector("button.ytp-skip-ad-button");
 
             console.log(skipButton);
-            this.mediaAdapter.playbackRate = 16;
+
+            this.mediaAdapter.setPlaybackRate(16);
 
             if (skipButton) {
                 skipButton.click();
                 return "16 & skipButton clicked";
             } else {
-                return this.mediaAdapter.playbackRate;
+                return this.mediaAdapter.getPlaybackRate();
             }
         }
 
         speedReset() {
-            this.mediaAdapter.playbackRate = this.mediaAdapter.defaultPlaybackRate;
-            return this.mediaAdapter.playbackRate;
+            this.mediaAdapter.setPlaybackRate(
+                this.mediaAdapter.defaultPlaybackRate
+            );
+
+            return this.mediaAdapter.getPlaybackRate();
         }
 
         moveForward() {
-            const jump = computeJumpSeconds(this.mediaAdapter.playbackRate);
-            var info = formatTime(this.mediaAdapter.currentTime) + " + " + jump + " = ";
+            const jump = computeJumpSeconds(
+                this.mediaAdapter.getPlaybackRate()
+            );
+
+            var info = formatTime(this.mediaAdapter.currentTime)
+                + " + "
+                + jump
+                + " = ";
 
             this.mediaAdapter.currentTime += jump;
 
@@ -106,8 +124,14 @@
         }
 
         moveBackward() {
-            const jump = computeJumpSeconds(this.mediaAdapter.playbackRate);
-            var info = formatTime(this.mediaAdapter.currentTime) + " - " + jump + " = ";
+            const jump = computeJumpSeconds(
+                this.mediaAdapter.getPlaybackRate()
+            );
+
+            var info = formatTime(this.mediaAdapter.currentTime)
+                + " - "
+                + jump
+                + " = ";
 
             this.mediaAdapter.currentTime -= jump;
 
@@ -156,11 +180,11 @@
             return this.player.pause();
         }
 
-        get playbackRate() {
+        getPlaybackRate() {
             return this.player.playbackRate;
         }
 
-        set playbackRate(value) {
+        setPlaybackRate(value) {
             this.player.playbackRate = value;
         }
 
