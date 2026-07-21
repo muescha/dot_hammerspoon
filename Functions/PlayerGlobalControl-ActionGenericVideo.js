@@ -25,7 +25,7 @@
         return Math.min(maxJump, Math.max(minJump, base * safeRate));
     }
 
-    const speedSteps = {
+    const speedChanges = {
         inc(currentSpeed) {
             return currentSpeed + (
                 currentSpeed >= 1
@@ -84,11 +84,11 @@
         }
 
         speedInc() {
-            return this.changeSpeed(speedSteps.inc);
+            return this.changeSpeed(speedChanges.inc);
         }
 
         speedDec() {
-            return this.changeSpeed(speedSteps.dec);
+            return this.changeSpeed(speedChanges.dec);
         }
 
         maxSpeed() {
