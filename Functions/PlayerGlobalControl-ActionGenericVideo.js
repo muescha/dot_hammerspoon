@@ -12,22 +12,6 @@
 
     log(`Action: ${action}`);
 
-    function formatTime(timestampInSeconds, showMilliseconds = false) {
-        const hoursValue = Math.floor(timestampInSeconds / 3600);
-        const minutesValue = Math.floor((timestampInSeconds % 3600) / 60);
-        const secondsValue = Math.floor(timestampInSeconds % 60);
-        const millisecondsValue = Math.floor((timestampInSeconds % 1) * 1000);
-
-        const hours = hoursValue.toString().padStart(2, "0");
-        const minutes = minutesValue.toString().padStart(2, "0");
-        const seconds = secondsValue.toString().padStart(2, "0");
-        const milliseconds = millisecondsValue.toString().padStart(4, "0");
-
-        return showMilliseconds
-            ? `${hours}:${minutes}:${seconds}.${milliseconds}`
-            : `${hours}:${minutes}:${seconds}`;
-    }
-
     class MediaController {
 
         static changes = {
@@ -72,6 +56,41 @@
                 maxJump,
                 Math.max(minJump, base * safeRate)
             );
+        }
+
+        static formatTime(
+            timestampInSeconds,
+            showMilliseconds = false
+        ) {
+            const hoursValue = Math.floor(
+                timestampInSeconds / 3600
+            );
+            const minutesValue = Math.floor(
+                (timestampInSeconds % 3600) / 60
+            );
+            const secondsValue = Math.floor(
+                timestampInSeconds % 60
+            );
+            const millisecondsValue = Math.floor(
+                (timestampInSeconds % 1) * 1000
+            );
+
+            const hours = hoursValue
+                .toString()
+                .padStart(2, "0");
+            const minutes = minutesValue
+                .toString()
+                .padStart(2, "0");
+            const seconds = secondsValue
+                .toString()
+                .padStart(2, "0");
+            const milliseconds = millisecondsValue
+                .toString()
+                .padStart(4, "0");
+
+            return showMilliseconds
+                ? `${hours}:${minutes}:${seconds}.${milliseconds}`
+                : `${hours}:${minutes}:${seconds}`;
         }
 
         constructor(mediaAdapter) {
@@ -138,7 +157,7 @@
             );
             const currentTime = this.mediaAdapter.getCurrentTime();
 
-            const info = formatTime(currentTime)
+            const info = MediaController.formatTime(currentTime)
                 + " "
                 + operator
                 + " "
@@ -149,7 +168,7 @@
                 calculateTime(currentTime, jump)
             );
 
-            return info + formatTime(
+            return info + MediaController.formatTime(
                 this.mediaAdapter.getCurrentTime()
             );
         }
