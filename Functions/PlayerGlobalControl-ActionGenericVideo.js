@@ -214,22 +214,28 @@
         NativeMediaAdapter
     ];
 
-    function findController() {
+    function findMediaAdapter() {
         for (const adapter of adapters) {
             const mediaAdapter = adapter.detect();
 
             if (mediaAdapter) {
-                console.log("Generic Player:");
-                console.log(mediaAdapter.player);
-
-                return new MediaController(mediaAdapter);
+                return mediaAdapter;
             }
         }
 
         return null;
     }
 
-    const controller = findController();
+    const mediaAdapter = findMediaAdapter();
+
+    if (mediaAdapter) {
+        console.log("Generic Player:");
+        console.log(mediaAdapter.player);
+    }
+
+    const controller = mediaAdapter
+        ? new MediaController(mediaAdapter)
+        : null;
 
     function executeAction(controller, action) {
         if (!controller) {
