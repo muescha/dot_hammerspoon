@@ -14,6 +14,18 @@
 
     class MediaController {
 
+        static actions = new Set([
+            "isGeneric",
+            "doPause",
+            "speedInc",
+            "speedDec",
+            "maxSpeed",
+            "speedReset",
+            "moveForward",
+            "moveBackward",
+            "nil"
+        ]);
+
         static strategies = {
             speed: {
                 inc(currentSpeed) {
@@ -98,13 +110,7 @@
         }
 
         hasAction(action) {
-            const controllerPrototype = Object.getPrototypeOf(this);
-
-            return action !== "constructor"
-                && Object.prototype.hasOwnProperty.call(
-                    controllerPrototype,
-                    action
-                )
+            return MediaController.actions.has(action)
                 && typeof this[action] === "function";
         }
 
