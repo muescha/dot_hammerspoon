@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spec: YouTube control via postMessage</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    max-width: 62rem; margin: 0 auto; padding: 2rem 1.25rem 4rem;
+    font: 16px/1.6 system-ui, -apple-system, sans-serif;
+    color: #1a1a1a; background: #fff;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { color: #e6e6e6; background: #16171a; }
+    code, pre { background: #26282d !important; }
+    th { background: #26282d !important; }
+    tr:nth-child(even) td { background: #1d1f23 !important; }
+    a { color: #7fb4ff; }
+  }
+  h1 { font-size: 1.7rem; line-height: 1.25; margin: 0 0 .25rem; }
+  h2 { font-size: 1.25rem; margin: 2.2rem 0 .6rem; padding-bottom: .3rem; border-bottom: 1px solid #8883; }
+  h3 { font-size: 1.05rem; margin: 1.4rem 0 .4rem; }
+  .meta { color: #8a8a8a; font-size: .9rem; margin-bottom: 1.5rem; }
+  code { background: #f0f1f3; padding: .12em .4em; border-radius: 4px; font-size: .88em; }
+  pre { background: #f0f1f3; padding: .8rem 1rem; border-radius: 8px; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: .8rem 0; font-size: .93rem; display: block; overflow-x: auto; }
+  th, td { text-align: left; padding: .45rem .7rem; border: 1px solid #8883; vertical-align: top; }
+  th { background: #f0f1f3; }
+  tr:nth-child(even) td { background: #fafafa; }
+  ol, ul { padding-left: 1.4rem; }
+  li { margin: .25rem 0; }
+  .ok { color: #1a9e4b; font-weight: 600; }
+  .no { color: #d13c3c; font-weight: 600; }
+  blockquote { border-left: 3px solid #8886; margin: 1rem 0; padding: .3rem 0 .3rem 1rem; color: #8a8a8a; }
+</style>
+</head>
+<body>
+
+<h1>Spec: YouTube control via <code>postMessage</code> (generic, without <code>window.YT</code>)</h1>
+<div class="meta">Date: 2026-07-21 · Affects: <code>Functions/PlayerGlobalControl-ActionGenericVideo.js</code> (called from <code>PlayerGlobalControl.lua</code>)</div>
+
+<h2>Goal</h2>
+<p>Remote-control embedded YouTube players (<code>&lt;iframe src=".../embed/..."&gt;</code>) on <strong>any</strong>
+website — like native <code>&lt;video&gt;</code>/<code>&lt;audio&gt;</code> tags. Test case:
+<code>http://cc.pixil.de/yt-mini.html?v=Ti3Kt1WlZUM&amp;t=71</code>. Generic, not tied to an editable test page.</p>
+
+<h2>Root cause — why the previous approach cannot work</h2>
+<p>The old <code>YouTubeIframeAdapter</code> loads the YouTube IFrame API and creates a <code>YT.Player</code>.
+That is fundamentally impossible here:</p>
+<ol>
+  <li><strong>Isolated world.</strong> JS runs via <code>activeTab.execute()</code> (JXA) in an isolated world.
+  DOM shared, <strong>globals not</strong> → <code>window.YT</code> stays <code>undefined</code>.</li>
+  <li><strong>Globals don't persist.</strong> Each <code>execute</code> starts a fresh world →
+  the whole <code>globalThis</code> state machinery is ineffective.</li>
+  <li><strong>CSP blocks the bridge.</strong> An injected <code>&lt;script&gt;</code> (main world) is blocked by
+  <code>script-src 'self' https://www.youtube.com</code>.</li>
+</ol>
+
+<h2>Proven approach: direct <code>postMessage</code></h2>
+<p>An embed with <code>enablejsapi=1</code> is just a postMessage protocol. Reachable from the isolated world:
+get the <code>&lt;iframe&gt;</code> from the DOM and call
+<code>iframe.contentWindow.postMessage(...)</code>. No <code>window.YT</code>, no injection, no CSP problem.</p>
+
+<h3>Verified live (via the exact Hammerspoon path, JXA)</h3>
+<table>
+  <tr><th>Capability</th><th>Result</th></tr>
+  <tr><td>detect iframe</td><td class="ok">✅</td></tr>
+  <tr><td><code>window.YT</code> in isolated world</td><td class="no">❌ undefined</td></tr>
+  <tr><td>JS globals across calls</td><td class="no">❌ disappear</td></tr>
+  <tr><td><code>addEventListener</code> listeners across calls</td><td class="ok">✅ survive</td></tr>
+  <tr><td>DOM/<code>dataset</code> as state cache</td><td class="ok">✅ persistent</td></tr>
+  <tr><td>add <code>enablejsapi=1</code> via reload</td><td class="ok">✅</td></tr>
+  <tr><td>read state via <code>infoDelivery</code></td><td class="ok">✅</td></tr>
+  <tr><td>commands <code>seekTo</code>/<code>setPlaybackRate</code>/<code>play</code>/<code>pause</code></td><td class="ok">✅</td></tr>
+</table>
+<p>State observed after the test: <code>{currentTime:245, playbackRate:2, playerState:2, duration:979}</code>.</p>
+
+<h2>Architecture</h2>
+<p>Skeleton stays: <code>MediaController</code> + adapter list with <code>detect()</code>. Per-adapter interface unchanged.</p>
+<ul>
+  <li><strong><code>NativeMediaAdapter</code></strong> (real <code>&lt;video&gt;</code>/<code>&lt;audio&gt;</code>): <strong>unchanged</strong>.</li>
+  <li><strong><code>YouTubePostMessageAdapter</code></strong> (new): <strong>fully replaces</strong> <code>YouTubeIframeAdapter</code>.</li>
+</ul>
+<p>Removed entirely (only diagnostic infrastructure): YT.Player creation, IFrame API loading/polling/timeout,
+<code>globalThis</code> state, context probes, <code>normalizeDebugValue</code>, <code>runInPageContext</code>.</p>
+
+<h3><code>static detect()</code> — idempotent, contract <code>{ mediaAdapter, status }</code></h3>
+<ol>
+  <li>Find iframe (<code>youtube.com/embed/</code> + <code>youtube-nocookie.com/embed/</code>). None → <code>null</code>.</li>
+  <li>Install listener if absent (guard: <code>dataset.pgcYt === "1"</code>, not <code>globalThis</code>).
+  It filters <code>infoDelivery</code> and writes to <code>dataset.pgcYtState</code> (JSON).</li>
+  <li>Missing <code>enablejsapi=1</code> → register handshake on <code>load</code>, set <code>iframe.src</code> (reload),
+  overlay "connecting…" → <code>{ mediaAdapter:null, status:"YouTube connecting…" }</code>.</li>
+  <li>Else send handshake. Cache populated → <code>{ mediaAdapter:new …, status:"ready" }</code> + remove overlay.
+  Cache empty → <code>{ mediaAdapter:null, status:"YouTube connecting…" }</code>.</li>
+</ol>
+
+<h3>State cache</h3>
+<p><code>dataset.pgcYtState</code> = JSON <code>{ currentTime, playbackRate, playerState, duration, rates, at }</code>.
+Listener merges each <code>infoDelivery</code> (present fields only).</p>
+
+<h3>Methods</h3>
+<table>
+  <tr><th>Method</th><th>Implementation</th></tr>
+  <tr><td><code>getMediaType()</code></td><td><code>"YOUTUBE_IFRAME"</code> (→ Lua: domain as <code>generic.video</code>)</td></tr>
+  <tr><td><code>isPaused()</code></td><td>cache <code>playerState !== 1</code></td></tr>
+  <tr><td><code>play()</code> / <code>pause()</code></td><td><code>postMessage</code> <code>playVideo</code> / <code>pauseVideo</code></td></tr>
+  <tr><td><code>getPlaybackRate()</code></td><td>cache <code>playbackRate</code> (fallback 1)</td></tr>
+  <tr><td><code>setPlaybackRate(v)</code></td><td><code>postMessage setPlaybackRate</code> + optimistic cache to <code>v</code></td></tr>
+  <tr><td><code>resetPlaybackRate()</code></td><td><code>setPlaybackRate(1)</code></td></tr>
+  <tr><td><code>getMaxPlaybackRate()</code></td><td>last value from cache <code>rates</code>, else 2</td></tr>
+  <tr><td><code>getCurrentTime()</code></td><td>cache <code>currentTime</code> (fallback 0)</td></tr>
+  <tr><td><code>setCurrentTime(v)</code></td><td><code>postMessage seekTo</code> <code>[max(0,v), true]</code> + optimistic cache</td></tr>
+  <tr><td><code>skipAd()</code></td><td>kept (<code>.ytp-skip-ad-button</code>; usually a no-op for cross-origin embeds, harmless)</td></tr>
+</table>
+
+<h3>postMessage protocol (reference)</h3>
+<pre><code>// Command
+iframe.contentWindow.postMessage(
+  JSON.stringify({event:"command", func:"seekTo", args:[200, true]}), "*");
+
+// Handshake (starts infoDelivery)
+iframe.contentWindow.postMessage(
+  JSON.stringify({event:"listening", id:1, channel:"widget"}), "*");
+
+// Reply: message event, JSON.parse(e.data).event === "infoDelivery", data in .info</code></pre>
+<p><code>playerState</code>: -1 unstarted · 0 ended · 1 playing · 2 paused · 3 buffering · 5 cued.
+Preconditions: <code>enablejsapi=1</code> + matching <code>origin</code> (already set by <code>yt-mini.js</code>).</p>
+
+<h2>Warmup behavior (cold start)</h2>
+<ol>
+  <li><code>detect()</code> installs the listener, adds <code>enablejsapi</code> if needed, sends the handshake,
+  shows overlay <strong>"YouTube connecting…"</strong> (a div on the parent page over the iframe).</li>
+  <li>First <code>infoDelivery</code> → adapter <strong>ready</strong>, overlay removed, controls normal.</li>
+</ol>
+<blockquote><code>hyper+O</code> (<code>setSavedWindow</code>) already triggers <code>isGeneric</code> →
+<code>detect()</code> for an unknown domain, kicking off setup + warmup before the first control key.
+A possibly needed <code>enablejsapi</code> reload costs a one-time "warmup press".</blockquote>
+
+<h2>Lua side</h2>
+<p><code>PlayerGlobalControl.lua</code> stays <strong>unchanged</strong>. For <code>cc.pixil.de</code> the existing path
+runs: <code>getAppActions</code> → <code>isGeneric</code> → adapter detects iframe →
+<code>getMediaType()</code> truthy → domain as <code>generic.video</code> → <code>ActionGenericVideo(...)</code>.</p>
+
+<h2>YAGNI / later</h2>
+<ul>
+  <li>Additional providers (Vimeo …) via extra adapters — not part of this spec.</li>
+  <li>Multiple simultaneous iframes — for now <code>querySelector</code> (first match).</li>
+</ul>
+
+<h2>Test strategy</h2>
+<p>Verify via the real JXA path (not chrome-devtools — different world/instance): a runner finds the
+<code>yt-mini.html</code> tab by URL and calls <code>tab.execute({javascript})</code>. Checks: iframe detected ·
+<code>enablejsapi</code> added · cache fills · commands change the cache as expected.</p>
+
+</body>
+</html>
