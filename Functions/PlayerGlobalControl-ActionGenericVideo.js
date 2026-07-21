@@ -50,7 +50,7 @@
         }
 
         isGeneric() {
-            return this.mediaAdapter.tagName;
+            return this.mediaAdapter.getMediaType();
         }
 
         doPause() {
@@ -170,7 +170,7 @@
             return new MediaController(mediaAdapter);
         }
 
-        get tagName() {
+        getMediaType() {
             return this.player.tagName;
         }
 
