@@ -119,7 +119,7 @@
         }
     }
 
-    class NativeAdapter {
+    class NativeMediaAdapter {
 
         static detect() {
             return document.querySelector("video, audio");
@@ -134,7 +134,7 @@
     }
 
     const adapters = [
-        NativeAdapter
+        NativeMediaAdapter
     ];
 
     function findController() {
