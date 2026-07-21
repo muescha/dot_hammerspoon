@@ -220,7 +220,10 @@ local ControlKeys = {
     [bundleIdChrome] = {
         ["generic.video"] = {
             selector = "",
-            start = ActionGenericVideo("play"),
+            start = {
+                ActionClick({ selector = ".ytp-large-play-button" }),
+                ActionGenericVideo("play")
+            },
             pause = ActionGenericVideo("doPause"),
             speedReset = ActionGenericVideo(),
             speedInc = ActionGenericVideo(),
