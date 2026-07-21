@@ -158,13 +158,6 @@
                 : null;
         }
 
-        static createController(mediaAdapter) {
-            console.log("Generic Player:");
-            console.log(mediaAdapter.player);
-
-            return new MediaController(mediaAdapter);
-        }
-
         getMediaType() {
             return this.player.tagName;
         }
@@ -226,7 +219,10 @@
             const mediaAdapter = adapter.detect();
 
             if (mediaAdapter) {
-                return adapter.createController(mediaAdapter);
+                console.log("Generic Player:");
+                console.log(mediaAdapter.player);
+
+                return new MediaController(mediaAdapter);
             }
         }
 
