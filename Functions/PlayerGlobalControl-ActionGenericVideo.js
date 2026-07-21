@@ -398,6 +398,16 @@
                 }
 
                 YouTubePostMessageAdapter.mergeState(patch);
+
+                const readyIframe = document.querySelector(
+                    YouTubePostMessageAdapter.iframeSelector
+                );
+
+                if (readyIframe) {
+                    YouTubePostMessageAdapter.removeOverlay(
+                        readyIframe
+                    );
+                }
             });
 
             document.documentElement.dataset[this.listenerFlag] =
@@ -461,6 +471,17 @@
             overlay.style.background = isError
                 ? "rgba(120, 0, 0, 0.88)"
                 : "rgba(0, 0, 0, 0.78)";
+
+            // Guarantee the connecting overlay never lingers: even if no
+            // infoDelivery arrives (e.g. a paused video), auto-remove it
+            // after a short warmup window. Data arrival removes it sooner
+            // via the message listener.
+            if (!isError) {
+                setTimeout(
+                    () => this.removeOverlay(iframe),
+                    3000
+                );
+            }
         }
 
         static removeOverlay(iframe) {
@@ -588,13 +609,30 @@
             const state =
                 YouTubePostMessageAdapter.readState();
 
-            return (state && state.playbackRate) || 1;
+            return state && state.playbackRate != null
+                ? state.playbackRate
+                : 1;
+        }
+
+        clampRate(value) {
+            const state =
+                YouTubePostMessageAdapter.readState();
+            const rates = (state && state.rates) || [];
+
+            const min = rates.length ? rates[0] : 0.25;
+            const max = rates.length
+                ? rates[rates.length - 1]
+                : 2;
+
+            return Math.min(max, Math.max(min, value));
         }
 
         setPlaybackRate(value) {
-            this.postCommand("setPlaybackRate", [value]);
+            const rate = this.clampRate(value);
+
+            this.postCommand("setPlaybackRate", [rate]);
             YouTubePostMessageAdapter.mergeState({
-                playbackRate: value
+                playbackRate: rate
             });
         }
 
@@ -628,7 +666,9 @@
             const state =
                 YouTubePostMessageAdapter.readState();
 
-            return (state && state.currentTime) || 0;
+            return state && state.currentTime != null
+                ? state.currentTime
+                : 0;
         }
 
         setCurrentTime(value) {
