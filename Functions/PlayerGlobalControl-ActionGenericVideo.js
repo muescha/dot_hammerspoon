@@ -2,7 +2,13 @@
 
 (function () {
 
-    console.log("Action: {{ action }}");
+    function log(value) {
+        console.log(value);
+
+        return value;
+    }
+
+    log("Action: {{ action }}");
 
     function formatTime(timestampInSeconds, showMilliseconds = false) {
         const hoursValue = Math.floor(timestampInSeconds / 3600);
@@ -205,7 +211,7 @@
                 "button.ytp-skip-ad-button"
             );
 
-            console.log(skipButton);
+            log(skipButton);
 
             if (skipButton) {
                 skipButton.click();
@@ -247,30 +253,20 @@
         if (!hasControllerAction(controller, action)) {
             const info = `no function controller.${action}() found - params.action="${action}"`;
 
-            console.log(info);
-
-            return info;
+            return log(info);
         }
 
-        const info = controller[action]();
-
-        console.log(info);
-
-        return info;
+        return log(controller[action]());
     }
 
     const mediaAdapter = findMediaAdapter();
 
     if (!mediaAdapter) {
-        const info = "no supported player found";
-
-        console.log(info);
-
-        return info;
+        return log("no supported player found");
     }
 
-    console.log("Generic Player:");
-    console.log(mediaAdapter.player);
+    log("Generic Player:");
+    log(mediaAdapter.player);
 
     const controller = new MediaController(mediaAdapter);
 
