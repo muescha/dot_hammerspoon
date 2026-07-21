@@ -303,27 +303,306 @@
         }
     }
 
+    class YouTubePostMessageAdapter {
+
+        static iframeSelector =
+            'iframe[src*="youtube.com/embed/"], '
+            + 'iframe[src*="youtube-nocookie.com/embed/"]';
+
+        static listenerFlag = "pgcYt";
+        static stateKey = "pgcYtState";
+        static overlayClass =
+            "player-global-control-youtube-loading";
+
+        constructor(iframe) {
+            this.iframe = iframe;
+        }
+
+        static readState() {
+            const raw =
+                document.documentElement.dataset[this.stateKey];
+
+            if (!raw) {
+                return null;
+            }
+
+            try {
+                return JSON.parse(raw);
+            } catch (_) {
+                return null;
+            }
+        }
+
+        static writeState(next) {
+            document.documentElement.dataset[this.stateKey] =
+                JSON.stringify(next);
+        }
+
+        static mergeState(patch) {
+            const prev = this.readState() || {};
+
+            Object.assign(prev, patch, { at: Date.now() });
+            this.writeState(prev);
+        }
+
+        static installListener() {
+            if (
+                document.documentElement.dataset[this.listenerFlag]
+                === "1"
+            ) {
+                return;
+            }
+
+            window.addEventListener("message", event => {
+                if (typeof event.data !== "string") {
+                    return;
+                }
+
+                let message;
+
+                try {
+                    message = JSON.parse(event.data);
+                } catch (_) {
+                    return;
+                }
+
+                if (
+                    !message
+                    || message.event !== "infoDelivery"
+                    || !message.info
+                ) {
+                    return;
+                }
+
+                const info = message.info;
+                const patch = {};
+
+                if (info.currentTime !== undefined) {
+                    patch.currentTime = info.currentTime;
+                }
+                if (info.playbackRate !== undefined) {
+                    patch.playbackRate = info.playbackRate;
+                }
+                if (info.playerState !== undefined) {
+                    patch.playerState = info.playerState;
+                }
+                if (info.duration !== undefined) {
+                    patch.duration = info.duration;
+                }
+                if (info.availablePlaybackRates !== undefined) {
+                    patch.rates = info.availablePlaybackRates;
+                }
+
+                YouTubePostMessageAdapter.mergeState(patch);
+            });
+
+            document.documentElement.dataset[this.listenerFlag] =
+                "1";
+        }
+
+        static sendListening(iframe) {
+            iframe.contentWindow.postMessage(
+                JSON.stringify({
+                    event: "listening",
+                    id: 1,
+                    channel: "widget"
+                }),
+                "*"
+            );
+        }
+
+        static showOverlay(iframe, message, isError = false) {
+            const parent = iframe.parentElement;
+
+            if (!parent) {
+                return;
+            }
+
+            if (getComputedStyle(parent).position === "static") {
+                parent.dataset.pgcYtPos =
+                    parent.style.position || "";
+                parent.style.position = "relative";
+            }
+
+            let overlay = parent.querySelector(
+                ":scope > ." + this.overlayClass
+            );
+
+            if (!overlay) {
+                overlay = document.createElement("div");
+                overlay.className = this.overlayClass;
+
+                Object.assign(overlay.style, {
+                    position: "absolute",
+                    inset: "0",
+                    zIndex: "2147483647",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "24px",
+                    boxSizing: "border-box",
+                    background: "rgba(0, 0, 0, 0.78)",
+                    color: "#ffffff",
+                    fontFamily: "system-ui, sans-serif",
+                    fontSize: "18px",
+                    fontWeight: "600",
+                    textAlign: "center",
+                    pointerEvents: "none"
+                });
+
+                parent.appendChild(overlay);
+            }
+
+            overlay.textContent = message;
+            overlay.style.background = isError
+                ? "rgba(120, 0, 0, 0.88)"
+                : "rgba(0, 0, 0, 0.78)";
+        }
+
+        static removeOverlay(iframe) {
+            const parent = iframe.parentElement;
+
+            if (!parent) {
+                return;
+            }
+
+            const overlay = parent.querySelector(
+                ":scope > ." + this.overlayClass
+            );
+
+            if (overlay) {
+                overlay.remove();
+            }
+
+            if (
+                Object.prototype.hasOwnProperty.call(
+                    parent.dataset,
+                    "pgcYtPos"
+                )
+            ) {
+                parent.style.position = parent.dataset.pgcYtPos;
+                delete parent.dataset.pgcYtPos;
+            }
+        }
+
+        static detect() {
+            const iframe = document.querySelector(
+                this.iframeSelector
+            );
+
+            if (!iframe) {
+                return null;
+            }
+
+            this.installListener();
+
+            let url;
+
+            try {
+                url = new URL(iframe.src);
+            } catch (_) {
+                url = null;
+            }
+
+            if (
+                url
+                && url.searchParams.get("enablejsapi") !== "1"
+            ) {
+                url.searchParams.set("enablejsapi", "1");
+
+                this.showOverlay(iframe, "YouTube connecting…");
+
+                iframe.addEventListener(
+                    "load",
+                    () => this.sendListening(iframe),
+                    { once: true }
+                );
+
+                iframe.src = url.toString();
+
+                return {
+                    mediaAdapter: null,
+                    status: "YouTube connecting…"
+                };
+            }
+
+            this.sendListening(iframe);
+
+            if (this.readState()) {
+                this.removeOverlay(iframe);
+
+                return {
+                    mediaAdapter:
+                        new YouTubePostMessageAdapter(iframe),
+                    status: "YouTube iframe player ready"
+                };
+            }
+
+            this.showOverlay(iframe, "YouTube connecting…");
+
+            return {
+                mediaAdapter: null,
+                status: "YouTube connecting…"
+            };
+        }
+
+        getPlayer() {
+            return this.iframe;
+        }
+
+        getMediaType() {
+            return "YOUTUBE_IFRAME";
+        }
+    }
+
     const adapters = [
-        NativeMediaAdapter
+        NativeMediaAdapter,
+        YouTubePostMessageAdapter
     ];
 
     function findMediaAdapter() {
         for (const adapter of adapters) {
-            const mediaAdapter = adapter.detect();
+            log(`checking adapter: ${adapter.name}`);
 
-            if (mediaAdapter) {
-                return mediaAdapter;
+            const detectionResult = adapter.detect();
+
+            log({
+                adapter: adapter.name,
+                detectionResult
+            });
+
+            if (!detectionResult) {
+                continue;
             }
+
+            if (
+                detectionResult.mediaAdapter !== undefined
+                || detectionResult.status !== undefined
+            ) {
+                return detectionResult;
+            }
+
+            return {
+                mediaAdapter: detectionResult,
+                status: `${adapter.name} detected`
+            };
         }
 
         return null;
     }
 
-    const mediaAdapter = findMediaAdapter();
+    const detectionResult = findMediaAdapter();
 
-    if (!mediaAdapter) {
+    if (!detectionResult) {
         return log("no supported player found");
     }
+
+    if (!detectionResult.mediaAdapter) {
+        return log(detectionResult.status);
+    }
+
+    const mediaAdapter =
+        detectionResult.mediaAdapter;
 
     log("Generic Player:");
     log(mediaAdapter.getPlayer());
