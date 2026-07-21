@@ -45,73 +45,73 @@
 
     class MediaController {
 
-        constructor(player) {
-            this.player = player;
+        constructor(mediaAdapter) {
+            this.mediaAdapter = mediaAdapter;
         }
 
         isGeneric() {
-            return this.player.tagName;
+            return this.mediaAdapter.tagName;
         }
 
         doPause() {
-            if (this.player.paused) {
-                this.player.play();
+            if (this.mediaAdapter.paused) {
+                this.mediaAdapter.play();
             } else {
-                this.player.pause();
+                this.mediaAdapter.pause();
             }
 
-            return this.player.paused;
+            return this.mediaAdapter.paused;
         }
 
         speedInc() {
-            let speedDiff = speedSteps.speedInc(this.player.playbackRate);
+            let speedDiff = speedSteps.speedInc(this.mediaAdapter.playbackRate);
             console.log(speedDiff);
-            this.player.playbackRate += speedDiff;
-            return this.player.playbackRate;
+            this.mediaAdapter.playbackRate += speedDiff;
+            return this.mediaAdapter.playbackRate;
         }
 
         speedDec() {
-            let speedDiff = speedSteps.speedDec(this.player.playbackRate);
+            let speedDiff = speedSteps.speedDec(this.mediaAdapter.playbackRate);
             console.log(speedDiff);
-            this.player.playbackRate -= speedDiff;
-            return this.player.playbackRate;
+            this.mediaAdapter.playbackRate -= speedDiff;
+            return this.mediaAdapter.playbackRate;
         }
 
         maxSpeed() {
             const skipButton = document.querySelector("button.ytp-skip-ad-button");
 
             console.log(skipButton);
-            this.player.playbackRate = 16;
+            this.mediaAdapter.playbackRate = 16;
 
             if (skipButton) {
                 skipButton.click();
                 return "16 & skipButton clicked";
             } else {
-                return this.player.playbackRate;
+                return this.mediaAdapter.playbackRate;
             }
         }
 
         speedReset() {
-            this.player.playbackRate = this.player.defaultPlaybackRate;
-            return this.player.playbackRate;
+            this.mediaAdapter.playbackRate = this.mediaAdapter.defaultPlaybackRate;
+            return this.mediaAdapter.playbackRate;
         }
 
         moveForward() {
-            const jump = computeJumpSeconds(this.player.playbackRate);
-            var info = formatTime(this.player.currentTime) + " + " + jump + " = ";
+            const jump = computeJumpSeconds(this.mediaAdapter.playbackRate);
+            var info = formatTime(this.mediaAdapter.currentTime) + " + " + jump + " = ";
 
-            this.player.currentTime += jump;
+            this.mediaAdapter.currentTime += jump;
 
-            return info + formatTime(this.player.currentTime);
+            return info + formatTime(this.mediaAdapter.currentTime);
         }
 
         moveBackward() {
-            const jump = computeJumpSeconds(this.player.playbackRate);
-            var info = formatTime(this.player.currentTime) + " - " + jump + " = ";
+            const jump = computeJumpSeconds(this.mediaAdapter.playbackRate);
+            var info = formatTime(this.mediaAdapter.currentTime) + " - " + jump + " = ";
 
-            this.player.currentTime -= jump;
+            this.mediaAdapter.currentTime -= jump;
 
-            return info + formatTime(this.player.currentTime);
+            return info + formatTime(this.mediaAdapter.currentTime);
         }
 
         nil() {
