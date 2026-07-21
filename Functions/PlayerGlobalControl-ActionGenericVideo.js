@@ -226,17 +226,6 @@
         return null;
     }
 
-    const mediaAdapter = findMediaAdapter();
-
-    if (mediaAdapter) {
-        console.log("Generic Player:");
-        console.log(mediaAdapter.player);
-    }
-
-    const controller = mediaAdapter
-        ? new MediaController(mediaAdapter)
-        : null;
-
     function executeAction(controller, action) {
         if (!controller) {
             const info = "no supported player found";
@@ -255,6 +244,17 @@
             return info;
         }
     }
+
+    const mediaAdapter = findMediaAdapter();
+
+    if (!mediaAdapter) {
+        return executeAction(null, "{{ action }}");
+    }
+
+    console.log("Generic Player:");
+    console.log(mediaAdapter.player);
+
+    const controller = new MediaController(mediaAdapter);
 
     return executeAction(controller, "{{ action }}");
 
