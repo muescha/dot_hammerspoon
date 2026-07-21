@@ -368,8 +368,12 @@
 
                 if (
                     !message
-                    || message.event !== "infoDelivery"
                     || !message.info
+                    || (
+                        message.event !== "infoDelivery"
+                        && message.event !== "initialDelivery"
+                        && message.event !== "apiInfoDelivery"
+                    )
                 ) {
                     return;
                 }
@@ -552,6 +556,101 @@
 
         getMediaType() {
             return "YOUTUBE_IFRAME";
+        }
+
+        postCommand(func, args = []) {
+            this.iframe.contentWindow.postMessage(
+                JSON.stringify({
+                    event: "command",
+                    func: func,
+                    args: args
+                }),
+                "*"
+            );
+        }
+
+        isPaused() {
+            const state =
+                YouTubePostMessageAdapter.readState();
+
+            return !state || state.playerState !== 1;
+        }
+
+        play() {
+            return this.postCommand("playVideo");
+        }
+
+        pause() {
+            return this.postCommand("pauseVideo");
+        }
+
+        getPlaybackRate() {
+            const state =
+                YouTubePostMessageAdapter.readState();
+
+            return (state && state.playbackRate) || 1;
+        }
+
+        setPlaybackRate(value) {
+            this.postCommand("setPlaybackRate", [value]);
+            YouTubePostMessageAdapter.mergeState({
+                playbackRate: value
+            });
+        }
+
+        getDefaultPlaybackRate() {
+            return 1;
+        }
+
+        resetPlaybackRate() {
+            this.setPlaybackRate(
+                this.getDefaultPlaybackRate()
+            );
+        }
+
+        getMaxPlaybackRate() {
+            const state =
+                YouTubePostMessageAdapter.readState();
+            const rates = state && state.rates;
+
+            return (rates && rates.length)
+                ? rates[rates.length - 1]
+                : 2;
+        }
+
+        setMaxPlaybackRate() {
+            this.setPlaybackRate(
+                this.getMaxPlaybackRate()
+            );
+        }
+
+        getCurrentTime() {
+            const state =
+                YouTubePostMessageAdapter.readState();
+
+            return (state && state.currentTime) || 0;
+        }
+
+        setCurrentTime(value) {
+            const target = Math.max(0, value);
+
+            this.postCommand("seekTo", [target, true]);
+            YouTubePostMessageAdapter.mergeState({
+                currentTime: target
+            });
+        }
+
+        skipAd() {
+            const skipButton = document.querySelector(
+                "button.ytp-skip-ad-button"
+            );
+
+            if (skipButton) {
+                skipButton.click();
+                return true;
+            }
+
+            return false;
         }
     }
 
