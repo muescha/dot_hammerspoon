@@ -227,16 +227,19 @@
     }
 
     function executeAction(controller, action) {
-        if (controller[action]) {
-            let info = controller[action]();
-            console.log(info);
-            return info;
-        } else {
+        if (!controller[action]) {
             const info = `no function controller.${action}() found - params.action="${action}"`;
 
             console.log(info);
+
             return info;
         }
+
+        const info = controller[action]();
+
+        console.log(info);
+
+        return info;
     }
 
     const mediaAdapter = findMediaAdapter();
