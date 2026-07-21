@@ -26,20 +26,20 @@
     }
 
     const speedSteps = {
-        speedInc(currentSpeed) {
-            if (currentSpeed >= 1) {
-                return 0.5;
-            } else {
-                return 0.25;
-            }
+        inc(currentSpeed) {
+            return currentSpeed + (
+                currentSpeed >= 1
+                    ? 0.5
+                    : 0.25
+            );
         },
 
-        speedDec(currentSpeed) {
-            if (currentSpeed <= 1) {
-                return 0.25;
-            } else {
-                return 0.5;
-            }
+        dec(currentSpeed) {
+            return currentSpeed - (
+                currentSpeed <= 1
+                    ? 0.25
+                    : 0.5
+            );
         }
     };
 
@@ -63,26 +63,22 @@
             return this.mediaAdapter.isPaused();
         }
 
-        speedInc() {
+        changeSpeed(calculateSpeed) {
             const currentSpeed = this.mediaAdapter.getPlaybackRate();
-            const speedDiff = speedSteps.speedInc(currentSpeed);
 
-            console.log(speedDiff);
-
-            this.mediaAdapter.setPlaybackRate(currentSpeed + speedDiff);
+            this.mediaAdapter.setPlaybackRate(
+                calculateSpeed(currentSpeed)
+            );
 
             return this.mediaAdapter.getPlaybackRate();
         }
 
+        speedInc() {
+            return this.changeSpeed(speedSteps.inc);
+        }
+
         speedDec() {
-            const currentSpeed = this.mediaAdapter.getPlaybackRate();
-            const speedDiff = speedSteps.speedDec(currentSpeed);
-
-            console.log(speedDiff);
-
-            this.mediaAdapter.setPlaybackRate(currentSpeed - speedDiff);
-
-            return this.mediaAdapter.getPlaybackRate();
+            return this.changeSpeed(speedSteps.dec);
         }
 
         maxSpeed() {
@@ -90,9 +86,9 @@
 
             if (this.mediaAdapter.skipAd()) {
                 return "16 & skipButton clicked";
-            } else {
-                return this.mediaAdapter.getPlaybackRate();
             }
+
+            return this.mediaAdapter.getPlaybackRate();
         }
 
         speedReset() {
