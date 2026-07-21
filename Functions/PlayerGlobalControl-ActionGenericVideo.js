@@ -43,6 +43,16 @@
         }
     };
 
+    const timeChanges = {
+        forward(currentTime, jump) {
+            return currentTime + jump;
+        },
+
+        backward(currentTime, jump) {
+            return currentTime - jump;
+        }
+    };
+
     class MediaController {
 
         constructor(mediaAdapter) {
@@ -123,14 +133,14 @@
 
         moveForward() {
             return this.changeTime(
-                (currentTime, jump) => currentTime + jump,
+                timeChanges.forward,
                 "+"
             );
         }
 
         moveBackward() {
             return this.changeTime(
-                (currentTime, jump) => currentTime - jump,
+                timeChanges.backward,
                 "-"
             );
         }
