@@ -43,12 +43,13 @@
         }
     };
 
-    const nativeAdapter = {
-        detect() {
-            return document.querySelector("video, audio");
-        },
+    class NativeAdapter {
 
-        createController(player) {
+        static detect() {
+            return document.querySelector("video, audio");
+        }
+
+        static createController(player) {
             console.log("Generic Player:");
             console.log(player);
 
@@ -124,10 +125,10 @@
                 }
             };
         }
-    };
+    }
 
     const adapters = [
-        nativeAdapter
+        NativeAdapter
     ];
 
     function findController() {
