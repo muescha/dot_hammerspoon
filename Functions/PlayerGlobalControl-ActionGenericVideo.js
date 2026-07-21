@@ -233,6 +233,10 @@
                 : null;
         }
 
+        getPlayer() {
+            return this.player;
+        }
+
         getMediaType() {
             return this.player.tagName;
         }
@@ -308,7 +312,7 @@
     }
 
     log("Generic Player:");
-    log(mediaAdapter.player);
+    log(mediaAdapter.getPlayer());
 
     const controller = new MediaController(mediaAdapter);
 
