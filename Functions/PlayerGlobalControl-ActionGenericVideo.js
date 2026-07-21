@@ -2,13 +2,15 @@
 
 (function () {
 
+    const action = "{{ action }}";
+
     function log(value) {
         console.log(value);
 
         return value;
     }
 
-    log("Action: {{ action }}");
+    log(`Action: ${action}`);
 
     function formatTime(timestampInSeconds, showMilliseconds = false) {
         const hoursValue = Math.floor(timestampInSeconds / 3600);
@@ -270,6 +272,6 @@
 
     const controller = new MediaController(mediaAdapter);
 
-    return executeAction(controller, "{{ action }}");
+    return executeAction(controller, action);
 
 })();
