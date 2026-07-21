@@ -14,6 +14,8 @@
 
     class MediaController {
 
+        static maxPlaybackRate = 16;
+
         static actions = new Set([
             "isGeneric",
             "doPause",
@@ -161,10 +163,12 @@
         }
 
         maxSpeed() {
-            this.mediaAdapter.setPlaybackRate(16);
+            const maxPlaybackRate = MediaController.maxPlaybackRate;
+
+            this.mediaAdapter.setPlaybackRate(maxPlaybackRate);
 
             if (this.mediaAdapter.skipAd()) {
-                return "16 & skipButton clicked";
+                return `${maxPlaybackRate} & skipButton clicked`;
             }
 
             return this.mediaAdapter.getPlaybackRate();
