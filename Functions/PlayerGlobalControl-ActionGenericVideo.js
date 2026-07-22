@@ -4,10 +4,10 @@
 
     const action = "{{ action }}";
 
-    function log(value) {
-        console.log(value);
+    function log(...values) {
+        console.log(...values);
 
-        return value;
+        return values[0];
     }
 
     log(`Action: ${action}`);
@@ -373,6 +373,8 @@
                     return;
                 }
 
+                log("EventListener:message:", message);
+
                 if (
                     !message
                     || !message.info
@@ -422,6 +424,7 @@
         }
 
         static sendListening(iframe) {
+            log("sendListening(iframe)");
             iframe.contentWindow.postMessage(
                 JSON.stringify({
                     event: "listening",
@@ -438,6 +441,8 @@
             if (!parent) {
                 return;
             }
+
+            log("showOverlay:message:", message);
 
             if (getComputedStyle(parent).position === "static") {
                 parent.dataset.pgcYtPos =
@@ -475,9 +480,7 @@
             }
 
             overlay.textContent = message;
-            overlay.style.background = isError
-                ? "rgba(120, 0, 0, 0.88)"
-                : "rgba(0, 0, 0, 0.78)";
+            log("showOverlay #" + showId + ": " + message)
 
             // Guarantee the connecting overlay never lingers: even if no
             // infoDelivery arrives (e.g. a paused video), auto-remove it
@@ -494,7 +497,10 @@
         static removeOverlay(iframe) {
             const parent = iframe.parentElement;
 
+            log("removeOverlay:Start");
+
             if (!parent) {
+                log("removeOverlay:NoParent:exit");
                 return;
             }
 
@@ -503,7 +509,10 @@
             );
 
             if (overlay) {
+                log("removeOverlay:OverlayExists:Remove");
                 overlay.remove();
+            } else {
+                log("removeOverlay:NoOverlay:exit");
             }
 
             if (
@@ -513,6 +522,7 @@
                 )
             ) {
                 parent.style.position = parent.dataset.pgcYtPos;
+                log("removeOverlay:pgcYtPos exists:delete:parent.dataset.pgcYtPos");
                 delete parent.dataset.pgcYtPos;
             }
         }
@@ -546,7 +556,10 @@
 
                 iframe.addEventListener(
                     "load",
-                    () => this.sendListening(iframe),
+                    () => {
+                        log("Eventlistener:Event:load");
+                        this.sendListening(iframe);
+                    },
                     { once: true }
                 );
 
@@ -559,8 +572,10 @@
             }
 
             this.sendListening(iframe);
-
+            log("readState:test");
             if (this.readState()) {
+                log("readState:ok");
+                log("removeOverlay: readstate");
                 this.removeOverlay(iframe);
 
                 return {
