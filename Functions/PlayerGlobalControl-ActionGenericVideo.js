@@ -435,7 +435,7 @@
             );
         }
 
-        static showOverlay(iframe, message, isError = false) {
+        static showOverlay(iframe, message) {
             const parent = iframe.parentElement;
 
             if (!parent) {
@@ -479,19 +479,61 @@
                 parent.appendChild(overlay);
             }
 
+            // Bump a monotonic counter on this element for every show (create
+            // OR recycle) and schedule a timer that captures that id. Only the
+            // newest id matches when a timer fires, so older timers become
+            // no-ops -> the overlay is auto-removed exactly the warmup window
+            // after the LAST message, never sooner. A DOM counter (not
+            // Date.now/UUID) is used deliberately: it is collision-free even
+            // for multiple shows within the same millisecond, and works on
+            // plain http where crypto.randomUUID is unavailable. The reset
+            // travels purely through the shared DOM, so a recycled show from a
+            // fresh injected script context needs no reference to the timer.
+            const showId =
+                (Number(overlay.dataset.pgcShowId) || 0) + 1;
+
+            overlay.dataset.pgcShowId = String(showId);
             overlay.textContent = message;
             log("showOverlay #" + showId + ": " + message)
 
-            // Guarantee the connecting overlay never lingers: even if no
-            // infoDelivery arrives (e.g. a paused video), auto-remove it
-            // after a short warmup window. Data arrival removes it sooner
-            // via the message listener.
-            if (!isError) {
-                setTimeout(
-                    () => this.removeOverlay(iframe),
-                    3000
-                );
-            }
+            this.scheduleOverlayTimeout(iframe, overlay, showId);
+        }
+
+        static scheduleOverlayTimeout(iframe, overlay, showId) {
+            setTimeout(
+                () => {
+                    // My element was already removed (e.g. by an infoDelivery).
+                    // Do nothing so this stale timer can't touch a newer
+                    // overlay that may have replaced it.
+                    if (!overlay.isConnected) {
+                        log(
+                            "removeOverlay: skipped - overlay #",
+                            showId,
+                            "already gone"
+                        );
+                        return;
+                    }
+
+                    // A newer message recycled this element and bumped the
+                    // id. That newer show scheduled its own timer, so this
+                    // one just steps aside.
+                    if (
+                        overlay.dataset.pgcShowId !== String(showId)
+                    ) {
+                        log(
+                            "removeOverlay: skipped - overlay #",
+                            showId,
+                            "replaced by #",
+                            overlay.dataset.pgcShowId
+                        );
+                        return;
+                    }
+
+                    log("removeOverlay: remove overlay #", showId);
+                    this.removeOverlay(iframe);
+                },
+                3000
+            );
         }
 
         static removeOverlay(iframe) {
@@ -598,7 +640,7 @@
         }
 
         getMediaType() {
-            return "YOUTUBE_IFRAME";
+            return "YouTube IFrame";
         }
 
         postCommand(func, args = []) {
