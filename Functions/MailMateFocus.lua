@@ -34,8 +34,25 @@ local function checkCmdClickInMailmateAndActivateMailmate()
         local mousePos = hs.mouse.absolutePosition()
         --debugInfo(scriptInfo,'mousePos ',mousePos)
         local focusedWindow = hs.window.focusedWindow()
+        if not focusedWindow then
+            debugInfo(scriptInfo, 'no focused window in MailMate --> exit')
+            return false
+        end
+        -- Ensure the focused window belongs to MailMate (defensive check)
+        local winApp = focusedWindow:application()
+        if not winApp or winApp:bundleID() ~= mailmateBundleID then
+            debugInfo(scriptInfo, 'focused window is not MailMate --> exit')
+            return false
+        end
         --debugInfo(scriptInfo,'focusedWindow ',focusedWindow)
         local frame = focusedWindow:frame()
+        if not frame then
+            debugInfo(scriptInfo,'no frame for focused window --> exit')
+            return false
+        end
+        -- Error:
+        -- LuaSkin: hs.eventtap callback error: /../MailMateFocus.lua:38:
+        --          attempt to index a nil value (local 'focusedWindow')
         --debugInfo(scriptInfo,'frame ',frame)
         if mousePos.x < frame.x or mousePos.y < frame.y or
                 mousePos.x > frame.x + frame.w or mousePos.y > frame.y + frame.h then
@@ -51,7 +68,12 @@ local function checkCmdClickInMailmateAndActivateMailmate()
     hs.timer.doAfter(0.5, function()
         if hs.application.frontmostApplication():bundleID() == chromeBundleID then
             debugInfo(scriptInfo, 'we are now in Chrome --> switch back')
-            hs.application.get(mailmateBundleID):activate()
+            local mmApp = hs.application.get(mailmateBundleID)
+            if mmApp then
+                mmApp:activate()
+            else
+                debugInfo(scriptInfo, 'MailMate app not found to activate')
+            end
         else
             debugInfo(scriptInfo, 'no app change --> exit')
         end
