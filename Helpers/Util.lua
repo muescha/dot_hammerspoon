@@ -17,7 +17,7 @@ function readFile(path)
     return s
 end
 
-function ReadSource(filename, fromLine, toLine)
+function readSource(filename, fromLine, toLine)
     toLine = toLine or fromLine
 
     local file, err = io.open(filename, "r")
@@ -45,9 +45,9 @@ function ReadSource(filename, fromLine, toLine)
     return data
 end
 
-function ReadLine(src, line)
+function readLine(src, line)
     local filename = src:match("^@?(.*)")
-    local lines = ReadSource(filename, line)
+    local lines = readSource(filename, line)
 
     if not lines then
         return nil

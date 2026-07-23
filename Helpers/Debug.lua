@@ -186,7 +186,7 @@ function debugTracePrint(event, line)
         return
     end
 
-    local source = ReadLine(info.source, line) or ""
+    local source = readLine(info.source, line) or ""
 
     print(info.short_src .. ":" .. line .. " " .. source)
 end

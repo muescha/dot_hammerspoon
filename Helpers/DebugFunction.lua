@@ -22,7 +22,7 @@ end
 function getFunctionBody(fun)
     local info = getFunctionInfo(fun)
     local sourcePath = info.source:match("@?(.*)")
-    local sourceText = ReadSource(sourcePath, info.linedefined, info.lastlinedefined)
+    local sourceText = readSource(sourcePath, info.linedefined, info.lastlinedefined)
     return table.concat(sourceText, "\n")
 end
 
