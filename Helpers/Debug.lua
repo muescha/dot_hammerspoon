@@ -179,22 +179,85 @@ function debugTraceback ()
     end
 end
 
-function debugTracePrint (event, line)
-    local info = debug.getinfo(2)
-    local s = info.short_src
+function debugTracePrint(event, line)
+    local info = debug.getinfo(2, "Sl")
+
     if info.source:startsWith("@/Application") then
         return
     end
 
-    local source = ReadLine(info.source, line)
-    --local source = "x"
+    local source = ReadLine(info.source, line) or ""
 
-    print(s .. ":" .. line .. " " .. table.concat(source))
+    print(info.short_src .. ":" .. line .. " " .. source)
 end
 
+---
+--- Starts a global Lua line trace.
+---
+--- WARNING:
+--- This traces every executed Lua line across the entire Hammerspoon
+--- runtime, including timers, watchers, callbacks and loaded modules.
+--- It generates huge log files and can significantly slow down
+--- Hammerspoon.
+---
+--- Only enable it briefly and always call debugTraceStop() afterwards.
+---
+--- Example:
+---
+---     debugTrace()
+---     someFunction()
+---     debugTraceStop()
+---
+--- Or stop tracing automatically after one second:
+---
+---     debugTrace()
+---
+---     hs.timer.doAfter(1, function()
+---         debugTraceStop()
+---         print("debugTrace stopped")
+---     end)
+---
 function debugTrace()
     debug.sethook(debugTracePrint, "l")
 end
 
+---
+--- Stops the global Lua line trace.
+---
+function debugTraceStop()
+    debug.sethook()
+end
 
--- debugTrace()
+---
+--- Executes a function while Lua line tracing is enabled.
+---
+--- The trace is stopped automatically, even when the function raises
+--- an error. Function arguments and multiple return values are preserved.
+---
+--- Example:
+---
+---     debugTraceFunction(someFunction)
+---
+---     debugTraceFunction(someFunction, arg1, arg2)
+---
+---     local result = debugTraceFunction(function()
+---         return someFunction()
+---     end)
+---
+function debugTraceFunction(fn, ...)
+    local results
+
+    debugTrace()
+
+    results = table.pack(
+        xpcall(fn, debug.traceback, ...)
+    )
+
+    debugTraceStop()
+
+    if not results[1] then
+        error(results[2], 0)
+    end
+
+    return table.unpack(results, 2, results.n)
+end
