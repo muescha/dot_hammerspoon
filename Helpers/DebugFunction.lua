@@ -10,20 +10,42 @@
 -- enhanced: https://github.com/GitoriousLispBackup/praxis/blob/master/prods/Cognitive/dribble.lua
 
 
-function getFunctionName(fun)
-    local info = debug.getinfo(fun,"S")
-    local sourcePath = info.source:match("@?(.*)") -- remove @ from beginning
-    local sourceText = ReadSource(sourcePath, info.linedefined-1, info.linedefined-1)
-    return table.concat(sourceText,"\n")
+local function getFunctionInfo(fun)
+    return debug.getinfo(fun, "S")
 end
 
+function getFunctionLocation(fun)
+    local info = getFunctionInfo(fun)
+    return info.source .. ":" .. info.linedefined .. "-" .. info.lastlinedefined
+end
+
+function getFunctionBody(fun)
+    local info = getFunctionInfo(fun)
+    local sourcePath = info.source:match("@?(.*)")
+    local sourceText = ReadSource(sourcePath, info.linedefined, info.lastlinedefined)
+    return table.concat(sourceText, "\n")
+end
+
+function getFunctionSignature(fun)
+    return getFunctionBody(fun):match("([^\n]+)")
+end
+
+function getHammerspoonFunctionName(fun)
+    local info = getFunctionInfo(fun)
+    local signature = getFunctionSignature(fun)
+
+    local moduleName = info.source:match("/extensions/hs/(.-)%.lua$")
+    local functionName = signature:match("module%.([%w_]+)%s*=%s*function")
+
+    if moduleName and functionName then
+        return "hs." .. moduleName .. "." .. functionName
+    end
+
+    return signature
+end
+
+-- TODO: BETTER: debugFunctionBody
 function debugFunction(fun)
-    local info = debug.getinfo(fun,"Sln")
-    -- debugInfo(info)
-    local sourcePath = info.source:match("@?(.*)") -- remove @ from beginning
-    local sourceText = ReadSource(sourcePath, info.linedefined-1, info.lastlinedefined)
-
-    local sourcePathAndLocation = info.source .. ":" .. info.linedefined .. "-" .. info.lastlinedefined
-
-    print("Source: " .. sourcePathAndLocation .. "\n\n" .. table.concat(sourceText,"\n"))
+    print("Source.path:\n\n" .. getFunctionLocation(fun) .. "\n\n")
+    print("Source.body:\n\n" .. getFunctionBody(fun) .. "\n\n")
 end

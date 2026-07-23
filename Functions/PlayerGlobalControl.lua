@@ -582,7 +582,8 @@ local functionMemory = {}
 ---
 local function doFunction(actionFunction)
 
-    debugInfo("--> doFunction(", getFunctionName(actionFunction), ',"', actionParameter, '")')
+    debugInfo("--> doFunction(", getFunctionSignature(actionFunction), ',"', actionParameter, '")')
+    debugInfo("debugFunction(actionFunction)")
     debugFunction(actionFunction)
 
     local ok, result = actionFunction(functionMemory)
