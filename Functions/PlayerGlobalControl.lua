@@ -116,7 +116,9 @@ end
 
 local function runActionCode(code)
     local wrapper = path() .. "PlayerGlobalControl-BrowserWrapper.js"
-    return runJavaScriptInBrowser(code, "Google Chrome", wrapper)
+    local application = "Google Chrome"
+    local params = { code = code, application = application, path = wrapper, debug = false }
+    return runJavaScriptInBrowser(params)
 end
 
 local function runActionCodeDebug(code)

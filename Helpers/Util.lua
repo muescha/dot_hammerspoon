@@ -47,30 +47,28 @@ function template(s, t)
     return result
 end
 
-function readFileTemplate(path, t)
-    -- double template if inside the replaced
-    -- code is the memory used
-    return template(template(readFile(path), t),t)
+function readFileTemplate(path, params)
+    -- Double template processing because the inserted code
+    -- may itself contain template variables.
+    return template(template(readFile(path), params), params)
 end
 
-function runJavaScriptInBrowser(code, browser, wrapper)
-    return runJavaScript(
-            readFileTemplate(wrapper, {
-                code = code,
-                application = browser,
-            }
-        )
-    )
+local function runScriptInBrowser(params, runner)
+    local script = readFileTemplate(params.path, params)
+
+    if params.debug then
+        debugInfo(getHammerspoonFunctionName(runner) .. ":\n\n", script)
+    end
+
+    return runner(script)
 end
 
-function runJavaScript(code)
-    debugInfo("JS: ", code)
-    return hs.osascript.javascript(code)
+function runJavaScriptInBrowser(params)
+    return runScriptInBrowser(params, hs.osascript.javascript)
 end
 
-function runAppleScript(code)
-    debugInfo("AS: ", code)
-    return hs.osascript.applescript(code)
+function runAppleScriptInBrowser(params)
+    return runScriptInBrowser(params, hs.osascript.applescript)
 end
 
 -- Define a function that checks if a method exists on a userdata object
