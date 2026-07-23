@@ -13,6 +13,7 @@ fileInfo()
 
 local logger = hs.logger.new("AppBorders")
 logger.i("Init")
+-- logger.setLogLevel("debug")
 
 local global_border = nil
 
@@ -52,6 +53,8 @@ function redrawBorder(window, name, event)
             --debugInfo("---------")
             --debugInfo("redraw")
             --debugInfo("---------")
+            --debugInfo(newFrame)
+            --debugInfo("---------")
             global_border:setFrame(newFrame)
         end
         global_border:show()
@@ -59,16 +62,29 @@ function redrawBorder(window, name, event)
         global_border:hide()
     end
 end
-
+logger.i("Before initBorder")
 initBorder()
+logger.i("After initBorder")
 
+logger.i("Before hs.window.filter.new(nil)")
 allwindows = hs.window.filter.new(nil)
+-- allwindows = hs.window.filter.new(nil, 'allfilter', 'debug')
+--allwindows.log.setLogLevel('debug')
+logger.i("After hs.window.filter.new(nil)")
 
+--debugInfo(allwindows)
+logger.i("before allwindows:subscribe")
+--allwindows:subscribe(hs.window.filter.events, redrawBorder)
 allwindows:subscribe(hs.window.filter.windowCreated, redrawBorder)
+logger.i("middle allwindows:subscribe")
 allwindows:subscribe(hs.window.filter.windowDestroyed, redrawBorder)
+logger.i("middle allwindows:subscribe")
 allwindows:subscribe(hs.window.filter.windowFocused, redrawBorder)
+logger.i("middle allwindows:subscribe")
 allwindows:subscribe(hs.window.filter.windowMoved, redrawBorder)
+logger.i("middle allwindows:subscribe")
 allwindows:subscribe(hs.window.filter.windowUnfocused, redrawBorder)
+logger.i("after allwindows:subscribe")
 
 
 
@@ -90,4 +106,6 @@ function debugEvents(window, name, event)
     debugInfo(event)
 end
 
---allwindows:subscribe(hs.window.filter.events, debugEvents)
+-- allwindows:subscribe(hs.window.filter.events, debugEvents)
+
+logger.i("after init")
