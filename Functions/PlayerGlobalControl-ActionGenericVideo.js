@@ -672,21 +672,25 @@
                 url
                 && url.searchParams.get("enablejsapi") !== "1"
             ) {
+                // Third-party embed without the JS API. We MUST reload once to
+                // turn it on -- but deliberately do NOT force autoplay+mute+
+                // warmup here: on a cross-origin embed Chrome only allows MUTED
+                // autoplay, and a muted warmup can never be un-muted again
+                // without a real user gesture (Hammerspoon key events don't
+                // count) -> the video ends up stuck muted / "broken". Instead we
+                // just enable the API and leave the poster untouched. The user
+                // presses the real Big Play button once (a genuine gesture ->
+                // plays WITH sound); after that infoDelivery fills the cache and
+                // hyper+O controls it normally.
                 url.searchParams.set("enablejsapi", "1");
-                // Muted autoplay so the reloaded player starts on its own and
-                // begins emitting infoDelivery without a manual click.
-                url.searchParams.set("autoplay", "1");
-                url.searchParams.set("mute", "1");
-                document.documentElement.dataset.pgcYtWarmup = "1";
 
-                this.showOverlay(iframe, "YouTube connecting…");
+                this.showOverlay(iframe, "YouTube: Play drücken");
 
                 iframe.addEventListener(
                     "load",
                     () => {
-                        log("Eventlistener:Event:load");
+                        log("Eventlistener:Event:load (enable jsapi only)");
                         this.sendListening(iframe);
-                        this.nudgePlayback(iframe);
                     },
                     { once: true }
                 );
@@ -695,7 +699,7 @@
 
                 return {
                     mediaAdapter: null,
-                    status: "YouTube connecting…"
+                    status: "YouTube: Play drücken"
                 };
             }
 
