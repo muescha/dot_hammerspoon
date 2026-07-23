@@ -3,19 +3,12 @@
 --- Created by muescha.
 --- DateTime: 05.08.22 12:02
 ---
---- Open New Chrome Window with the same size
+--- Open a new Chrome window with the same size as the current one
 
 fileInfo()
 
-bindHotkey(to("Google Chrome"), { "cmd"}, "n", keyInfo("New Window (only in Chrome)"), function()
-
-    local menuItemName = "Neues Fenster"
-
-    local currentFrame = hs.window.focusedWindow():frame()
-    local app = hs.application.frontmostApplication()
-
-    app:selectMenuItem(menuItemName)
-
-    hs.window.focusedWindow():setFrame(currentFrame)
-
+bindHotkey(to("Google Chrome"), { "cmd" }, "n", keyInfo("New Window (only in Chrome)"), function()
+    local menuItemNames = { "Neues Fenster", "New Window" }
+    local options = { alertPrefix = "New Window" }
+    applicationSelectMenuItemApplySameFrame(menuItemNames, options)
 end)

@@ -27,7 +27,6 @@ hyper = { "shift", "ctrl", "alt", "cmd" }
 hs.hotkey.alertDuration = 0
 
 require('Functions.Reload')
-require("Functions.ConfigConsole")
 
 require('Functions.SetupLuaRocks')
 
@@ -50,6 +49,7 @@ require("Helpers.HotkeySilence")
 require("Helpers.SendKeysOnlyInApp")
 require("Helpers.HotkeyBindModal")
 require("Helpers.HotkeyBindSafe")
+require("Helpers.ApplicationSelectMenuItemApplySameFrame")
 
 hs.logger.defaultLogLevel = "info"
 --hs.logger.defaultLogLevel = "verbose"
