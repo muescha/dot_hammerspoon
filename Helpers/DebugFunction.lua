@@ -9,37 +9,6 @@
 
 -- enhanced: https://github.com/GitoriousLispBackup/praxis/blob/master/prods/Cognitive/dribble.lua
 
-function ReadSource(filename, fromLine, toLine)
-
-    if toLine == nil then toLine = fromLine end
-
-    local function skip_n_lines(f, n)
-        while f:read('*l') do
-            n = n - 1
-            if n == 0 then break end
-        end
-        return n
-    end
-
-    local function read_n_lines(f, n)
-        local t = {}
-        for i = 1, n do
-            local s = f:read('*l')
-            if not s then break end
-            t[#t + 1] = s
-        end
-        return t
-    end
-
-    local data = {}
-
-    --local f = io.open(filename, 'rb+')
-    local f = io.open(filename)
-    if 0 == skip_n_lines(f, fromLine) then
-        data = read_n_lines(f, toLine-fromLine+1)
-    end
-    return data
-end
 
 function getFunctionName(fun)
     local info = debug.getinfo(fun,"S")

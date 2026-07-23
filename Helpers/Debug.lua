@@ -179,20 +179,6 @@ function debugTraceback ()
     end
 end
 
-function ReadLine(src, line)
-    return ReadSource(src:match("@?(.*)"), line)
-    -- debugInfo(src)
-    -- debugInfo(src:match("@?(.*)"))
-    --if line == nil then return "?" end
-    --local f = io.open(src:match("@?(.*)"))
-    --local i = 1 -- line counter
-    --for l in f:lines() do -- lines iterator, "l" returns the line
-    --    if i == line then return l end -- we found this line, return it
-    --    i = i + 1 -- counting lines
-    --end
-    --return "" -- Doesn't have that line
-end
-
 function debugTracePrint (event, line)
     local info = debug.getinfo(2)
     local s = info.short_src

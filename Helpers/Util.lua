@@ -17,6 +17,45 @@ function readFile(path)
     return s
 end
 
+function ReadSource(filename, fromLine, toLine)
+    toLine = toLine or fromLine
+
+    local file, err = io.open(filename, "r")
+
+    if not file then
+        return nil, err
+    end
+
+    local data = {}
+    local currentLine = 0
+
+    for sourceLine in file:lines() do
+        currentLine = currentLine + 1
+
+        if currentLine >= fromLine and currentLine <= toLine then
+            data[#data + 1] = sourceLine
+        end
+
+        if currentLine >= toLine then
+            break
+        end
+    end
+
+    file:close()
+    return data
+end
+
+function ReadLine(src, line)
+    local filename = src:match("^@?(.*)")
+    local lines = ReadSource(filename, line)
+
+    if not lines then
+        return nil
+    end
+
+    return lines[1]
+end
+
 -- TODO: Remove because better implementation is in hs.fnutils.partial
 function partial(fn, arg)
     return function(...)
