@@ -91,29 +91,67 @@ function printErrorHistory()
         return os.date("%Y-%m-%d %H:%M:%S", math.floor(ts))
     end
 
+    local lines = {}
+
+    local function add(line)
+        table.insert(lines, line or "")
+    end
+
+    local function writeReportToFile(reportText)
+        local timestampForFile = os.date("%Y-%m-%d-%H-%M-%S")
+        local dir = hs.configdir .. "/Errors"
+        hs.fs.mkdir(dir) -- ensure directory exists (no-op if already present)
+        local filePath = string.format("%s/%s.txt", dir, timestampForFile)
+        print("Write report to: ".. filePath)
+        local ok, err = pcall(function()
+            local f = assert(io.open(filePath, "w"))
+            f:write(reportText)
+            f:close()
+        end)
+        if not ok then
+            -- If writing to file fails, still surface this info in the console buffer
+            add("")
+            add("Failed to write error report to file:")
+            add(tostring(err))
+        else
+            add("")
+            add("Saved error report to: " .. filePath)
+        end
+    end
+
     if not errorHistory or next(errorHistory) == nil then
-        print("\n===== ErrorCatcher History =====")
-        print("No stored errors.")
-        hs.openConsole()
+        add("")
+        add("===== ErrorCatcher History =====")
+        add("No stored errors.")
+        local report = table.concat(lines, "\n")
+        print(report)
+        hs.openConsole(true)
+        writeReportToFile(report)
         return
     end
 
     local errorHistorySorted = sortErrorHistory()
 
-    print("\n===== ErrorCatcher History • " .. tostring(#errorHistorySorted) .. " unique error(s) =====")
-    for index, error in ipairs(errorHistorySorted) do
-        local last = tonumber(error.lastShownAt) or 0
+    add("")
+    add("===== ErrorCatcher History • " .. tostring(#errorHistorySorted) .. " unique error(s) =====")
+
+    local now = hs.timer.secondsSinceEpoch()
+
+    for index, errObj in ipairs(errorHistorySorted) do
+        local last = tonumber(errObj.lastShownAt) or 0
         local lastDate = fmtDate(last)
-        local count = tostring(error.count or 0)
-        local now = hs.timer.secondsSinceEpoch()
+        local count = tostring(errObj.count or 0)
         local ago = tostring(math.max(0, math.floor(now - last)))
-        local info = string.format("[%d] • %sx • last: %s (%ss ago)", index, count, lastDate, ago )
-        print(info)
-        print(error.lastMessage)
-        print("----------------------------------------")
+        local info = string.format("[%d] • %sx • last: %s (%ss ago)", index, count, lastDate, ago)
+        add(info)
+        add(tostring(errObj.lastMessage or ""))
+        add("----------------------------------------")
     end
 
-    hs.openConsole()
+    local report = table.concat(lines, "\n")
+    print(report)
+    hs.openConsole(true)
+    writeReportToFile(report)
 end
 
 ------------------------------------------------------------
