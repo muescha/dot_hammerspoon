@@ -42,6 +42,6 @@ function obj:init(mod, key, description)
     hs.hotkey.bind(mod, key, description, caffeineClicked)
 end
 
-obj:init(hyper, 'c', keyInfo("toggle Caffeine"))
+obj:init(hyper, 'i', keyInfo("toggle Caffeine"))
 
 return obj
