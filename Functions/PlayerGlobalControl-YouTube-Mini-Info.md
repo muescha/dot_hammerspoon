@@ -1,58 +1,58 @@
 # YouTube Mini Player (`yt-mini.html`)
 
-Ein minimaler, ablenkungsfreier YouTube-Player: nur das Video im `<iframe>`,
-kein Feed, keine Kommentare, keine Vorschläge. Gehostet unter
-`http://cc.pixil.de/yt-mini.html`, gesteuert über Query-Parameter.
+A minimal, distraction-free YouTube player: just the video in an `<iframe>`,
+no feed, no comments, no suggestions. Hosted at
+`http://cc.pixil.de/yt-mini.html`, controlled via query parameters.
 
-## URL-Parameter
+## URL parameters
 
-| Param | Bedeutung | Beispiel |
-|-------|-----------|----------|
-| `v`   | YouTube-Video-ID (11 Zeichen) | `v=FVsMsCFtlOs` |
-| `t`   | Startzeit in Sekunden, `s`-Suffix erlaubt | `t=277` oder `t=277s` |
+| Param | Meaning | Example |
+|-------|---------|---------|
+| `v`   | YouTube video ID (11 characters) | `v=FVsMsCFtlOs` |
+| `t`   | Start time in seconds, `s` suffix allowed | `t=277` or `t=277s` |
 
-Aufruf:
+Usage:
 
 ```
 http://cc.pixil.de/yt-mini.html?v=FVsMsCFtlOs&t=277s
 ```
 
-### Validierung
+### Validation
 
-- `v` muss dem Muster `^[A-Za-z0-9_-]{11}$` entsprechen.
-- `t` wird von einem optionalen `s` am Ende befreit (`.replace(/s$/i, '')`)
-  und muss danach eine ganze Zahl `0 … 604800` (max. 7 Tage) sein.
-- Ungültige Werte -> Fehlermeldung im Body, kein Player.
+- `v` must match the pattern `^[A-Za-z0-9_-]{11}$`.
+- `t` has an optional trailing `s` stripped (`.replace(/s$/i, '')`)
+  and must then be an integer `0 … 604800` (max. 7 days).
+- Invalid values -> error message in the body, no player.
 
-## Verhalten von `mini.js`
+## Behavior of `mini.js`
 
-1. Liest `v` und `t` aus der URL, validiert sie.
-2. Baut ein YouTube-Embed-`<iframe>`:
-   `https://www.youtube.com/embed/<id>` mit
+1. Reads `v` and `t` from the URL, validates them.
+2. Builds a YouTube embed `<iframe>`:
+   `https://www.youtube.com/embed/<id>` with
    `start`, `autoplay=1`, `playsinline=1`, `rel=0`, `enablejsapi=1`, `origin`.
-3. Startet nach `load` den `infoDelivery`-Strom per
+3. After `load`, starts the `infoDelivery` stream via
    `postMessage({event:'listening', id:1, channel:'widget'})`.
-4. Aus den `infoDelivery`-Nachrichten:
-   - **Tab-Titel** = `HH:MM:SS - Titel — Kanal` (Dauer + `videoData`).
-   - **Live-`t=`**: Die aktuelle Abspielposition wird per
-     `history.replaceState` laufend als `t=<sek>s` in die eigene Adresszeile
-     geschrieben (nur bei echtem Sekundenwechsel, da `infoDelivery` ~4×/Sek.
-     feuert). So ist die URL immer aktuell zum Kopieren/Reload/Zurückspringen.
+4. From the `infoDelivery` messages:
+   - **Tab title** = `HH:MM:SS - Title — Channel` (duration + `videoData`).
+   - **Live `t=`**: The current playback position is continuously written into
+     the browser's own address bar as `t=<sec>s` via `history.replaceState`
+     (only on an actual whole-second change, since `infoDelivery` fires ~4×/sec).
+     This keeps the URL always current for copying/reloading/jumping back.
 
-## Toggle-Bookmarklet (YouTube ⇄ Mini)
+## Toggle bookmarklet (YouTube ⇄ Mini)
 
-Ein einziges Lesezeichen für beide Richtungen. Es erkennt am Hostnamen, ob man
-auf YouTube oder im Mini-Player ist, übernimmt `location.search` (also `v`, `t`,
-…) 1:1 und tauscht nur Origin+Pfad. Auf YouTube wird zusätzlich die aktuelle
-`<video>`-Position als `t` gesetzt.
+A single bookmark for both directions. It detects from the hostname whether you
+are on YouTube or in the mini player, carries `location.search` (i.e. `v`, `t`,
+…) over 1:1 and swaps only the origin + path. On YouTube it additionally sets
+the current `<video>` position as `t`.
 
-**Einzeiler (ins Lesezeichen einfügen):**
+**One-liner (paste into the bookmark):**
 
 ```javascript
 javascript:(function(){var yt=location.hostname.indexOf('youtube.com')>-1;var url=new URL(yt?'http://cc.pixil.de/yt-mini.html':'https://www.youtube.com/watch');url.search=location.search;if(yt){var v=document.querySelector('video');if(v&&v.currentTime>1)url.searchParams.set('t',Math.floor(v.currentTime)+'s');}location.href=url.href;})();
 ```
 
-**Lesbare Version (ohne Kommentare — `//` überlebt das Einzeilen nicht):**
+**Readable version (without comments — `//` does not survive minification into one line):**
 
 ```javascript
 javascript:(function () {
@@ -77,18 +77,18 @@ javascript:(function () {
 })();
 ```
 
-| Wo du klickst | Richtung | Zeitmarke |
-|---------------|----------|-----------|
-| `youtube.com/watch?v=…` | → Mini | aktuelle `<video>`-Position (sonst URL-`t`) |
-| `cc.pixil.de/yt-mini.html?v=…` | → YouTube | `t` aus der Mini-URL (läuft dank `replaceState` live mit) |
+| Where you click | Direction | Timestamp |
+|-----------------|-----------|-----------|
+| `youtube.com/watch?v=…` | → Mini | current `<video>` position (otherwise URL `t`) |
+| `cc.pixil.de/yt-mini.html?v=…` | → YouTube | `t` from the mini URL (kept live via `replaceState`) |
 
-Hinweis: `youtu.be`-Kurzlinks müssen nicht behandelt werden — YouTube leitet
-sie ohnehin auf `youtube.com/watch` um.
+Note: `youtu.be` short links don't need special handling — YouTube redirects
+them to `youtube.com/watch` anyway.
 
-## Zusammenspiel mit `PlayerGlobalControl`
+## Interplay with `PlayerGlobalControl`
 
-Der Mini-Player nutzt dieselbe YouTube-IFrame-postMessage-API
-(`enablejsapi=1`, `infoDelivery`) wie die Hammerspoon-Fernsteuerung in
+The mini player uses the same YouTube IFrame postMessage API
+(`enablejsapi=1`, `infoDelivery`) as the Hammerspoon remote control in
 [`PlayerGlobalControl-ActionGenericVideo.js`](./PlayerGlobalControl-ActionGenericVideo.js).
-Der eingebettete Player lässt sich also genauso per `command`-Nachrichten
-(`playVideo`, `pauseVideo`, `seekTo`, `setPlaybackRate`, …) steuern.
+The embedded player can therefore be controlled the same way via `command`
+messages (`playVideo`, `pauseVideo`, `seekTo`, `setPlaybackRate`, …).
