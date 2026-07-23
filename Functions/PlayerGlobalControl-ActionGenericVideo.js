@@ -5,7 +5,7 @@
     const action = "{{ action }}";
 
     function log(...values) {
-        console.log(...values);
+        console.log("[PGC]", ...values);
 
         return values[0];
     }
