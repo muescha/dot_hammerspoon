@@ -665,22 +665,22 @@ local function doCommand(appActions, actionQueue, callback)
             debugInfo("No command defined for action: " .. command)
             doCommand(appActions, actionQueue, callback)
             return
-        else
-            if type(actionCommands) == 'function' then
-                actionCommands = { actionCommands }
-            else
-                actionCommands = { table.unpack(actionCommands) }
-            end
-            doCommand(appActions, actionCommands, function(ok)
-                if not ok then
-                    callback(false)
-                    return
-                end
-
-                doCommand(appActions, actionQueue, callback)
-            end)
-            return
         end
+
+        if type(actionCommands) == 'function' then
+            actionCommands = { actionCommands }
+        else
+            actionCommands = { table.unpack(actionCommands) }
+        end
+        doCommand(appActions, actionCommands, function(ok)
+            if not ok then
+                callback(false)
+                return
+            end
+
+            doCommand(appActions, actionQueue, callback)
+        end)
+        return
 
     elseif type(command) == 'function' then
         -- function type
