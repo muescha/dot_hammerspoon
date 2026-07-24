@@ -86,13 +86,6 @@ function PlayerActions.setBrowserActions(actions)
     PlayerActions.browserActions = actions
 end
 
-function PlayerActions.getActions(bundleId, domain)
-    if domain then
-        return PlayerActions.getBrowserActions(domain)
-    end
-    return PlayerActions.getAppActions(bundleId)
-end
-
 function PlayerActions.getAppActions(bundleId)
     return PlayerActions.appActions[bundleId]
 end
@@ -103,6 +96,18 @@ end
 
 function PlayerActions.hasAppActions(bundleId)
     return PlayerActions.getAppActions(bundleId) ~= nil
+end
+
+function PlayerActions.hasBrowserActions()
+    return next(PlayerActions.browserActions) ~= nil
+end
+
+function PlayerActions.supportsBundleId(bundleId)
+    if bundleId == bundleIdChrome then
+        return PlayerActions.hasBrowserActions()
+    end
+
+    return PlayerActions.hasAppActions(bundleId)
 end
 
 function PlayerActions.extendDomainActions(targetDomain, sourceDomain, overrides)
@@ -140,14 +145,6 @@ function PlayerTarget.getReceiverApp()
     end
 
     return hs.application.applicationsForBundleID(PlayerTarget.getBundleId())[1]
-end
-
-function PlayerTarget.getActions(domain)
-    if PlayerTarget.isChrome() then
-        return PlayerActions.getBrowserActions(domain)
-    end
-
-    return PlayerActions.getAppActions(PlayerTarget.getBundleId())
 end
 
 -- Java Script Actions
@@ -828,7 +825,7 @@ local function getGenericVideoActions(domain, callback)
     doFunction(ActionGenericVideo("isGeneric"), function(ok)
         if ok and functionMemory[domain..'-ActionGenericVideo-isGeneric'] then
             local genericDomain = "generic.video"
-            local appActions = PlayerTarget.getActions(genericDomain)
+            local appActions = PlayerActions.getBrowserActions(genericDomain)
             functionMemory['domain'] = genericDomain
             callback(appActions, genericDomain)
         else
@@ -852,14 +849,14 @@ local function getAppActions(callback)
             callback(nil, nil)
             return
         end
-        appActions = PlayerTarget.getActions(domain)
+        appActions = PlayerActions.getBrowserActions(domain)
         if appActions == nil then
             getGenericVideoActions(domain, callback)
             return
         end
         functionMemory['domain'] = domain
     else
-        appActions = PlayerTarget.getActions()
+        appActions = PlayerActions.getAppActions(PlayerTarget.getBundleId())
     end
 
     callback(appActions, domain)
@@ -982,7 +979,7 @@ local function setSavedWindow()
     debugInfo("reset cache")
     cache = {}
 
-    if not PlayerActions.hasAppActions(bundleId) then
+    if not PlayerActions.supportsBundleId(bundleId) then
         local savedWindow = PlayerTarget.getWindow()
         if savedWindow then
             local msg = "setSavedWindow: focus saved window"
