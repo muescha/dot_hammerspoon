@@ -231,16 +231,25 @@ function MemoryCalcCheck(params)
         })
 end
 
+local doKey
+
+local function Key(modifier, key)
+    return function(_, callback)
+        doKey(modifier, key)
+        callback(true, {})
+    end
+end
+
 local ControlKeys = {
     [bundleIdIINA] = {
-        pause = { {}, "p" },
-        speedReset = { {}, "0" },
+        pause = Key({}, "p"),
+        speedReset = Key({}, "0"),
         -- speedInc = { {}, "=" }, -- +
         -- speedDec = { {}, "-" },
-        speedInc = { {}, "]" }, -- 2,0
-        speedDec = { {}, "[" }, -- 0,5
-        moveForward = { {}, "right" },
-        moveBackward = { {}, "left" },
+        speedInc = Key({}, "]"), -- 2,0
+        speedDec = Key({}, "["), -- 0,5
+        moveForward = Key({}, "right"),
+        moveBackward = Key({}, "left"),
         info = "IINA Player"
     },
     [bundleIdChrome] = {
@@ -280,7 +289,7 @@ local ControlKeys = {
             start = {
                 ActionClick({ selector = ".ytp-large-play-button" })
             },
-            pause = { {}, "k" },
+            pause = Key({}, "k"),
             -- document.querySelector('.ytp-large-play-button').click()
             -- not working: 
             --pause = {
@@ -288,10 +297,10 @@ local ControlKeys = {
             --},
 
             speedReset = actionSpeedReset(3),
-            speedInc = { { "shift" }, "." }, -- '>'
-            speedDec = { { "shift" }, "," }, -- '<'
-            moveForward = { {}, "right" },
-            moveBackward = { {}, "left" },
+            speedInc = Key({ "shift" }, "."), -- '>'
+            speedDec = Key({ "shift" }, ","), -- '<'
+            moveForward = Key({}, "right"),
+            moveBackward = Key({}, "left"),
             maxQuality = {
                 ActionClick({ selector="button.ytp-settings-button"}),
                 ActionPatch({
@@ -310,12 +319,12 @@ local ControlKeys = {
         ["twitch.tv"] = {
             selector = ".persistent-player",
             start = {},
-            pause = { {}, "k" },
+            pause = Key({}, "k"),
             speedReset = actionSpeedReset(3),
-            speedInc = { {}, "." }, -- '>'
-            speedDec = { {}, "," }, -- '<'
-            moveForward = { {}, "right" },
-            moveBackward = { {}, "left" },
+            speedInc = Key({}, "."), -- '>'
+            speedDec = Key({}, ","), -- '<'
+            moveForward = Key({}, "right"),
+            moveBackward = Key({}, "left"),
             info = "Twitch Player (Speed only on Videos)"
         },
         ["udemy.com"] = {
@@ -325,22 +334,22 @@ local ControlKeys = {
                 ActionClick({ selector = "[data-purpose='go-to-next-button']" })
             },
             selector = "video.vjs-tech",
-            pause = { {}, "SPACE" },
+            pause = Key({}, "SPACE"),
             speedReset = actionSpeedReset(2),
-            speedInc = { { "shift" }, "right" },
-            speedDec = { { "shift" }, "left" },
-            moveForward = { {}, "right" },
-            moveBackward = { {}, "left" },
+            speedInc = Key({ "shift" }, "right"),
+            speedDec = Key({ "shift" }, "left"),
+            moveForward = Key({}, "right"),
+            moveBackward = Key({}, "left"),
             info = "Udemy Player"
         },
         ["tvnow.de"] = {
             start = {},
-            pause = { {}, "SPACE" },
+            pause = Key({}, "SPACE"),
             speedReset = {},
             speedInc = {},
             speedDec = {},
-            moveForward = { {}, "right" },
-            moveBackward = { {}, "left" },
+            moveForward = Key({}, "right"),
+            moveBackward = Key({}, "left"),
             info = "TVnow Player (no speed controls)"
 
         },
@@ -350,7 +359,7 @@ local ControlKeys = {
             --    speedItemsDefault = '1x',
             --},
             start = {},
-            pause = { {}, "SPACE" },
+            pause = Key({}, "SPACE"),
             speedReset ={
                 --ActionClick, { selector="div[aria-label='Einstellungen']"},
                 --ActionClick, { selector="div[name='playbackRates']"},
@@ -392,8 +401,8 @@ local ControlKeys = {
                     property="aria-label"
                 }),
             },
-            moveForward = { {}, "right" },
-            moveBackward = { {}, "left" },
+            moveForward = Key({}, "right"),
+            moveBackward = Key({}, "left"),
             info = "Spiegel.de Player"
         },
         -- https://exporte.wdr.de/player/current/v-6.5.0/ardplayer-wdr.js?t=19569
@@ -433,23 +442,23 @@ local ControlKeys = {
                 ActionClick({ selector=".ardplayer-bottom-sheet-container div[aria-label='Geschwindigkeit'] span.ardplayer-option[data-index='{{ data-index }}']"}),
                 ActionClick({ timeout=500, selector=".ardplayer-bottom-sheet-close-button.ardplayer-icon-close"}),
             },
-            moveForward = { {}, "l" },
-            moveBackward = { {}, "j" },
+            moveForward = Key({}, "l"),
+            moveBackward = Key({}, "j"),
             info = "wdr.de Player"
         },
         ["joyn.de"] = {
             start = {},
-            pause = { {}, "SPACE" },
+            pause = Key({}, "SPACE"),
             speedReset = {},
             speedInc = {},
             speedDec = {},
-            moveForward = { {}, "right" },
-            moveBackward = { {}, "left" },
+            moveForward = Key({}, "right"),
+            moveBackward = Key({}, "left"),
             info = "Joyn Player (no speed controls)"
         },
         ["spotify.com"] = {
             start = {},
-            pause = { {}, "SPACE" },
+            pause = Key({}, "SPACE"),
             speedReset = {
                 ActionClick({
                     selector = "button[data-testid='control-button-playback-speed']"
@@ -508,8 +517,8 @@ local ControlKeys = {
                 })
 
             },
-            moveForward = { { "cmd", "shift"}, "right" },
-            moveBackward = { { "cmd", "shift" }, "left" },
+            moveForward = Key({ "cmd", "shift"}, "right"),
+            moveBackward = Key({ "cmd", "shift" }, "left"),
             info = "Spotify Player"
         },
     }
@@ -581,7 +590,7 @@ end
 ---@param key string @key
 ---@return void
 ---
-local function doKey(modifier, key)
+doKey = function(modifier, key)
     debugInfo("--> doKey(", modifier, ',"', key, '")')
 
     local receiverApp
@@ -655,6 +664,8 @@ local function doCommand(appActions, actionQueue, callback)
         local actionCommands = appActions[action]
         if actionCommands == nil then
             debugInfo("No command defined for action: " .. action)
+            doCommand(appActions, actionQueue, callback)
+            return
         else
             if type(actionCommands) == 'function' then
                 actionCommands = { actionCommands }
@@ -686,16 +697,11 @@ local function doCommand(appActions, actionQueue, callback)
         end)
         return
 
-    else -- table?
-
-        local modifier = table.remove(actionQueue, 1)
-        local key = table.remove(actionQueue, 1)
-
-        doKey(modifier, key)
-
+    else
+        debugInfo("Unknown command: ", peek)
+        callback(false)
+        return
     end
-
-    doCommand(appActions, actionQueue, callback)
 
 end
 
