@@ -134,11 +134,18 @@ function BrowserDriver.getCurrentUrl(_target, callback)
     callback(getChromeUrl())
 end
 
+function BrowserDriver.getDomain(target, callback)
+    assert(callback, "BrowserDriver.getDomain requires callback")
+
+    BrowserDriver.getCurrentUrl(target, function(url)
+        callback(getUrlDomain(url))
+    end)
+end
+
 function BrowserDriver.getActions(target, callback)
     assert(callback, "BrowserDriver.getActions requires callback")
 
-    BrowserDriver.getCurrentUrl(target, function(url)
-        local domain = getUrlDomain(url)
+    BrowserDriver.getDomain(target, function(domain)
         if domain == nil then
             debugInfo("No domain detected for current Chrome tab (likely internal/blank page).")
             callback(nil, nil)
