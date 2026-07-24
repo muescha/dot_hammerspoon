@@ -37,7 +37,7 @@ local bundleIdChrome = "com.google.Chrome"
 local browserGoogleChrome = "Google Chrome"
 local browserGoogleDevTools = "Google DevTools"
 local browserJavaScriptRunner = browserGoogleChrome
-local getChromeUrlDomain
+local getUrlDomain
 local getGenericVideoActions
 
 local actions = enumString {
@@ -127,24 +127,32 @@ function BrowserDriver.supportsActions()
     return PlayerActions.hasBrowserActions()
 end
 
-function BrowserDriver.getActions(_target, callback)
+function BrowserDriver.getCurrentUrl(_target, callback)
+    assert(callback, "BrowserDriver.getCurrentUrl requires callback")
+
+    callback(getChromeUrl())
+end
+
+function BrowserDriver.getActions(target, callback)
     assert(callback, "BrowserDriver.getActions requires callback")
 
-    local domain = getChromeUrlDomain()
-    if domain == nil then
-        debugInfo("No domain detected for current Chrome tab (likely internal/blank page).")
-        callback(nil, nil)
-        return
-    end
+    BrowserDriver.getCurrentUrl(target, function(url)
+        local domain = getUrlDomain(url)
+        if domain == nil then
+            debugInfo("No domain detected for current Chrome tab (likely internal/blank page).")
+            callback(nil, nil)
+            return
+        end
 
-    local appActions = PlayerActions.getBrowserActions(domain)
-    if appActions == nil then
-        getGenericVideoActions(domain, callback)
-        return
-    end
+        local appActions = PlayerActions.getBrowserActions(domain)
+        if appActions == nil then
+            getGenericVideoActions(domain, callback)
+            return
+        end
 
-    functionMemory['domain'] = domain
-    callback(appActions, domain)
+        functionMemory['domain'] = domain
+        callback(appActions, domain)
+    end)
 end
 
 local AppDriver = {
@@ -720,16 +728,15 @@ local function tld(domain)
     return parts[#parts -1]..".".. parts[#parts]
 end
 
-function getChromeUrlDomain()
-    local url = getChromeUrl()
+getUrlDomain = function(url)
     debugInfo("current url: ", url)
     if not url then
-        debugInfo("getChromeUrlDomain: url is nil")
+        debugInfo("getUrlDomain: url is nil")
         return nil
     end
     local parts = hs.http.urlParts(url)
     if not parts or not parts.host then
-        debugInfo("getChromeUrlDomain: no host parsed (likely non-http(s) url). parts=", parts)
+        debugInfo("getUrlDomain: no host parsed (likely non-http(s) url). parts=", parts)
         return nil
     end
     local host = parts.host
