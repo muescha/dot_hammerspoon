@@ -110,6 +110,14 @@ local function getBrowserScript(params)
     return script
 end
 
+local function finishBrowserScript(callback, ok, output, message)
+    if not ok then
+        debugInfo("Browser script failed: ", message)
+    end
+
+    callback(ok, output, message)
+end
+
 local function runScriptInBrowser(params, runner, callback)
     assert(callback, "runScriptInBrowser requires callback")
     local script = getBrowserScript(params)
@@ -119,7 +127,7 @@ local function runScriptInBrowser(params, runner, callback)
     end
 
     local ok, output, message = runner(script)
-    callback(ok, output, message)
+    finishBrowserScript(callback, ok, output, message)
 end
 
 local function runJavaScriptInChromeDevTools(params, callback)
@@ -137,11 +145,7 @@ local function runJavaScriptInChromeDevTools(params, callback)
             debugInfo("Chrome DevTools active page: nil")
         end
 
-        if err then
-            debugInfo("Chrome DevTools error: ", err)
-        end
-
-        callback(err == nil, result, err)
+        finishBrowserScript(callback, err == nil, result, err)
     end)
 end
 

@@ -282,6 +282,11 @@ local function copyCommandQueue(command)
     return type(command) == 'table' and { table.unpack(command) } or { command }
 end
 
+local function failCommand(callback, message, details)
+    debugInfo(message, details)
+    callback(false, details or message)
+end
+
 local ControlKeys = {
     [bundleIdIINA] = {
         pause = Key({}, "p"),
@@ -649,7 +654,8 @@ local function doFunction(actionFunction, callback)
             helper.table.assign(functionMemory, result)
             debugInfo("Memory: ", functionMemory)
         else
-            debugInfo("doFunction: action failed: ", result)
+            failCommand(callback, "doFunction: action failed: ", result)
+            return
         end
 
         callback(ok, result)
@@ -677,7 +683,7 @@ local function doCommand(appActions, actionQueue, callback)
 
     local function continueQueue(ok, message)
         if not ok then
-            callback(false, message)
+            failCommand(callback, "Command queue failed: ", message)
             return
         end
 
@@ -688,8 +694,7 @@ local function doCommand(appActions, actionQueue, callback)
 
         local actionCommands = appActions[command]
         if actionCommands == nil then
-            debugInfo("No command defined for action: " .. command)
-            doCommand(appActions, actionQueue, callback)
+            failCommand(callback, "No command defined for action: " .. command)
             return
         end
 
@@ -699,9 +704,7 @@ local function doCommand(appActions, actionQueue, callback)
         doFunction(command, continueQueue)
 
     else
-        local message = "Unknown command: " .. tostring(command)
-        debugInfo(message)
-        callback(false, message)
+        failCommand(callback, "Unknown command: " .. tostring(command))
     end
 
 end
