@@ -102,14 +102,6 @@ function PlayerActions.hasBrowserActions()
     return next(PlayerActions.browserActions) ~= nil
 end
 
-function PlayerActions.supportsBundleId(bundleId)
-    if bundleId == bundleIdChrome then
-        return PlayerActions.hasBrowserActions()
-    end
-
-    return PlayerActions.hasAppActions(bundleId)
-end
-
 function PlayerActions.extendDomainActions(targetDomain, sourceDomain, overrides)
     PlayerActions.browserActions[targetDomain] = helper.table.assigned(PlayerActions.browserActions[sourceDomain], overrides)
 end
@@ -134,6 +126,14 @@ end
 
 function PlayerTarget.isChrome()
     return PlayerTarget.bundleId == bundleIdChrome
+end
+
+function PlayerTarget.supportsBundleId(bundleId)
+    if bundleId == bundleIdChrome then
+        return PlayerActions.hasBrowserActions()
+    end
+
+    return PlayerActions.hasAppActions(bundleId)
 end
 
 function PlayerTarget.getReceiverApp()
@@ -979,7 +979,7 @@ local function setSavedWindow()
     debugInfo("reset cache")
     cache = {}
 
-    if not PlayerActions.supportsBundleId(bundleId) then
+    if not PlayerTarget.supportsBundleId(bundleId) then
         local savedWindow = PlayerTarget.getWindow()
         if savedWindow then
             local msg = "setSavedWindow: focus saved window"
