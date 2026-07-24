@@ -145,7 +145,7 @@ end
 
 local function runActionCode(code, callback)
     local wrapper = path() .. "PlayerGlobalControl-BrowserWrapper.js"
-    local params = { code = code, application = browserGoogleChrome, path = wrapper, browser = browserJavaScriptRunner, debug = true }
+    local params = { code = code, application = browserGoogleChrome, path = wrapper, browser = browserJavaScriptRunner, debug = false }
 
     if browserJavaScriptRunner == browserGoogleDevTools then
         params.path = nil
@@ -652,7 +652,7 @@ local function doFunction(actionFunction, callback)
             debugInfo("doFunction: action failed: ", result)
         end
 
-        callback(ok)
+        callback(ok, result)
     end
 
     actionFunction(functionMemory, done)
@@ -675,9 +675,9 @@ local function doCommand(appActions, actionQueue, callback)
 
     local command = table.remove(actionQueue, 1)
 
-    local function continueQueue(ok)
+    local function continueQueue(ok, message)
         if not ok then
-            callback(false)
+            callback(false, message)
             return
         end
 
@@ -699,8 +699,9 @@ local function doCommand(appActions, actionQueue, callback)
         doFunction(command, continueQueue)
 
     else
-        debugInfo("Unknown command: ", command)
-        callback(false)
+        local message = "Unknown command: " .. tostring(command)
+        debugInfo(message)
+        callback(false, message)
     end
 
 end
@@ -848,14 +849,21 @@ local function createHotkey(sourceKey, action, description)
 
         getAppActions(function(appActions, domain)
             if appActions == nil then
-                debugInfo("exit - no commands found for domain " + domain)
+                debugInfo("exit - no commands found for domain " .. tostring(domain))
                 checkSwitchBack(switchBackToWindow)
                 return
             end
 
             helper.table.assign(functionMemory, { action = action })
-            doCommand(appActions, { action }, function()
+            doCommand(appActions, { action }, function(ok, message)
                 checkSwitchBack(switchBackToWindow)
+
+                if not ok then
+                    local msg = "HotKey action failed: " .. action .. "\n" .. tostring(message)
+                    debugInfo(msg)
+                    hs.alert.show(msg)
+                    return
+                end
 
                 print("collectgarbage(count)")
                 print(collectgarbage("count"))
