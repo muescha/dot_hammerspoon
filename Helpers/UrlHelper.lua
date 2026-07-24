@@ -29,6 +29,10 @@ function UrlHelper.getTld(url)
     return tld or host
 end
 
+function UrlHelper.getDomain(url)
+    return UrlHelper.getTld(url)
+end
+
 -- Normalize parts.queryItems (array of single-key tables) into a key->value map
 local function normalizeQueryItemsToMap(qItems)
     local map = {}

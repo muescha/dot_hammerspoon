@@ -138,7 +138,7 @@ function BrowserDriver.getDomain(target, callback)
 
     BrowserDriver.getCurrentUrl(target, function(url)
         debugInfo("current url: ", url)
-        local domain = helper.url.getTld(url)
+        local domain = helper.url.getDomain(url)
         debugInfo("current domain: ", domain)
         callback(domain)
     end)
