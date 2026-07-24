@@ -89,8 +89,16 @@ function PlayerActions.getActions(bundleId, domain)
     return targetActions
 end
 
-function PlayerActions.hasActions(bundleId)
-    return PlayerActions.getActions(bundleId) ~= nil
+function PlayerActions.getAppActions(bundleId)
+    return PlayerActions.getActions(bundleId)
+end
+
+function PlayerActions.getBrowserActions(domain)
+    return PlayerActions.getActions(bundleIdChrome, domain)
+end
+
+function PlayerActions.hasAppActions(bundleId)
+    return PlayerActions.getAppActions(bundleId) ~= nil
 end
 
 function PlayerActions.extendDomainActions(targetDomain, sourceDomain, overrides)
@@ -132,7 +140,11 @@ function PlayerTarget.getReceiverApp()
 end
 
 function PlayerTarget.getActions(domain)
-    return PlayerActions.getActions(PlayerTarget.getBundleId(), domain)
+    if PlayerTarget.isChrome() then
+        return PlayerActions.getBrowserActions(domain)
+    end
+
+    return PlayerActions.getAppActions(PlayerTarget.getBundleId())
 end
 
 -- Java Script Actions
@@ -968,7 +980,7 @@ local function setSavedWindow()
     debugInfo("reset cache")
     cache = {}
 
-    if not PlayerActions.hasActions(bundleId) then
+    if not PlayerActions.hasAppActions(bundleId) then
         local savedWindow = PlayerTarget.getWindow()
         if savedWindow then
             local msg = "setSavedWindow: focus saved window"
