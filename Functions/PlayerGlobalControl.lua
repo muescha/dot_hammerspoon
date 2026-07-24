@@ -240,6 +240,10 @@ local function Key(modifier, key)
     end
 end
 
+local function copyCommandQueue(command)
+    return type(command) == 'table' and { table.unpack(command) } or { command }
+end
+
 local ControlKeys = {
     [bundleIdIINA] = {
         pause = Key({}, "p"),
@@ -658,8 +662,6 @@ local function doCommand(appActions, actionQueue, callback)
 
     if type(command) == 'string' then
 
-        -- unpack reference
-        --local actionCommands = { table.unpack(appActions[action]) }
         local actionCommands = appActions[command]
         if actionCommands == nil then
             debugInfo("No command defined for action: " .. command)
@@ -667,12 +669,7 @@ local function doCommand(appActions, actionQueue, callback)
             return
         end
 
-        if type(actionCommands) == 'function' then
-            actionCommands = { actionCommands }
-        else
-            actionCommands = { table.unpack(actionCommands) }
-        end
-        doCommand(appActions, actionCommands, function(ok)
+        doCommand(appActions, copyCommandQueue(actionCommands), function(ok)
             if not ok then
                 callback(false)
                 return
