@@ -835,8 +835,8 @@ local function getGenericVideoActions(domain, callback)
 end
 
 
-local function getAppActions(callback)
-    assert(callback, "getAppActions requires callback")
+function PlayerTarget.getActions(callback)
+    assert(callback, "PlayerTarget.getActions requires callback")
 
     local appActions
 
@@ -895,7 +895,7 @@ local function createHotkey(sourceKey, action, description)
 
         local switchBackToWindow = checkSwitch()
 
-        getAppActions(function(appActions, domain)
+        PlayerTarget.getActions(function(appActions, domain)
             if appActions == nil then
                 debugInfo("exit - no commands found for domain " .. tostring(domain))
                 checkSwitchBack(switchBackToWindow)
@@ -997,7 +997,7 @@ local function setSavedWindow()
 
     PlayerTarget.saveWindow(win)
 
-    getAppActions(function(appActions, domain)
+    PlayerTarget.getActions(function(appActions, domain)
         if appActions == nil then
             local msg = "setSavedWindow: no player actions defined for current domain: " .. (domain or "(none)")
             debugInfo(msg)
