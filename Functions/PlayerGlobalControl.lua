@@ -73,12 +73,38 @@ function actionSpeedReset(count)
     return reset
 end
 
---local currentBundleId = bundleIdIINA
-local savedBundleId = bundleIdChrome
+local PlayerTarget = {
+    bundleId = bundleIdChrome,
+    window = nil
+}
 
----@type hs.window
-local savedWindow = nil
-local savedDomain = nil
+function PlayerTarget.saveWindow(win)
+    PlayerTarget.window = win
+    PlayerTarget.bundleId = win:application():bundleID()
+end
+
+function PlayerTarget.getWindow()
+    return PlayerTarget.window
+end
+
+function PlayerTarget.getBundleId()
+    return PlayerTarget.bundleId
+end
+
+function PlayerTarget.isChrome()
+    return PlayerTarget.bundleId == bundleIdChrome
+end
+
+function PlayerTarget.getReceiverApp()
+    local savedWindow = PlayerTarget.getWindow()
+    if savedWindow then
+        -- TODO: activate the window - place over others - but go back to current app
+        -- TODO: check if savedWindow still exists - otherwise null it or use the current
+        return savedWindow:application()
+    end
+
+    return hs.application.applicationsForBundleID(PlayerTarget.getBundleId())[1]
+end
 
 -- Java Script Actions
 
@@ -231,16 +257,6 @@ function MemoryCalcCheck(params)
         })
 end
 
-local function getReceiverApp()
-    if savedWindow then
-        -- TODO: activate the window - place over others - but go back to current app
-        -- TODO: check if savedWindow still exists - otherwise null it or use the current
-        return savedWindow:application()
-    end
-
-    return hs.application.applicationsForBundleID(savedBundleId)[1]
-end
-
 ---@param modifier table @available modifiers or empty table
 ---@param key string @key
 ---@return void
@@ -248,7 +264,7 @@ end
 local function doKey(modifier, key)
     debugInfo("--> doKey(", modifier, ',"', key, '")')
 
-    local receiverApp = getReceiverApp()
+    local receiverApp = PlayerTarget.getReceiverApp()
 
     if receiverApp then
         hs.eventtap.keyStroke(modifier, key, 0, receiverApp)
@@ -726,7 +742,8 @@ local function checkSwitch()
     local returnSwitchBacks = { win }
 
     --if bundleIdChrome ~= bundleID then debugInfo("checkSwitch: current app no Chrome") return end
-    if bundleIdChrome ~= savedBundleId then debugInfo("checkSwitch: saved window is not chrome") return end
+    if not PlayerTarget.isChrome() then debugInfo("checkSwitch: saved window is not chrome") return end
+    local savedWindow = PlayerTarget.getWindow()
     if savedWindow==nil then debugInfo("checkSwitch: no window saved") return end
     if savedWindow:application()==nil then debugInfo("checkSwitch: savedWindow has no Application") return end
     if win == savedWindow then debugInfo("checkSwitch: current app focused is same window as saved") return end
@@ -768,22 +785,20 @@ local function getAppActions(callback)
         callback(result)
     end
 
-    if savedBundleId == bundleIdChrome then
-        --local domain = savedDomain or getChromeUrlDomain()
+    if PlayerTarget.isChrome() then
         local domain = getChromeUrlDomain()
         if domain == nil then
             debugInfo("No domain detected for current Chrome tab (likely internal/blank page).")
             done(nil)
             return
         end
-        appActions = ControlKeys[savedBundleId][domain]
+        appActions = ControlKeys[PlayerTarget.getBundleId()][domain]
         if appActions == nil then
-            --local generic = ControlKeys[savedBundleId]["genieric.video"]
             functionMemory['domain'] = domain
             doFunction(ActionGenericVideo("isGeneric"), function(ok)
                 if ok and functionMemory[domain..'-ActionGenericVideo-isGeneric'] then
                     domain = "generic.video"
-                    appActions = ControlKeys[savedBundleId][domain]
+                    appActions = ControlKeys[PlayerTarget.getBundleId()][domain]
                     functionMemory['domain'] = domain
                     done(appActions)
                 else
@@ -794,7 +809,7 @@ local function getAppActions(callback)
         end
         functionMemory['domain'] = domain
     else
-        appActions = ControlKeys[savedBundleId]
+        appActions = ControlKeys[PlayerTarget.getBundleId()]
     end
 
     done(appActions)
@@ -910,6 +925,7 @@ local function setSavedWindow()
     cache = {}
 
     if ControlKeys[bundleID] == nil then
+        local savedWindow = PlayerTarget.getWindow()
         if savedWindow then
             local msg = "setSavedWindow: focus saved window"
             debugInfo(msg)
@@ -920,12 +936,10 @@ local function setSavedWindow()
         return
     end
 
-    savedWindow = win
-    savedBundleId = bundleID
-    if savedBundleId == bundleIdChrome then
+    PlayerTarget.saveWindow(win)
+    local savedDomain = nil
+    if PlayerTarget.isChrome() then
         savedDomain = getChromeUrlDomain()
-    else
-        savedDomain = nil
     end
 
     getAppActions(function(appActions)
@@ -938,7 +952,7 @@ local function setSavedWindow()
 
         local enabledInfo = getEnabledInfo(appActions)
 
-        debugInfo("setSavedWindow: changed savedBundleId to: " .. savedBundleId)
+        debugInfo("setSavedWindow: changed savedBundleId to: " .. PlayerTarget.getBundleId())
 
         local infoText = "Detected: "..appActions.info
                 .."\n\n"..enabledInfo
