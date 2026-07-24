@@ -680,7 +680,6 @@ local function doCommand(appActions, actionQueue, callback)
 
             doCommand(appActions, actionQueue, callback)
         end)
-        return
 
     elseif type(command) == 'function' then
         -- function type
@@ -692,12 +691,10 @@ local function doCommand(appActions, actionQueue, callback)
 
             doCommand(appActions, actionQueue, callback)
         end)
-        return
 
     else
         debugInfo("Unknown command: ", command)
         callback(false)
-        return
     end
 
 end
