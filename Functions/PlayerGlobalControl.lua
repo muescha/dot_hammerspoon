@@ -37,7 +37,6 @@ local bundleIdChrome = "com.google.Chrome"
 local browserGoogleChrome = "Google Chrome"
 local browserGoogleDevTools = "Google DevTools"
 local browserJavaScriptRunner = browserGoogleChrome
-local getUrlDomain
 local getGenericVideoActions
 local functionMemory = {}
 
@@ -138,7 +137,10 @@ function BrowserDriver.getDomain(target, callback)
     assert(callback, "BrowserDriver.getDomain requires callback")
 
     BrowserDriver.getCurrentUrl(target, function(url)
-        callback(getUrlDomain(url))
+        debugInfo("current url: ", url)
+        local domain = helper.url.getTld(url)
+        debugInfo("current domain: ", domain)
+        callback(domain)
     end)
 end
 
@@ -723,36 +725,6 @@ function getChromeUrl()
         return nil
     end
     return url
-end
-
-local function host(url)
-    return (url.."/"):match("://(.-)/")
-end
-
-local function tld(domain)
-    if domain == nil then return nil end
-    local parts = hs.fnutils.split(domain, '%.')
-    if #parts == 1 then return domain end
-    return parts[#parts -1]..".".. parts[#parts]
-end
-
-getUrlDomain = function(url)
-    debugInfo("current url: ", url)
-    if not url then
-        debugInfo("getUrlDomain: url is nil")
-        return nil
-    end
-    local parts = hs.http.urlParts(url)
-    if not parts or not parts.host then
-        debugInfo("getUrlDomain: no host parsed (likely non-http(s) url). parts=", parts)
-        return nil
-    end
-    local host = parts.host
-    debugInfo("current host: ", host)
-    --local domain = url:match("[%w%.]*%.(%w+%.%w+)")
-    local domain = tld(host)
-    debugInfo("current domain: ", domain)
-    return domain
 end
 
 ---@param actionFunction function @function to be called
