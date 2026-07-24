@@ -92,18 +92,66 @@ function readFileTemplate(path, params)
     return template(template(readFile(path), params), params)
 end
 
-local function runScriptInBrowser(params, runner)
-    local script = readFileTemplate(params.path, params)
+local function runTemplateString(s, params)
+    -- Double template processing because the inserted code
+    -- may itself contain template variables.
+    return template(template(s, params), params)
+end
+
+local function runScriptInBrowser(params, runner, callback)
+    local script
+
+    if params.path then
+        script = readFileTemplate(params.path, params)
+    else
+        script = runTemplateString(params.code, params)
+    end
 
     if params.debug then
         debugInfo(getHammerspoonFunctionName(runner) .. ":\n\n", script)
     end
 
+    if callback then
+        local ok, output, message = runner(script)
+        callback(ok, output, message)
+        return
+    end
+
     return runner(script)
 end
 
-function runJavaScriptInBrowser(params)
-    return runScriptInBrowser(params, hs.osascript.javascript)
+local function runJavaScriptInChromeDevTools(params, callback)
+    local script = runTemplateString(params.code, params)
+
+    if params.debug then
+        debugInfo("Chrome DevTools:\n\n", script)
+    end
+
+    if not callback then
+        return false, nil, "Google DevTools runner requires a callback"
+    end
+
+    return helper.chrome.devtools.executeJavascript(script, function(result, err, page)
+        if page then
+            debugInfo("Chrome DevTools active page: ", page.id, " ", page.title, " ", page.url)
+        else
+            debugInfo("Chrome DevTools active page: nil")
+        end
+
+        if err then
+            debugInfo("Chrome DevTools error: ", err)
+        end
+
+        callback(err == nil, result, err)
+    end)
+end
+
+function runJavaScriptInBrowser(params, callback)
+    if params.browser == "Google DevTools" then
+        return runJavaScriptInChromeDevTools(params, callback)
+    end
+
+    return runScriptInBrowser(params, hs.osascript.javascript, callback)
 end
 
 function runAppleScriptInBrowser(params)

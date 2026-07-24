@@ -34,6 +34,9 @@ local cache = {}
 
 local bundleIdIINA = "com.colliderli.iina"
 local bundleIdChrome = "com.google.Chrome"
+local browserGoogleChrome = "Google Chrome"
+local browserGoogleDevTools = "Google DevTools"
+local browserJavaScriptRunner = browserGoogleChrome
 
 local actions = enumString {
     "start",
@@ -114,18 +117,33 @@ local function getActionCode(templatePath, action, params)
     return doCache(cacheKey, generate)
 end
 
-local function runActionCode(code)
+local function runActionCode(code, callback)
     local wrapper = path() .. "PlayerGlobalControl-BrowserWrapper.js"
-    local application = "Google Chrome"
-    local params = { code = code, application = application, path = wrapper, debug = false }
-    return runJavaScriptInBrowser(params)
+    local params = { code = code, application = browserGoogleChrome, path = wrapper, browser = browserJavaScriptRunner, debug = true }
+
+    if browserJavaScriptRunner == browserGoogleDevTools then
+        params.path = nil
+    end
+
+    return runJavaScriptInBrowser(params, callback)
 end
 
-local function runActionCodeDebug(code)
-    local ok, output, message = runActionCode(code)
+local function logActionCodeResult(ok, output, message)
     debugInfo("runActionCode -      ok: ", ok)
     debugInfo("runActionCode -  Output: ", output)
     debugInfo("runActionCode - Message: ", message)
+end
+
+local function runActionCodeDebug(code, callback)
+    if callback then
+        return runActionCode(code, function(ok, output, message)
+            logActionCodeResult(ok, output, message)
+            callback(ok, output, message)
+        end)
+    end
+
+    local ok, output, message = runActionCode(code)
+    logActionCodeResult(ok, output, message)
     return ok, output, message
 end
 
@@ -133,24 +151,38 @@ end
 function GenericAction(action, defaultParams)
     local templatePath = path()
 
-    return function(memory)
+    return function(memory, callback)
         local params = helper.table.assigned(memory, defaultParams)
         debugInfo("Params: ", params)
         local code = getActionCode(templatePath, action, params)
-        local ok, output, message = runActionCodeDebug(code)
 
-        if params.property == nil then
-            if output == nil then
-                return ok, {}
+        local handleResult = function(ok, output, message)
+            if not ok then
+                return false, message
             end
-            return ok, { [(memory.domain or '') .. '-' .. action..'-'.. params.action] = output}
+
+            if params.property == nil then
+                if output == nil then
+                    return ok, {}
+                end
+                return ok, { [(memory.domain or '') .. '-' .. action..'-'.. params.action] = output}
+            end
+
+            local calc = params.calc or function(v) return v end
+
+            -- TODO add nil check for output
+            local result = { [params.property] = calc(output)}
+            return ok, result
         end
 
-        local calc = params.calc or function(v) return v end
+        if callback then
+            return runActionCodeDebug(code, function(ok, output, message)
+                callback(handleResult(ok, output, message))
+            end)
+        end
 
-        -- TODO add nil check for output
-        local result = { [params.property] = calc(output)}
-        return ok, result
+        local ok, output, message = runActionCodeDebug(code)
+        return handleResult(ok, output, message)
     end
 end
 
@@ -580,19 +612,40 @@ local functionMemory = {}
 ---@param actionFunction function @function to be called
 ---@return void
 ---
-local function doFunction(actionFunction)
+local function doFunction(actionFunction, callback)
 
     debugInfo("--> doFunction(", getFunctionSignature(actionFunction), ',"', actionParameter, '")')
     debugInfo("debugFunction(actionFunction)")
     debugFunction(actionFunction)
 
+    local done = function(ok, result)
+        --debugInfo(ok, result, type(result))
+        local win = hs.window.focusedWindow()
+        -- 1 top / 2 bottom
+        hs.alert.show(hs.inspect(result), { atScreenEdge = 1}, win)
+
+        if ok then
+            helper.table.assign(functionMemory, result)
+            debugInfo("Memory: ", functionMemory)
+        else
+            debugInfo("doFunction: action failed: ", result)
+        end
+
+        if callback then
+            callback(ok)
+        end
+    end
+
+    if callback then
+        local ok, result = actionFunction(functionMemory, done)
+        if ok ~= nil or result ~= nil then
+            return done(ok, result)
+        end
+        return
+    end
+
     local ok, result = actionFunction(functionMemory)
-    --debugInfo(ok, result, type(result))
-    local win = hs.window.focusedWindow()
-    -- 1 top / 2 bottom
-    hs.alert.show(hs.inspect(result), { atScreenEdge = 1}, win)
-    helper.table.assign(functionMemory, result)
-    debugInfo("Memory: ", functionMemory)
+    return done(ok, result)
 end
 
 
@@ -600,9 +653,10 @@ end
 ---@param actionQueue table @queue of actions
 ---@return void
 ---
-local function doCommand(appActions, actionQueue)
+local function doCommand(appActions, actionQueue, callback)
 
     if #actionQueue == 0 then
+        if callback then callback(true) end
         return
     end
 
@@ -624,14 +678,28 @@ local function doCommand(appActions, actionQueue)
             else
                 actionCommands = { table.unpack(actionCommands) }
             end
-            doCommand(appActions, actionCommands)
+            return doCommand(appActions, actionCommands, function(ok)
+                if not ok then
+                    if callback then callback(false) end
+                    return
+                end
+
+                doCommand(appActions, actionQueue, callback)
+            end)
         end
 
     elseif type(peek) == 'function' then
         -- function type
         local actionFunction = table.remove(actionQueue, 1)
 
-        doFunction(actionFunction)
+        return doFunction(actionFunction, function(ok)
+            if not ok then
+                if callback then callback(false) end
+                return
+            end
+
+            doCommand(appActions, actionQueue, callback)
+        end)
 
     else -- table?
 
@@ -642,7 +710,7 @@ local function doCommand(appActions, actionQueue)
 
     end
 
-    doCommand(appActions, actionQueue)
+    doCommand(appActions, actionQueue, callback)
 
 end
 
@@ -658,8 +726,8 @@ local function testforScriptEnabled()
 end
 
 local function selectPlayer(selector)
-    if selector==nil then return end
-    ActionSelect({ selector=selector })
+    if selector==nil or selector=="" then return end
+    doFunction(ActionSelect({ selector=selector }), function() end)
 end
 
 -- TODO: when Chrome is not the current App, then also i need to switch to
@@ -716,35 +784,47 @@ local function checkSwitchBack(switchBacks)
 end
 
 
-local function getAppActions()
+local function getAppActions(callback)
 
     local appActions
+
+    local done = function(result)
+        if callback then
+            callback(result)
+            return
+        end
+
+        return result
+    end
 
     if savedBundleId == bundleIdChrome then
         --local domain = savedDomain or getChromeUrlDomain()
         local domain = getChromeUrlDomain()
         if domain == nil then
             debugInfo("No domain detected for current Chrome tab (likely internal/blank page).")
-            return nil
+            return done(nil)
         end
         appActions = ControlKeys[savedBundleId][domain]
         if appActions == nil then
             --local generic = ControlKeys[savedBundleId]["genieric.video"]
             functionMemory['domain'] = domain
-            doFunction(ActionGenericVideo("isGeneric"))
-            if functionMemory[domain..'-ActionGenericVideo-isGeneric'] then
-                domain = "generic.video"
-                appActions = ControlKeys[savedBundleId][domain]
-            else
-                return
-            end
+            return doFunction(ActionGenericVideo("isGeneric"), function(ok)
+                if ok and functionMemory[domain..'-ActionGenericVideo-isGeneric'] then
+                    domain = "generic.video"
+                    appActions = ControlKeys[savedBundleId][domain]
+                    functionMemory['domain'] = domain
+                    done(appActions)
+                else
+                    done(nil)
+                end
+            end)
         end
         functionMemory['domain'] = domain
     else
         appActions = ControlKeys[savedBundleId]
     end
 
-    return appActions
+    return done(appActions)
 end
 
 local hotkeyInfo = {}
@@ -780,29 +860,46 @@ local function createHotkey(sourceKey, action, description)
 
         local switchBackToWindow = checkSwitch()
 
-        local appActions = getAppActions()
+        getAppActions(function(appActions)
+            if appActions == nil then
+                debugInfo("exit - no commands found")
+                checkSwitchBack(switchBackToWindow)
+                return
+            end
 
-        if appActions == nil then
-            debugInfo("exit - no commands found")
-            return
-        end
+            helper.table.assign(functionMemory, { action = action })
+            doCommand(appActions, { action }, function()
+                checkSwitchBack(switchBackToWindow)
 
-        helper.table.assign(functionMemory, { action = action })
-        doCommand(appActions, { action })
-
-        checkSwitchBack(switchBackToWindow)
-
-        print("collectgarbage(count)")
-        print(collectgarbage("count"))
-        debugInfo("-----------------------------")
-        debugInfo("HotKey: End")
-        debugInfo("-----------------------------")
+                print("collectgarbage(count)")
+                print(collectgarbage("count"))
+                debugInfo("-----------------------------")
+                debugInfo("HotKey: End")
+                debugInfo("-----------------------------")
+            end)
+        end)
 
     end)
 
 end
 
+local function toggleBrowserJavaScriptRunner()
+    if browserJavaScriptRunner == browserGoogleChrome then
+        browserJavaScriptRunner = browserGoogleDevTools
+    else
+        browserJavaScriptRunner = browserGoogleChrome
+    end
+
+    debugInfo("Player browser JavaScript runner: ", browserJavaScriptRunner)
+    hs.alert.show("Player JS: " .. browserJavaScriptRunner)
+end
+
 local function setSavedWindow()
+    debugInfo("devtoolscheck: Start")
+    local devtoolscheck = helper.chrome.devtools.debugFrontmostChromeDetection()
+    debugInfo("devtoolscheck: Result:")
+    debugTable(devtoolscheck)
+    debugInfo("devtoolscheck: End")
     local win = hs.window.focusedWindow()
     if win == nil then
         debugInfo("setSavedWindow: no focused window available")
@@ -838,26 +935,26 @@ local function setSavedWindow()
         savedDomain = nil
     end
 
-    local appActions = getAppActions()
+    getAppActions(function(appActions)
+        if appActions == nil then
+            local msg = "setSavedWindow: no player actions defined for current domain: " .. (savedDomain or "(none)")
+            debugInfo(msg)
+            hs.alert.show(msg)
+            return
+        end
 
-    if appActions == nil then
-        local msg = "setSavedWindow: no player actions defined for current domain: " .. (savedDomain or "(none)")
-        debugInfo(msg)
-        hs.alert.show(msg)
-        return
-    end
+        local enabledInfo = getEnabledInfo(appActions)
 
-    local enabledInfo = getEnabledInfo(appActions)
+        debugInfo("setSavedWindow: changed savedBundleId to: " .. savedBundleId)
 
-    debugInfo("setSavedWindow: changed savedBundleId to: " .. savedBundleId)
+        local infoText = "Detected: "..appActions.info
+                .."\n\n"..enabledInfo
 
-    local infoText = "Detected: "..appActions.info
-            .."\n\n"..enabledInfo
+        debugInfo("\n\n".. infoText)
+        hs.alert.show(infoText, { textFont = "Menlo"}, win)
 
-    debugInfo("\n\n".. infoText)
-    hs.alert.show(infoText, { textFont = "Menlo"}, win)
-
-    selectPlayer(appActions.selector)
+        selectPlayer(appActions.selector)
+    end)
 end
 
 function getEnabledInfo(appActions)
@@ -900,3 +997,4 @@ createHotkey("j", actions.maxQuality, "Max Quality")
 createHotkey("9", actions.maxSpeed, "Max Speed")
 
 hs.hotkey.bind(hyper, "o", keyInfo("Set active App"), setSavedWindow)
+hs.hotkey.bind(hyper, "z", keyInfo("Toggle Player JS Runner"), toggleBrowserJavaScriptRunner)
