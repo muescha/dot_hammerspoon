@@ -654,16 +654,15 @@ local function doCommand(appActions, actionQueue, callback)
 
     debugInfo("--> doCommand(", "appActions", ",", actionQueue, ")")
 
-    local peek = actionQueue[1]
+    local command = table.remove(actionQueue, 1)
 
-    if type(peek) == 'string' then
+    if type(command) == 'string' then
 
         -- unpack reference
-        local action = table.remove(actionQueue, 1)
         --local actionCommands = { table.unpack(appActions[action]) }
-        local actionCommands = appActions[action]
+        local actionCommands = appActions[command]
         if actionCommands == nil then
-            debugInfo("No command defined for action: " .. action)
+            debugInfo("No command defined for action: " .. command)
             doCommand(appActions, actionQueue, callback)
             return
         else
@@ -683,11 +682,9 @@ local function doCommand(appActions, actionQueue, callback)
             return
         end
 
-    elseif type(peek) == 'function' then
+    elseif type(command) == 'function' then
         -- function type
-        local actionFunction = table.remove(actionQueue, 1)
-
-        doFunction(actionFunction, function(ok)
+        doFunction(command, function(ok)
             if not ok then
                 callback(false)
                 return
@@ -698,7 +695,7 @@ local function doCommand(appActions, actionQueue, callback)
         return
 
     else
-        debugInfo("Unknown command: ", peek)
+        debugInfo("Unknown command: ", command)
         callback(false)
         return
     end
