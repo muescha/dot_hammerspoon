@@ -73,7 +73,25 @@ function actionSpeedReset(count)
     return reset
 end
 
-local ControlKeys
+local PlayerActions = {
+    actions = {}
+}
+
+function PlayerActions.setActions(actions)
+    PlayerActions.actions = actions
+end
+
+function PlayerActions.getActions(bundleId, domain)
+    local targetActions = PlayerActions.actions[bundleId]
+    if domain then
+        return targetActions and targetActions[domain] or nil
+    end
+    return targetActions
+end
+
+function PlayerActions.hasActions(bundleId)
+    return PlayerActions.getActions(bundleId) ~= nil
+end
 
 local PlayerTarget = {
     bundleId = bundleIdChrome,
@@ -109,11 +127,7 @@ function PlayerTarget.getReceiverApp()
 end
 
 function PlayerTarget.getActions(domain)
-    local targetActions = ControlKeys[PlayerTarget.getBundleId()]
-    if domain then
-        return targetActions and targetActions[domain] or nil
-    end
-    return targetActions
+    return PlayerActions.getActions(PlayerTarget.getBundleId(), domain)
 end
 
 -- Java Script Actions
@@ -297,7 +311,7 @@ local function failCommand(callback, message, details)
     callback(false, details or message)
 end
 
-ControlKeys = {
+PlayerActions.setActions({
     [bundleIdIINA] = {
         pause = Key({}, "p"),
         speedReset = Key({}, "0"),
@@ -579,16 +593,16 @@ ControlKeys = {
             info = "Spotify Player"
         },
     }
-}
+})
 
 -- https://www.ardaudiothek.de/sendung/legion/12015417/
-ControlKeys[bundleIdChrome]["ardaudiothek.de"] = helper.table.assigned(ControlKeys[bundleIdChrome]["wdr.de"], {
+PlayerActions.actions[bundleIdChrome]["ardaudiothek.de"] = helper.table.assigned(PlayerActions.actions[bundleIdChrome]["wdr.de"], {
         selector = ".ardplayer-viewport",
         info = "ardaudiothek.de Player"
     })
 
 -- https://www.ardmediathek.de/video/lokalzeit-aus-koeln/lokalzeit-aus-koeln-oder-25-08-2023/wdr/Y3JpZDovL3dkci5kZS9CZWl0cmFnLWU3NjI3YTM4LTI4YTUtNDlkNi04NGZkLTNhZmYxMWI1ZTY1Ng
-ControlKeys[bundleIdChrome]["ardmediathek.de"] = helper.table.assigned(ControlKeys[bundleIdChrome]["wdr.de"], {
+PlayerActions.actions[bundleIdChrome]["ardmediathek.de"] = helper.table.assigned(PlayerActions.actions[bundleIdChrome]["wdr.de"], {
         selector = ".ardplayer-viewport",
         info = "ardmediathek.de Player"
     })
@@ -949,7 +963,7 @@ local function setSavedWindow()
     debugInfo("reset cache")
     cache = {}
 
-    if ControlKeys[bundleId] == nil then
+    if not PlayerActions.hasActions(bundleId) then
         local savedWindow = PlayerTarget.getWindow()
         if savedWindow then
             local msg = "setSavedWindow: focus saved window"
