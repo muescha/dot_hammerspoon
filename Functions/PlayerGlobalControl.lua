@@ -37,6 +37,8 @@ local bundleIdChrome = "com.google.Chrome"
 local browserGoogleChrome = "Google Chrome"
 local browserGoogleDevTools = "Google DevTools"
 local browserJavaScriptRunner = browserGoogleChrome
+local getChromeUrlDomain
+local getGenericVideoActions
 
 local actions = enumString {
     "start",
@@ -125,12 +127,38 @@ function BrowserDriver.supportsActions()
     return PlayerActions.hasBrowserActions()
 end
 
+function BrowserDriver.getActions(_target, callback)
+    assert(callback, "BrowserDriver.getActions requires callback")
+
+    local domain = getChromeUrlDomain()
+    if domain == nil then
+        debugInfo("No domain detected for current Chrome tab (likely internal/blank page).")
+        callback(nil, nil)
+        return
+    end
+
+    local appActions = PlayerActions.getBrowserActions(domain)
+    if appActions == nil then
+        getGenericVideoActions(domain, callback)
+        return
+    end
+
+    functionMemory['domain'] = domain
+    callback(appActions, domain)
+end
+
 local AppDriver = {
     isBrowser = false
 }
 
 function AppDriver.supportsActions(bundleId)
     return PlayerActions.hasAppActions(bundleId)
+end
+
+function AppDriver.getActions(target, callback)
+    assert(callback, "AppDriver.getActions requires callback")
+
+    callback(PlayerActions.getAppActions(target.getBundleId()), nil)
 end
 
 local PlayerDriver = {}
@@ -167,6 +195,12 @@ end
 
 function PlayerTarget.supportsBundleId(bundleId)
     return PlayerDriver.detect(bundleId).supportsActions(bundleId)
+end
+
+function PlayerTarget.getActions(callback)
+    assert(callback, "PlayerTarget.getActions requires callback")
+
+    PlayerTarget.getDriver().getActions(PlayerTarget, callback)
 end
 
 function PlayerTarget.getReceiverApp()
@@ -851,7 +885,7 @@ local function checkSwitchBack(switchBacks)
     end
 end
 
-local function getGenericVideoActions(domain, callback)
+getGenericVideoActions = function(domain, callback)
     functionMemory['domain'] = domain
 
     doFunction(ActionGenericVideo("isGeneric"), function(ok)
@@ -864,34 +898,6 @@ local function getGenericVideoActions(domain, callback)
             callback(nil, domain)
         end
     end)
-end
-
-
-function PlayerTarget.getActions(callback)
-    assert(callback, "PlayerTarget.getActions requires callback")
-
-    local appActions
-
-    local domain
-
-    if PlayerTarget.isBrowser() then
-        domain = getChromeUrlDomain()
-        if domain == nil then
-            debugInfo("No domain detected for current Chrome tab (likely internal/blank page).")
-            callback(nil, nil)
-            return
-        end
-        appActions = PlayerActions.getBrowserActions(domain)
-        if appActions == nil then
-            getGenericVideoActions(domain, callback)
-            return
-        end
-        functionMemory['domain'] = domain
-    else
-        appActions = PlayerActions.getAppActions(PlayerTarget.getBundleId())
-    end
-
-    callback(appActions, domain)
 end
 
 local hotkeyInfo = {}
