@@ -781,15 +781,13 @@ local function getAppActions(callback)
 
     local appActions
 
-    local done = function(result)
-        callback(result)
-    end
+    local domain
 
     if PlayerTarget.isChrome() then
-        local domain = getChromeUrlDomain()
+        domain = getChromeUrlDomain()
         if domain == nil then
             debugInfo("No domain detected for current Chrome tab (likely internal/blank page).")
-            done(nil)
+            callback(nil, nil)
             return
         end
         appActions = ControlKeys[PlayerTarget.getBundleId()][domain]
@@ -800,9 +798,9 @@ local function getAppActions(callback)
                     domain = "generic.video"
                     appActions = ControlKeys[PlayerTarget.getBundleId()][domain]
                     functionMemory['domain'] = domain
-                    done(appActions)
+                    callback(appActions, domain)
                 else
-                    done(nil)
+                    callback(nil, domain)
                 end
             end)
             return
@@ -812,7 +810,7 @@ local function getAppActions(callback)
         appActions = ControlKeys[PlayerTarget.getBundleId()]
     end
 
-    done(appActions)
+    callback(appActions, domain)
 end
 
 local hotkeyInfo = {}
@@ -848,9 +846,9 @@ local function createHotkey(sourceKey, action, description)
 
         local switchBackToWindow = checkSwitch()
 
-        getAppActions(function(appActions)
+        getAppActions(function(appActions, domain)
             if appActions == nil then
-                debugInfo("exit - no commands found")
+                debugInfo("exit - no commands found for domain " + domain)
                 checkSwitchBack(switchBackToWindow)
                 return
             end
@@ -942,9 +940,9 @@ local function setSavedWindow()
         savedDomain = getChromeUrlDomain()
     end
 
-    getAppActions(function(appActions)
+    getAppActions(function(appActions, domain)
         if appActions == nil then
-            local msg = "setSavedWindow: no player actions defined for current domain: " .. (savedDomain or "(none)")
+            local msg = "setSavedWindow: no player actions defined for current domain: " .. (domain or "(none)")
             debugInfo(msg)
             hs.alert.show(msg)
             return
