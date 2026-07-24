@@ -93,6 +93,11 @@ function PlayerActions.hasActions(bundleId)
     return PlayerActions.getActions(bundleId) ~= nil
 end
 
+function PlayerActions.extendDomainActions(targetDomain, sourceDomain, overrides)
+    local browserActions = PlayerActions.actions[bundleIdChrome]
+    browserActions[targetDomain] = helper.table.assigned(browserActions[sourceDomain], overrides)
+end
+
 local PlayerTarget = {
     bundleId = bundleIdChrome,
     window = nil
@@ -596,13 +601,13 @@ PlayerActions.setActions({
 })
 
 -- https://www.ardaudiothek.de/sendung/legion/12015417/
-PlayerActions.actions[bundleIdChrome]["ardaudiothek.de"] = helper.table.assigned(PlayerActions.actions[bundleIdChrome]["wdr.de"], {
+PlayerActions.extendDomainActions("ardaudiothek.de", "wdr.de", {
         selector = ".ardplayer-viewport",
         info = "ardaudiothek.de Player"
     })
 
 -- https://www.ardmediathek.de/video/lokalzeit-aus-koeln/lokalzeit-aus-koeln-oder-25-08-2023/wdr/Y3JpZDovL3dkci5kZS9CZWl0cmFnLWU3NjI3YTM4LTI4YTUtNDlkNi04NGZkLTNhZmYxMWI1ZTY1Ng
-PlayerActions.actions[bundleIdChrome]["ardmediathek.de"] = helper.table.assigned(PlayerActions.actions[bundleIdChrome]["wdr.de"], {
+PlayerActions.extendDomainActions("ardmediathek.de", "wdr.de", {
         selector = ".ardplayer-viewport",
         info = "ardmediathek.de Player"
     })
