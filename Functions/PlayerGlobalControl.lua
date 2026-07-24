@@ -106,6 +106,31 @@ function PlayerActions.extendDomainActions(targetDomain, sourceDomain, overrides
     PlayerActions.browserActions[targetDomain] = helper.table.assigned(PlayerActions.browserActions[sourceDomain], overrides)
 end
 
+local BrowserDriver = {
+    isBrowser = true,
+    bundleIds = {
+        [bundleIdChrome] = true
+    }
+}
+
+function BrowserDriver.detect(bundleId)
+    if BrowserDriver.bundleIds[bundleId] then
+        return BrowserDriver
+    end
+
+    return nil
+end
+
+local AppDriver = {
+    isBrowser = false
+}
+
+local PlayerDriver = {}
+
+function PlayerDriver.detect(bundleId)
+    return BrowserDriver.detect(bundleId) or AppDriver
+end
+
 local PlayerTarget = {
     bundleId = bundleIdChrome,
     window = nil
@@ -124,12 +149,16 @@ function PlayerTarget.getBundleId()
     return PlayerTarget.bundleId
 end
 
-function PlayerTarget.isChrome()
-    return PlayerTarget.bundleId == bundleIdChrome
+function PlayerTarget.getDriver()
+    return PlayerDriver.detect(PlayerTarget.getBundleId())
+end
+
+function PlayerTarget.isBrowser()
+    return PlayerTarget.getDriver().isBrowser
 end
 
 function PlayerTarget.supportsBundleId(bundleId)
-    if bundleId == bundleIdChrome then
+    if PlayerDriver.detect(bundleId).isBrowser then
         return PlayerActions.hasBrowserActions()
     end
 
@@ -785,8 +814,7 @@ local function checkSwitch()
 
     local returnSwitchBacks = { win }
 
-    --if bundleIdChrome ~= bundleId then debugInfo("checkSwitch: current app no Chrome") return end
-    if not PlayerTarget.isChrome() then debugInfo("checkSwitch: saved window is not chrome") return end
+    if not PlayerTarget.isBrowser() then debugInfo("checkSwitch: saved window is not browser") return end
     local savedWindow = PlayerTarget.getWindow()
     if savedWindow==nil then debugInfo("checkSwitch: no window saved") return end
     if savedWindow:application()==nil then debugInfo("checkSwitch: savedWindow has no Application") return end
@@ -842,7 +870,7 @@ function PlayerTarget.getActions(callback)
 
     local domain
 
-    if PlayerTarget.isChrome() then
+    if PlayerTarget.isBrowser() then
         domain = getChromeUrlDomain()
         if domain == nil then
             debugInfo("No domain detected for current Chrome tab (likely internal/blank page).")
