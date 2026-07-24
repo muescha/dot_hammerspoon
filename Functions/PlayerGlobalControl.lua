@@ -78,10 +78,12 @@ local PlayerActions = {
     browserActions = {}
 }
 
-function PlayerActions.setActions(actions)
-    PlayerActions.appActions = actions
-    PlayerActions.browserActions = actions[bundleIdChrome] or {}
-    PlayerActions.appActions[bundleIdChrome] = nil
+function PlayerActions.setAppActions(bundleId, actions)
+    PlayerActions.appActions[bundleId] = actions
+end
+
+function PlayerActions.setBrowserActions(actions)
+    PlayerActions.browserActions = actions
 end
 
 function PlayerActions.getActions(bundleId, domain)
@@ -329,8 +331,7 @@ local function failCommand(callback, message, details)
     callback(false, details or message)
 end
 
-PlayerActions.setActions({
-    [bundleIdIINA] = {
+PlayerActions.setAppActions(bundleIdIINA, {
         pause = Key({}, "p"),
         speedReset = Key({}, "0"),
         -- speedInc = { {}, "=" }, -- +
@@ -340,8 +341,9 @@ PlayerActions.setActions({
         moveForward = Key({}, "right"),
         moveBackward = Key({}, "left"),
         info = "IINA Player"
-    },
-    [bundleIdChrome] = {
+    })
+
+PlayerActions.setBrowserActions({
         ["generic.video"] = {
             selector = "",
             start = {
@@ -610,8 +612,7 @@ PlayerActions.setActions({
             moveBackward = Key({ "cmd", "shift" }, "left"),
             info = "Spotify Player"
         },
-    }
-})
+    })
 
 -- https://www.ardaudiothek.de/sendung/legion/12015417/
 PlayerActions.extendDomainActions("ardaudiothek.de", "wdr.de", {
