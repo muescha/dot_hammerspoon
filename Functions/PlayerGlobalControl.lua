@@ -620,14 +620,13 @@ local functionMemory = {}
 local function doFunction(actionFunction, callback)
     assert(callback, "doFunction requires callback")
 
-    debugInfo("--> doFunction(", getFunctionSignature(actionFunction), ',"', actionParameter, '")')
+    debugInfo("--> doFunction(", getFunctionSignature(actionFunction), ")")
+    debugInfo("Memory: ", functionMemory)
     debugInfo("debugFunction(actionFunction)")
     debugFunction(actionFunction)
 
     local done = function(ok, result)
-        --debugInfo(ok, result, type(result))
         local win = hs.window.focusedWindow()
-        -- 1 top / 2 bottom
         hs.alert.show(hs.inspect(result), { atScreenEdge = 1}, win)
 
         if ok then
