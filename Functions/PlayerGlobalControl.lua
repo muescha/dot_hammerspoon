@@ -295,7 +295,7 @@ local ControlKeys = {
             },
             pause = Key({}, "k"),
             -- document.querySelector('.ytp-large-play-button').click()
-            -- not working: 
+            -- not working:
             --pause = {
             --    ActionClick({ selector = ".ytp-large-play-button" })
             --},
@@ -594,18 +594,20 @@ end
 ---@param key string @key
 ---@return void
 ---
+local function getReceiverApp()
+    if savedWindow then
+        -- TODO: activate the window - place over others - but go back to current app
+        -- TODO: check if savedWindow still exists - otherwise null it or use the current
+        return savedWindow:application()
+    end
+
+    return hs.application.applicationsForBundleID(savedBundleId)[1]
+end
+
 doKey = function(modifier, key)
     debugInfo("--> doKey(", modifier, ',"', key, '")')
 
-    local receiverApp
-
-    if savedWindow then
-        receiverApp = savedWindow:application()
-        -- TODO: activate the window - place over others - but go back to current app
-        -- TODO: check if savedWindow still exists - otherwise null it or use the current
-    else
-        receiverApp = hs.application.applicationsForBundleID(savedBundleId)[1]
-    end
+    local receiverApp = getReceiverApp()
 
     if receiverApp then
         hs.eventtap.keyStroke(modifier, key, 0, receiverApp)
