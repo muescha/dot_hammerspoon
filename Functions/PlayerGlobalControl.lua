@@ -779,6 +779,21 @@ local function checkSwitchBack(switchBacks)
     end
 end
 
+local function getGenericVideoActions(domain, callback)
+    functionMemory['domain'] = domain
+
+    doFunction(ActionGenericVideo("isGeneric"), function(ok)
+        if ok and functionMemory[domain..'-ActionGenericVideo-isGeneric'] then
+            local genericDomain = "generic.video"
+            local appActions = ControlKeys[PlayerTarget.getBundleId()][genericDomain]
+            functionMemory['domain'] = genericDomain
+            callback(appActions, genericDomain)
+        else
+            callback(nil, domain)
+        end
+    end)
+end
+
 
 local function getAppActions(callback)
     assert(callback, "getAppActions requires callback")
@@ -796,17 +811,7 @@ local function getAppActions(callback)
         end
         appActions = ControlKeys[PlayerTarget.getBundleId()][domain]
         if appActions == nil then
-            functionMemory['domain'] = domain
-            doFunction(ActionGenericVideo("isGeneric"), function(ok)
-                if ok and functionMemory[domain..'-ActionGenericVideo-isGeneric'] then
-                    domain = "generic.video"
-                    appActions = ControlKeys[PlayerTarget.getBundleId()][domain]
-                    functionMemory['domain'] = domain
-                    callback(appActions, domain)
-                else
-                    callback(nil, domain)
-                end
-            end)
+            getGenericVideoActions(domain, callback)
             return
         end
         functionMemory['domain'] = domain
