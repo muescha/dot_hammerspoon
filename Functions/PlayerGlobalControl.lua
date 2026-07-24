@@ -74,27 +74,29 @@ function actionSpeedReset(count)
 end
 
 local PlayerActions = {
-    actions = {}
+    appActions = {},
+    browserActions = {}
 }
 
 function PlayerActions.setActions(actions)
-    PlayerActions.actions = actions
+    PlayerActions.appActions = actions
+    PlayerActions.browserActions = actions[bundleIdChrome] or {}
+    PlayerActions.appActions[bundleIdChrome] = nil
 end
 
 function PlayerActions.getActions(bundleId, domain)
-    local targetActions = PlayerActions.actions[bundleId]
     if domain then
-        return targetActions and targetActions[domain] or nil
+        return PlayerActions.getBrowserActions(domain)
     end
-    return targetActions
+    return PlayerActions.getAppActions(bundleId)
 end
 
 function PlayerActions.getAppActions(bundleId)
-    return PlayerActions.getActions(bundleId)
+    return PlayerActions.appActions[bundleId]
 end
 
 function PlayerActions.getBrowserActions(domain)
-    return PlayerActions.getActions(bundleIdChrome, domain)
+    return PlayerActions.browserActions[domain]
 end
 
 function PlayerActions.hasAppActions(bundleId)
@@ -102,8 +104,7 @@ function PlayerActions.hasAppActions(bundleId)
 end
 
 function PlayerActions.extendDomainActions(targetDomain, sourceDomain, overrides)
-    local browserActions = PlayerActions.actions[bundleIdChrome]
-    browserActions[targetDomain] = helper.table.assigned(browserActions[sourceDomain], overrides)
+    PlayerActions.browserActions[targetDomain] = helper.table.assigned(PlayerActions.browserActions[sourceDomain], overrides)
 end
 
 local PlayerTarget = {
