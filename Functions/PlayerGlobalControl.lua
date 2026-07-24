@@ -231,7 +231,29 @@ function MemoryCalcCheck(params)
         })
 end
 
-local doKey
+local function getReceiverApp()
+    if savedWindow then
+        -- TODO: activate the window - place over others - but go back to current app
+        -- TODO: check if savedWindow still exists - otherwise null it or use the current
+        return savedWindow:application()
+    end
+
+    return hs.application.applicationsForBundleID(savedBundleId)[1]
+end
+
+---@param modifier table @available modifiers or empty table
+---@param key string @key
+---@return void
+---
+local function doKey(modifier, key)
+    debugInfo("--> doKey(", modifier, ',"', key, '")')
+
+    local receiverApp = getReceiverApp()
+
+    if receiverApp then
+        hs.eventtap.keyStroke(modifier, key, 0, receiverApp)
+    end
+end
 
 local function Key(modifier, key)
     return function(_, callback)
@@ -588,30 +610,6 @@ function getChromeUrlDomain()
     local domain = tld(host)
     debugInfo("current domain: ", domain)
     return domain
-end
-
----@param modifier table @available modifiers or empty table
----@param key string @key
----@return void
----
-local function getReceiverApp()
-    if savedWindow then
-        -- TODO: activate the window - place over others - but go back to current app
-        -- TODO: check if savedWindow still exists - otherwise null it or use the current
-        return savedWindow:application()
-    end
-
-    return hs.application.applicationsForBundleID(savedBundleId)[1]
-end
-
-doKey = function(modifier, key)
-    debugInfo("--> doKey(", modifier, ',"', key, '")')
-
-    local receiverApp = getReceiverApp()
-
-    if receiverApp then
-        hs.eventtap.keyStroke(modifier, key, 0, receiverApp)
-    end
 end
 
 local functionMemory = {}
