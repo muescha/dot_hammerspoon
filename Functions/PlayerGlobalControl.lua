@@ -121,9 +121,17 @@ function BrowserDriver.detect(bundleId)
     return nil
 end
 
+function BrowserDriver.supportsActions()
+    return PlayerActions.hasBrowserActions()
+end
+
 local AppDriver = {
     isBrowser = false
 }
+
+function AppDriver.supportsActions(bundleId)
+    return PlayerActions.hasAppActions(bundleId)
+end
 
 local PlayerDriver = {}
 
@@ -158,11 +166,7 @@ function PlayerTarget.isBrowser()
 end
 
 function PlayerTarget.supportsBundleId(bundleId)
-    if PlayerDriver.detect(bundleId).isBrowser then
-        return PlayerActions.hasBrowserActions()
-    end
-
-    return PlayerActions.hasAppActions(bundleId)
+    return PlayerDriver.detect(bundleId).supportsActions(bundleId)
 end
 
 function PlayerTarget.getReceiverApp()
