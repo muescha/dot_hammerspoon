@@ -73,6 +73,8 @@ function actionSpeedReset(count)
     return reset
 end
 
+local ControlKeys
+
 local PlayerTarget = {
     bundleId = bundleIdChrome,
     window = nil
@@ -104,6 +106,14 @@ function PlayerTarget.getReceiverApp()
     end
 
     return hs.application.applicationsForBundleID(PlayerTarget.getBundleId())[1]
+end
+
+function PlayerTarget.getActions(domain)
+    local targetActions = ControlKeys[PlayerTarget.getBundleId()]
+    if domain then
+        return targetActions and targetActions[domain] or nil
+    end
+    return targetActions
 end
 
 -- Java Script Actions
@@ -287,7 +297,7 @@ local function failCommand(callback, message, details)
     callback(false, details or message)
 end
 
-local ControlKeys = {
+ControlKeys = {
     [bundleIdIINA] = {
         pause = Key({}, "p"),
         speedReset = Key({}, "0"),
@@ -785,7 +795,7 @@ local function getGenericVideoActions(domain, callback)
     doFunction(ActionGenericVideo("isGeneric"), function(ok)
         if ok and functionMemory[domain..'-ActionGenericVideo-isGeneric'] then
             local genericDomain = "generic.video"
-            local appActions = ControlKeys[PlayerTarget.getBundleId()][genericDomain]
+            local appActions = PlayerTarget.getActions(genericDomain)
             functionMemory['domain'] = genericDomain
             callback(appActions, genericDomain)
         else
@@ -809,14 +819,14 @@ local function getAppActions(callback)
             callback(nil, nil)
             return
         end
-        appActions = ControlKeys[PlayerTarget.getBundleId()][domain]
+        appActions = PlayerTarget.getActions(domain)
         if appActions == nil then
             getGenericVideoActions(domain, callback)
             return
         end
         functionMemory['domain'] = domain
     else
-        appActions = ControlKeys[PlayerTarget.getBundleId()]
+        appActions = PlayerTarget.getActions()
     end
 
     callback(appActions, domain)
