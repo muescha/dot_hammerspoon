@@ -660,6 +660,15 @@ local function doCommand(appActions, actionQueue, callback)
 
     local command = table.remove(actionQueue, 1)
 
+    local function continueQueue(ok)
+        if not ok then
+            callback(false)
+            return
+        end
+
+        doCommand(appActions, actionQueue, callback)
+    end
+
     if type(command) == 'string' then
 
         local actionCommands = appActions[command]
@@ -669,25 +678,10 @@ local function doCommand(appActions, actionQueue, callback)
             return
         end
 
-        doCommand(appActions, copyCommandQueue(actionCommands), function(ok)
-            if not ok then
-                callback(false)
-                return
-            end
-
-            doCommand(appActions, actionQueue, callback)
-        end)
+        doCommand(appActions, copyCommandQueue(actionCommands), continueQueue)
 
     elseif type(command) == 'function' then
-        -- function type
-        doFunction(command, function(ok)
-            if not ok then
-                callback(false)
-                return
-            end
-
-            doCommand(appActions, actionQueue, callback)
-        end)
+        doFunction(command, continueQueue)
 
     else
         debugInfo("Unknown command: ", command)
