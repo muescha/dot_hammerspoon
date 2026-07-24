@@ -125,7 +125,7 @@ local function runActionCode(code, callback)
         params.path = nil
     end
 
-    return runJavaScriptInBrowser(params, callback)
+    runJavaScriptInBrowser(params, callback)
 end
 
 local function logActionCodeResult(ok, output, message)
@@ -135,16 +135,11 @@ local function logActionCodeResult(ok, output, message)
 end
 
 local function runActionCodeDebug(code, callback)
-    if callback then
-        return runActionCode(code, function(ok, output, message)
-            logActionCodeResult(ok, output, message)
-            callback(ok, output, message)
-        end)
-    end
-
-    local ok, output, message = runActionCode(code)
-    logActionCodeResult(ok, output, message)
-    return ok, output, message
+    assert(callback, "runActionCodeDebug requires callback")
+    runActionCode(code, function(ok, output, message)
+        logActionCodeResult(ok, output, message)
+        callback(ok, output, message)
+    end)
 end
 
 --
@@ -152,6 +147,7 @@ function GenericAction(action, defaultParams)
     local templatePath = path()
 
     return function(memory, callback)
+        assert(callback, "GenericAction requires callback")
         local params = helper.table.assigned(memory, defaultParams)
         debugInfo("Params: ", params)
         local code = getActionCode(templatePath, action, params)
@@ -175,14 +171,9 @@ function GenericAction(action, defaultParams)
             return ok, result
         end
 
-        if callback then
-            return runActionCodeDebug(code, function(ok, output, message)
-                callback(handleResult(ok, output, message))
-            end)
-        end
-
-        local ok, output, message = runActionCodeDebug(code)
-        return handleResult(ok, output, message)
+        runActionCodeDebug(code, function(ok, output, message)
+            callback(handleResult(ok, output, message))
+        end)
     end
 end
 
@@ -213,14 +204,15 @@ function ActionGenericVideo(command)
 end
 
 function MemoryCalc(params)
-    return function(memory) -- MemoryCalc
+    return function(memory, callback) -- MemoryCalc
+        assert(callback, "MemoryCalc requires callback")
         local allParams = helper.table.assigned(memory, params)
         debugInfo("MemoryCalc")
         debugInfo("Params: ", allParams)
         debugFunction(allParams.calc)
         local output = allParams.calc(allParams[allParams.property])
         local result = { [allParams.property] = output}
-        return true, result
+        callback(true, result)
     end
 end
 
@@ -613,6 +605,7 @@ local functionMemory = {}
 ---@return void
 ---
 local function doFunction(actionFunction, callback)
+    assert(callback, "doFunction requires callback")
 
     debugInfo("--> doFunction(", getFunctionSignature(actionFunction), ',"', actionParameter, '")')
     debugInfo("debugFunction(actionFunction)")
@@ -631,21 +624,10 @@ local function doFunction(actionFunction, callback)
             debugInfo("doFunction: action failed: ", result)
         end
 
-        if callback then
-            callback(ok)
-        end
+        callback(ok)
     end
 
-    if callback then
-        local ok, result = actionFunction(functionMemory, done)
-        if ok ~= nil or result ~= nil then
-            return done(ok, result)
-        end
-        return
-    end
-
-    local ok, result = actionFunction(functionMemory)
-    return done(ok, result)
+    actionFunction(functionMemory, done)
 end
 
 
@@ -654,9 +636,10 @@ end
 ---@return void
 ---
 local function doCommand(appActions, actionQueue, callback)
+    assert(callback, "doCommand requires callback")
 
     if #actionQueue == 0 then
-        if callback then callback(true) end
+        callback(true)
         return
     end
 
@@ -678,28 +661,30 @@ local function doCommand(appActions, actionQueue, callback)
             else
                 actionCommands = { table.unpack(actionCommands) }
             end
-            return doCommand(appActions, actionCommands, function(ok)
+            doCommand(appActions, actionCommands, function(ok)
                 if not ok then
-                    if callback then callback(false) end
+                    callback(false)
                     return
                 end
 
                 doCommand(appActions, actionQueue, callback)
             end)
+            return
         end
 
     elseif type(peek) == 'function' then
         -- function type
         local actionFunction = table.remove(actionQueue, 1)
 
-        return doFunction(actionFunction, function(ok)
+        doFunction(actionFunction, function(ok)
             if not ok then
-                if callback then callback(false) end
+                callback(false)
                 return
             end
 
             doCommand(appActions, actionQueue, callback)
         end)
+        return
 
     else -- table?
 
@@ -785,16 +770,12 @@ end
 
 
 local function getAppActions(callback)
+    assert(callback, "getAppActions requires callback")
 
     local appActions
 
     local done = function(result)
-        if callback then
-            callback(result)
-            return
-        end
-
-        return result
+        callback(result)
     end
 
     if savedBundleId == bundleIdChrome then
@@ -802,13 +783,14 @@ local function getAppActions(callback)
         local domain = getChromeUrlDomain()
         if domain == nil then
             debugInfo("No domain detected for current Chrome tab (likely internal/blank page).")
-            return done(nil)
+            done(nil)
+            return
         end
         appActions = ControlKeys[savedBundleId][domain]
         if appActions == nil then
             --local generic = ControlKeys[savedBundleId]["genieric.video"]
             functionMemory['domain'] = domain
-            return doFunction(ActionGenericVideo("isGeneric"), function(ok)
+            doFunction(ActionGenericVideo("isGeneric"), function(ok)
                 if ok and functionMemory[domain..'-ActionGenericVideo-isGeneric'] then
                     domain = "generic.video"
                     appActions = ControlKeys[savedBundleId][domain]
@@ -818,13 +800,14 @@ local function getAppActions(callback)
                     done(nil)
                 end
             end)
+            return
         end
         functionMemory['domain'] = domain
     else
         appActions = ControlKeys[savedBundleId]
     end
 
-    return done(appActions)
+    done(appActions)
 end
 
 local hotkeyInfo = {}

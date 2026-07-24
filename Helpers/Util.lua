@@ -98,7 +98,7 @@ local function runTemplateString(s, params)
     return template(template(s, params), params)
 end
 
-local function runScriptInBrowser(params, runner, callback)
+local function getBrowserScript(params)
     local script
 
     if params.path then
@@ -107,31 +107,30 @@ local function runScriptInBrowser(params, runner, callback)
         script = runTemplateString(params.code, params)
     end
 
+    return script
+end
+
+local function runScriptInBrowser(params, runner, callback)
+    assert(callback, "runScriptInBrowser requires callback")
+    local script = getBrowserScript(params)
+
     if params.debug then
         debugInfo(getHammerspoonFunctionName(runner) .. ":\n\n", script)
     end
 
-    if callback then
-        local ok, output, message = runner(script)
-        callback(ok, output, message)
-        return
-    end
-
-    return runner(script)
+    local ok, output, message = runner(script)
+    callback(ok, output, message)
 end
 
 local function runJavaScriptInChromeDevTools(params, callback)
+    assert(callback, "runJavaScriptInChromeDevTools requires callback")
     local script = runTemplateString(params.code, params)
 
     if params.debug then
         debugInfo("Chrome DevTools:\n\n", script)
     end
 
-    if not callback then
-        return false, nil, "Google DevTools runner requires a callback"
-    end
-
-    return helper.chrome.devtools.executeJavascript(script, function(result, err, page)
+    helper.chrome.devtools.executeJavascript(script, function(result, err, page)
         if page then
             debugInfo("Chrome DevTools active page: ", page.id, " ", page.title, " ", page.url)
         else
@@ -147,15 +146,17 @@ local function runJavaScriptInChromeDevTools(params, callback)
 end
 
 function runJavaScriptInBrowser(params, callback)
+    assert(callback, "runJavaScriptInBrowser requires callback")
     if params.browser == "Google DevTools" then
-        return runJavaScriptInChromeDevTools(params, callback)
+        runJavaScriptInChromeDevTools(params, callback)
+        return
     end
 
-    return runScriptInBrowser(params, hs.osascript.javascript, callback)
+    runScriptInBrowser(params, hs.osascript.javascript, callback)
 end
 
-function runAppleScriptInBrowser(params)
-    return runScriptInBrowser(params, hs.osascript.applescript)
+function runAppleScriptInBrowser(params, callback)
+    runScriptInBrowser(params, hs.osascript.applescript, callback)
 end
 
 -- Define a function that checks if a method exists on a userdata object
