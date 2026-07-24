@@ -39,6 +39,7 @@ local browserGoogleDevTools = "Google DevTools"
 local browserJavaScriptRunner = browserGoogleChrome
 local getUrlDomain
 local getGenericVideoActions
+local functionMemory = {}
 
 local actions = enumString {
     "start",
@@ -746,8 +747,6 @@ getUrlDomain = function(url)
     debugInfo("current domain: ", domain)
     return domain
 end
-
-local functionMemory = {}
 
 ---@param actionFunction function @function to be called
 ---@return void
