@@ -867,6 +867,26 @@ local function toggleBrowserJavaScriptRunner()
     hs.alert.show("Player JS: " .. browserJavaScriptRunner)
 end
 
+local function getEnabledInfo(appActions)
+    local enabledInfo = ""
+    local icon = ""
+
+    local sortedActionsIterator = helper.table.sortByKeyIterator(actions)
+    local format = "✧%s %s %-12s %s\n"
+    for k, v in sortedActionsIterator do
+
+        if appActions[v] == nil or type(appActions[v]) == 'table' and #appActions[v] == 0 then
+            icon = "🔴"
+        else
+            icon = "🟢"
+        end
+
+        local info = string.format(format, hotkeyInfo[v].sourceKey  ,icon ,v, hotkeyInfo[v].description)
+        enabledInfo = enabledInfo .. info
+    end
+    return enabledInfo
+end
+
 local function setSavedWindow()
     debugInfo("devtoolscheck: Start")
     local devtoolscheck = helper.chrome.devtools.debugFrontmostChromeDetection()
@@ -928,26 +948,6 @@ local function setSavedWindow()
 
         selectPlayer(appActions.selector)
     end)
-end
-
-function getEnabledInfo(appActions)
-    local enabledInfo = ""
-    local icon = ""
-
-    local sortedActionsIterator = helper.table.sortByKeyIterator(actions)
-    local format = "✧%s %s %-12s %s\n"
-    for k, v in sortedActionsIterator do
-
-        if appActions[v] == nil or type(appActions[v]) == 'table' and #appActions[v] == 0 then
-            icon = "🔴"
-        else
-            icon = "🟢"
-        end
-
-        local info = string.format(format, hotkeyInfo[v].sourceKey  ,icon ,v, hotkeyInfo[v].description)
-        enabledInfo = enabledInfo .. info
-    end
-    return enabledInfo
 end
 
 -- Start
