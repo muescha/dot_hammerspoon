@@ -737,11 +737,11 @@ local function checkSwitch()
     if win == nil then debugInfo("checkSwitch: no focused window available") return end
     local app = win:application()
     if app == nil then debugInfo("checkSwitch: focused window has no application") return end
-    local bundleID = app:bundleID()
+    local bundleId = app:bundleID()
 
     local returnSwitchBacks = { win }
 
-    --if bundleIdChrome ~= bundleID then debugInfo("checkSwitch: current app no Chrome") return end
+    --if bundleIdChrome ~= bundleId then debugInfo("checkSwitch: current app no Chrome") return end
     if not PlayerTarget.isChrome() then debugInfo("checkSwitch: saved window is not chrome") return end
     local savedWindow = PlayerTarget.getWindow()
     if savedWindow==nil then debugInfo("checkSwitch: no window saved") return end
@@ -916,13 +916,14 @@ local function setSavedWindow()
         debugInfo("setSavedWindow: focused window has no application")
         return
     end
-    local bundleID = app:bundleID()
+    local bundleId = app:bundleID()
+    local title = app:title()
 
     debugInfo("Cache Size:", helper.table.count(cache))
     debugInfo("reset cache")
     cache = {}
 
-    if ControlKeys[bundleID] == nil then
+    if ControlKeys[bundleId] == nil then
         local savedWindow = PlayerTarget.getWindow()
         if savedWindow then
             local msg = "setSavedWindow: focus saved window"
@@ -930,15 +931,15 @@ local function setSavedWindow()
             hs.alert.show(msg)
 
             savedWindow:focus()
+        else
+            local msg = "setSavedWindow: no player controls defined for App " .. title .. " ('" .. bundleId .. "')"
+            debugInfo(msg)
+            hs.alert.show(msg)
         end
         return
     end
 
     PlayerTarget.saveWindow(win)
-    local savedDomain = nil
-    if PlayerTarget.isChrome() then
-        savedDomain = getChromeUrlDomain()
-    end
 
     getAppActions(function(appActions, domain)
         if appActions == nil then
