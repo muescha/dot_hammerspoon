@@ -35,18 +35,18 @@ end
 
 --- app condition curry functions
 
-local function conditionTo(set, app)
+local function conditionInApp(set, app)
     return set[app]
 end
 
-local function conditionExclude(set, app)
+local function conditionNotInApp(set, app)
     return not set[app]
 end
 
 local function curryCondition(condition, ...)
     local appSet = listToSet(listFromVarargs(...))
-    local function curried(name)
-        return condition(appSet, name)
+    local function curried(currentAppName)
+        return condition(appSet, currentAppName)
     end
     return curried
 end
@@ -62,13 +62,13 @@ end
 ---@class hs.hotkey.conditions
 ---@field inApps fun(apps: table|string, ...: string): HotkeyCondition
 function hotkeyConditions.inApps(...)
-    return curryCondition(conditionTo, ...)
+    return curryCondition(conditionInApp, ...)
 end
 
 ---@class hs.hotkey.conditions
 ---@field notInApps fun(apps: table|string, ...: string): HotkeyCondition
 function hotkeyConditions.notInApps(...)
-    return curryCondition(conditionExclude, ...)
+    return curryCondition(conditionNotInApp, ...)
 end
 
 ---@class hs.hotkey.conditions
