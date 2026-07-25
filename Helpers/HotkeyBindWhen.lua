@@ -111,7 +111,7 @@ function hotkeyConditions.notInAppsAndTabs(...)
     local conditions = {}
     for _, pair in ipairs({...}) do
         local appName, tabPattern = table.unpack(pair)
-        table.insert(conditions, hotkeyConditions.notInAppAndTab(appName, tabPattern))
+        table.insert(conditions, hotkeyConditions.inAppAndTab(appName, tabPattern))
     end
     return hotkeyConditions.noneOf(table.unpack(conditions))
 end
