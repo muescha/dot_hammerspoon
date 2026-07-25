@@ -63,6 +63,10 @@ local function conditionFromOne(conditionOrTarget)
         return conditionOrTarget
     end
 
+    if type(conditionOrTarget) == "string" then
+        return conditionFromTarget(hotkeyTarget.app(conditionOrTarget))
+    end
+
     if type(conditionOrTarget) == "table" and conditionOrTarget.kind then
         return conditionFromTarget(conditionOrTarget)
     end
@@ -75,6 +79,9 @@ end
 
 local function conditionFrom(...)
     local args = { ... }
+    if #args == 1 and type(args[1]) == "table" and not args[1].kind then
+        args = args[1]
+    end
 
     if #args == 0 then
         error("Expected at least one hotkey condition or target", 3)
@@ -394,10 +401,10 @@ end
 ---@field bind fun(modifier: table|string, key: string|number, message: string|nil, pressedfn: function|nil, releasedfn: function|nil, repeatfn: function|nil)
 ---@field block fun(modifier: table|string, key: string|number, message: string|nil, debugMessage: string|nil)
 
----@param ... HotkeyCondition|HotkeyTarget
+---@param ... HotkeyCondition|HotkeyTarget|string
 ---@return hs.hotkey.whenBuilder
 ---@class hs.hotkey
----@field when fun(...: HotkeyCondition|HotkeyTarget): hs.hotkey.whenBuilder
+---@field when fun(...: HotkeyCondition|HotkeyTarget|string): hs.hotkey.whenBuilder
 function hs.hotkey.when(...)
     local shouldHandleHotkey = conditionFrom(...)
 
