@@ -91,7 +91,7 @@ end
 
 function hotkeyConditions.inAppsAndTabs(...)
     local conditions = {}
-    for _, pair in ipairs({...}) do
+    for _, pair in ipairs(listFromVarargs(...)) do
         local appName, tabPattern = table.unpack(pair)
         table.insert(conditions, hotkeyConditions.inAppAndTab(appName, tabPattern))
     end
@@ -109,7 +109,7 @@ end
 
 function hotkeyConditions.notInAppsAndTabs(...)
     local conditions = {}
-    for _, pair in ipairs({...}) do
+    for _, pair in ipairs(listFromVarargs(...)) do
         local appName, tabPattern = table.unpack(pair)
         table.insert(conditions, hotkeyConditions.inAppAndTab(appName, tabPattern))
     end
@@ -128,8 +128,10 @@ end
 --   conditions.notInApps(apps)
 --   conditions.inAppAndTab(appName, tabPattern)
 --   conditions.inAppsAndTabs({appName, tabPattern}, ...)
+--   conditions.inAppsAndTabs(appTabPairs)
 --   conditions.notInAppAndTab(appName, tabPattern)
 --   conditions.notInAppsAndTabs({appName, tabPattern}, ...)
+--   conditions.notInAppsAndTabs(appTabPairs)
 --   conditions.anyOf(condition, ...)
 --   conditions.noneOf(condition, ...)
 
@@ -148,8 +150,12 @@ end
 -- hs.hotkey.when(conditions.inAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"})).bind({"cmd"}, "n", "info", myFunction)
 -- hs.hotkey.when(conditions.anyOf(conditions.inAppAndTab("MailMate", "essages%)$"), conditions.inAppAndTab("WhatsApp", "pattern"))).bind({"cmd"}, "n", "info", myFunction)
 
+-- local appTabPairs = {{"MailMate", "essages%)$"}, {"WhatsApp", "pattern"}}
+-- hs.hotkey.when(conditions.inAppsAndTabs(appTabPairs)).bind({"cmd"}, "n", "info", myFunction)
+
 -- hs.hotkey.when(conditions.notInAppAndTab("MailMate", "essages%)$")).bind({"cmd"}, "n", "info", myFunction)
 -- hs.hotkey.when(conditions.notInAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"})).bind({"cmd"}, "n", "info", myFunction)
+-- hs.hotkey.when(conditions.notInAppsAndTabs(appTabPairs)).bind({"cmd"}, "n", "info", myFunction)
 -- hs.hotkey.when(conditions.allApps).bind({"cmd"}, "n", nil, myFunction)
 -- hs.hotkey.when(conditions.inApps("MailMate")).block({"cmd"}, "W", "block cmd+w", "blocked cmd+w in MailMate")
 
