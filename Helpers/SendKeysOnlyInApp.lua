@@ -147,7 +147,7 @@ end
 -- AllApps:
 --   bindHotkey(allApps, {"cmd"}, "n", nil, myFunction)
 
-function bindHotkey(runWithAppCondition, modifier, key, message, callback)
+function bindHotkey(shouldHandleHotkey, modifier, key, message, callback)
 
     -- in case someone forget to set the message to nil
     if not callback then
@@ -176,12 +176,12 @@ function bindHotkey(runWithAppCondition, modifier, key, message, callback)
         debugInfo("currentTab=focusedWindow:title()")
         debugInfo("currentTab: ", currentTab)
 
-        local canRun = runWithAppCondition(currentApp, currentTab)
+        local shouldHandle = shouldHandleHotkey(currentApp, currentTab)
 
-        debugInfo("canRun = runWithAppCondition(currentApp, currentTab)")
-        debugInfo("canRun: ", canRun)
+        debugInfo("shouldHandle = shouldHandleHotkey(currentApp, currentTab)")
+        debugInfo("shouldHandle: ", shouldHandle)
 
-        if canRun then
+        if shouldHandle then
             --hs.alert.show("execute on: " .. currentApp)
             --logger.i("execute on: " .. currentApp)
             callback()
