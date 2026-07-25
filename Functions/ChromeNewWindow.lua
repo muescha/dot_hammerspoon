@@ -9,8 +9,15 @@ fileInfo()
 
 local conditions = hs.hotkey.conditions
 
-hs.hotkey.bindWhen(conditions.inApps("Google Chrome"), { "cmd" }, "n", keyInfo("New Window (only in Chrome)"), function()
-    local menuItemNames = { "Neues Fenster", "New Window" }
-    local options = { alertPrefix = "New Window" }
-    applicationSelectMenuItemApplySameFrame(menuItemNames, options)
-end)
+hs.hotkey
+    .when(conditions.inApps("Google Chrome"))
+    .bind(
+        { "cmd" },
+        "n",
+        keyInfo("New Window (only in Chrome)"),
+        function()
+            local menuItemNames = { "Neues Fenster", "New Window" }
+            local options = { alertPrefix = "New Window" }
+            applicationSelectMenuItemApplySameFrame(menuItemNames, options)
+        end
+    )

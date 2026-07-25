@@ -197,6 +197,14 @@ function hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, callback
     end)
 end
 
+function hs.hotkey.when(shouldHandleHotkey)
+    return {
+        bind = function(modifier, key, message, callback)
+            hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, callback)
+        end
+    }
+end
+
 
 -- Bind Hotkey only to one app
 
