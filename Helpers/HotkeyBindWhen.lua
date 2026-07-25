@@ -149,6 +149,9 @@ end
 -- AllApps:
 --   hs.hotkey.bindWhen(hotkeyConditions.allApps, {"cmd"}, "n", nil, myFunction)
 
+-- One app:
+--   hs.hotkey.bindWhen(hotkeyConditions.inApps("Google Chrome"), {"cmd"}, "n", nil, myFunction)
+
 function hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, callback)
 
     -- in case someone forget to set the message to nil
@@ -216,11 +219,4 @@ function hs.hotkey.blockWhen(shouldHandleHotkey, modifier, key, message, debugMe
     end
 
     hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, noop)
-end
-
-
--- Bind Hotkey only to one app
-
-function bindHotkeyOnlyTo(appname, modifier, key, message, callback)
-    hs.hotkey.bindWhen(hotkeyConditions.inApps(appname), modifier, key, message, callback)
 end
