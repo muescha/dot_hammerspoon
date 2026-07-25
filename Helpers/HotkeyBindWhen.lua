@@ -118,36 +118,36 @@ function excludeAppsAndTabs(...)
     return none(table.unpack(conditions))
 end
 
--- bindHotkey(AppCondition, modifier, key, function)
+-- bindHotkeyWhen(AppCondition, modifier, key, function)
 
 -- AppCondition := to(apps) | exclude(apps)
 
 -- `apps` := can be a list of parameters or a table
 
--- bindHotkey(to("Google Chrome","code"), modifier, key, message, function)
--- bindHotkey(to({"Google Chrome","code"}), modifier, key, message, function)
+-- bindHotkeyWhen(to("Google Chrome","code"), modifier, key, message, function)
+-- bindHotkeyWhen(to({"Google Chrome","code"}), modifier, key, message, function)
 
--- bindHotkey(exclude("Google Chrome"), modifier, key, message, function)
--- bindHotkey(exclude("Google Chrome","whatsapp"), modifier, key, message, function)
+-- bindHotkeyWhen(exclude("Google Chrome"), modifier, key, message, function)
+-- bindHotkeyWhen(exclude("Google Chrome","whatsapp"), modifier, key, message, function)
 
--- bindHotkey(to("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
--- bindHotkey(exclude("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(to("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(exclude("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
 
--- bindHotkey(toAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
--- bindHotkey(toAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
--- bindHotkey(any(toAppAndTab("MailMate", "essages%)$"), toAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(toAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(toAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(any(toAppAndTab("MailMate", "essages%)$"), toAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
 
--- bindHotkey(excludeAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
--- bindHotkey(excludeAppsAndTabs({"MailMate","essages%)$"},{"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
--- bindHotkey(none(excludeAppAndTab("MailMate","essages%)$",excludeAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(excludeAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(excludeAppsAndTabs({"MailMate","essages%)$"},{"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(none(excludeAppAndTab("MailMate","essages%)$",excludeAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
 
 -- local apps = {"Google Chrome","IntelliJ IDEA"}
--- bindHotkey(to(apps), {"cmd"}, "n", nil, myFunction)
+-- bindHotkeyWhen(to(apps), {"cmd"}, "n", nil, myFunction)
 
 -- AllApps:
---   bindHotkey(allApps, {"cmd"}, "n", nil, myFunction)
+--   bindHotkeyWhen(allApps, {"cmd"}, "n", nil, myFunction)
 
-function bindHotkey(shouldHandleHotkey, modifier, key, message, callback)
+function bindHotkeyWhen(shouldHandleHotkey, modifier, key, message, callback)
 
     -- in case someone forget to set the message to nil
     if not callback then
@@ -199,5 +199,5 @@ end
 -- Bind Hotkey only to one app
 
 function bindHotkeyOnlyTo(appname, modifier, key, message, callback)
-    bindHotkey(to(appname), modifier, key, message, callback)
+    bindHotkeyWhen(to(appname), modifier, key, message, callback)
 end

@@ -12,4 +12,4 @@ local noop = function()
     debugInfo("blocked cmd+shift+a in ChatGPT")
 end
 
-bindHotkey(toAppsAndTabs(chatGptCondition),{"cmd", "shift"}, "A", keyInfo("block cmd+shift+a in ChatGPT"), noop)
+bindHotkeyWhen(toAppsAndTabs(chatGptCondition),{"cmd", "shift"}, "A", keyInfo("block cmd+shift+a in ChatGPT"), noop)

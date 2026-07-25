@@ -6,7 +6,7 @@
 
 fileInfo()
 
-bindHotkey(to("Google Chrome"), hyper, "t", keyInfo("Open Tab in new Window"), function()
+bindHotkeyWhen(to("Google Chrome"), hyper, "t", keyInfo("Open Tab in new Window"), function()
     local menuItemNames = { "Tab in ein neues Fenster verschieben", "Move Tab to New Window" }
     local options = { alertPrefix = "Move Tab" }
     applicationSelectMenuItemApplySameFrame(menuItemNames, options)
