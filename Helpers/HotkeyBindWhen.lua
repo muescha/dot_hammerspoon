@@ -16,16 +16,12 @@ local function listToSet (list)
     return set
 end
 
-local function toTable(st)
-    return type(st) == 'table' and st or { st }
-end
-
-local function normalizeArgs(st)
-    if isTable(st) and isTable(st[1]) then
-        return st[1]
-    else
-        return st
+local function listFromVarargs(...)
+    local args = { ... }
+    if #args == 1 and type(args[1]) == 'table' then
+        return args[1]
     end
+    return args
 end
 
 --- app condition curry functions
@@ -39,7 +35,7 @@ local function conditionExclude(set, app)
 end
 
 local function curryCondition(condition, ...)
-    local appSet = listToSet({ ... })
+    local appSet = listToSet(listFromVarargs(...))
     local function curried(name)
         return condition(appSet, name)
     end
