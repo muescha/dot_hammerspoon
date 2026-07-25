@@ -16,6 +16,7 @@ local logger = hs.logger.new("HotkeyBindWhen")
 
 ---@alias HotkeyCondition fun(currentAppName: string, currentTab: string): boolean
 ---@alias HotkeyTarget { kind: "app"|"appTab", app: string, tab: string|nil, withTab: function|nil }
+---@alias HotkeyTargetSpec { app: string, tab: string|nil }
 ---@alias AppTabPair { [1]: string, [2]: string }
 ---@type hs.hotkey.conditions
 hs.hotkey.conditions = hs.hotkey.conditions or {}
@@ -71,6 +72,14 @@ local function conditionFromOne(conditionOrTarget)
         return conditionFromTarget(conditionOrTarget)
     end
 
+    if type(conditionOrTarget) == "table" and conditionOrTarget.app then
+        if conditionOrTarget.tab then
+            return conditionFromTarget(hotkeyTarget.appTab(conditionOrTarget.app, conditionOrTarget.tab))
+        end
+
+        return conditionFromTarget(hotkeyTarget.app(conditionOrTarget.app))
+    end
+
     error("Expected a hotkey condition or target, got "
             .. type(conditionOrTarget)
             .. ": "
@@ -79,7 +88,7 @@ end
 
 local function conditionFrom(...)
     local args = { ... }
-    if #args == 1 and type(args[1]) == "table" and not args[1].kind then
+    if #args == 1 and type(args[1]) == "table" and not args[1].kind and not args[1].app then
         args = args[1]
     end
 
@@ -401,10 +410,10 @@ end
 ---@field bind fun(modifier: table|string, key: string|number, message: string|nil, pressedfn: function|nil, releasedfn: function|nil, repeatfn: function|nil)
 ---@field block fun(modifier: table|string, key: string|number, message: string|nil, debugMessage: string|nil)
 
----@param ... HotkeyCondition|HotkeyTarget|string
+---@param ... HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string
 ---@return hs.hotkey.whenBuilder
 ---@class hs.hotkey
----@field when fun(...: HotkeyCondition|HotkeyTarget|string): hs.hotkey.whenBuilder
+---@field when fun(...: HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string): hs.hotkey.whenBuilder
 function hs.hotkey.when(...)
     local shouldHandleHotkey = conditionFrom(...)
 
