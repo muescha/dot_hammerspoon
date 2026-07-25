@@ -155,9 +155,11 @@ function hotkeyConditions.notInAppsAndTabs(...)
     return hotkeyConditions.noneOf(table.unpack(conditions))
 end
 
--- hs.hotkey.bindWhen(AppCondition, modifier, key, message, function)
--- hs.hotkey.when(AppCondition).bind(modifier, key, message, function)
+-- hs.hotkey.bindWhen(AppCondition, modifier, key, message, pressedfn, releasedfn, repeatfn)
+-- hs.hotkey.when(AppCondition).bind(modifier, key, message, pressedfn, releasedfn, repeatfn)
 -- hs.hotkey.when(AppCondition).block(modifier, key, message, debugMessage)
+-- Blocked press and repeat events are passed through with hs.eventtap.keyStroke.
+-- Blocked release events are ignored.
 
 -- local conditions = hs.hotkey.conditions
 
@@ -169,54 +171,70 @@ end
 --   conditions.notInApps(apps)
 --   conditions.inAppAndTab(appName, tabPattern)
 --   conditions.inAppsAndTabs({appName, tabPattern}, ...)
+--   conditions.inAppsAndTabs(appTabPair)
 --   conditions.inAppsAndTabs(appTabPairs)
 --   conditions.notInAppAndTab(appName, tabPattern)
 --   conditions.notInAppsAndTabs({appName, tabPattern}, ...)
+--   conditions.notInAppsAndTabs(appTabPair)
 --   conditions.notInAppsAndTabs(appTabPairs)
 --   conditions.anyOf(condition, ...)
 --   conditions.noneOf(condition, ...)
 
 -- `apps` := table of app names, for example {"Google Chrome", "code"}
+-- `appTabPair` := {appName, tabPattern} pair, for example {"ChatGPT", "ChatGPT"}
 -- `appTabPairs` := table of {appName, tabPattern} pairs
 
--- hs.hotkey.when(conditions.inApps("Google Chrome", "code")).bind(modifier, key, message, myFunction)
--- hs.hotkey.when(conditions.inApps({"Google Chrome", "code"})).bind(modifier, key, message, myFunction)
+-- hs.hotkey.when(conditions.inApps("Google Chrome", "code")).bind(modifier, key, message, pressedfn)
+-- hs.hotkey.when(conditions.inApps({"Google Chrome", "code"})).bind(modifier, key, message, pressedfn)
 
--- hs.hotkey.when(conditions.notInApps("Google Chrome")).bind(modifier, key, message, myFunction)
--- hs.hotkey.when(conditions.notInApps("Google Chrome", "whatsapp")).bind(modifier, key, message, myFunction)
+-- hs.hotkey.when(conditions.notInApps("Google Chrome")).bind(modifier, key, message, pressedfn)
+-- hs.hotkey.when(conditions.notInApps("Google Chrome", "whatsapp")).bind(modifier, key, message, pressedfn)
 
--- hs.hotkey.when(conditions.inApps("Google Chrome", "IntelliJ IDEA")).bind({"cmd"}, "n", "info", myFunction)
--- hs.hotkey.when(conditions.notInApps("Google Chrome", "IntelliJ IDEA")).bind({"cmd"}, "n", "info", myFunction)
+-- hs.hotkey.when(conditions.inApps("Google Chrome", "IntelliJ IDEA")).bind({"cmd"}, "n", "info", pressedfn)
+-- hs.hotkey.when(conditions.notInApps("Google Chrome", "IntelliJ IDEA")).bind({"cmd"}, "n", "info", pressedfn)
 
--- hs.hotkey.when(conditions.inAppAndTab("MailMate", "essages%)$")).bind({"cmd"}, "n", "info", myFunction)
--- hs.hotkey.when(conditions.inAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"})).bind({"cmd"}, "n", "info", myFunction)
--- hs.hotkey.when(conditions.anyOf(conditions.inAppAndTab("MailMate", "essages%)$"), conditions.inAppAndTab("WhatsApp", "pattern"))).bind({"cmd"}, "n", "info", myFunction)
+-- hs.hotkey.when(conditions.inAppAndTab("MailMate", "essages%)$")).bind({"cmd"}, "n", "info", pressedfn)
+-- hs.hotkey.when(conditions.inAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"})).bind({"cmd"}, "n", "info", pressedfn)
+-- hs.hotkey.when(conditions.anyOf(conditions.inAppAndTab("MailMate", "essages%)$"), conditions.inAppAndTab("WhatsApp", "pattern"))).bind({"cmd"}, "n", "info", pressedfn)
+
+-- local appTabPair = {"ChatGPT", "ChatGPT"}
+-- hs.hotkey.when(conditions.inAppsAndTabs(appTabPair)).bind({"cmd"}, "n", "info", pressedfn)
 
 -- local appTabPairs = {{"MailMate", "essages%)$"}, {"WhatsApp", "pattern"}}
--- hs.hotkey.when(conditions.inAppsAndTabs(appTabPairs)).bind({"cmd"}, "n", "info", myFunction)
+-- hs.hotkey.when(conditions.inAppsAndTabs(appTabPairs)).bind({"cmd"}, "n", "info", pressedfn)
 
--- hs.hotkey.when(conditions.notInAppAndTab("MailMate", "essages%)$")).bind({"cmd"}, "n", "info", myFunction)
--- hs.hotkey.when(conditions.notInAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"})).bind({"cmd"}, "n", "info", myFunction)
--- hs.hotkey.when(conditions.notInAppsAndTabs(appTabPairs)).bind({"cmd"}, "n", "info", myFunction)
--- hs.hotkey.when(conditions.allApps).bind({"cmd"}, "n", nil, myFunction)
+-- hs.hotkey.when(conditions.notInAppAndTab("MailMate", "essages%)$")).bind({"cmd"}, "n", "info", pressedfn)
+-- hs.hotkey.when(conditions.notInAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"})).bind({"cmd"}, "n", "info", pressedfn)
+-- hs.hotkey.when(conditions.notInAppsAndTabs(appTabPairs)).bind({"cmd"}, "n", "info", pressedfn)
+-- hs.hotkey.when(conditions.allApps).bind({"cmd"}, "n", nil, pressedfn)
 -- hs.hotkey.when(conditions.inApps("MailMate")).block({"cmd"}, "W", "block cmd+w", "blocked cmd+w in MailMate")
 
 ---@param shouldHandleHotkey HotkeyCondition
 ---@param modifier table|string
 ---@param key string|number
 ---@param message string|nil
----@param callback function
+---@param pressedfn function|nil
+---@param releasedfn function|nil
+---@param repeatfn function|nil
 ---@class hs.hotkey
----@field bindWhen fun(shouldHandleHotkey: HotkeyCondition, modifier: table|string, key: string|number, message: string|nil, callback: function)
-function hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, callback)
+---@field bindWhen fun(shouldHandleHotkey: HotkeyCondition, modifier: table|string, key: string|number, message: string|nil, pressedfn: function|nil, releasedfn: function|nil, repeatfn: function|nil)
+function hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, pressedfn, releasedfn, repeatfn)
 
     -- in case someone forget to set the message to nil
-    if not callback then
-        callback = message
+    if type(message) == "function" then
+        repeatfn = releasedfn
+        releasedfn = pressedfn
+        pressedfn = message
         message = nil
     end
+
+    if not pressedfn and not releasedfn and not repeatfn then
+        error("At least one of pressedfn, releasedfn or repeatfn must be a function", 2)
+    end
+
     local hotkeyHandler
-    hotkeyHandler = hs.hotkey.bind(modifier, key, message, function()
+
+    local function shouldHandle()
         -- guard: frontmostApplication may be nil briefly
         local frontmost = hs.application.frontmostApplication()
         local currentApp = frontmost and frontmost:name() or ""
@@ -242,22 +260,60 @@ function hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, callback
         debugInfo("shouldHandle = shouldHandleHotkey(currentApp, currentTab)")
         debugInfo("shouldHandle: ", shouldHandle)
 
+        return shouldHandle
+    end
+
+    local function passThroughKeystroke()
+        hotkeyDisableSilent(hotkeyHandler)
+        hs.eventtap.keyStroke(modifier, key)
+        hotkeyEnableSilent(hotkeyHandler)
+    end
+
+    local function handleHotkeyEvent(callback, passThroughWhenBlocked)
+        local shouldHandle = shouldHandle()
+
         if shouldHandle then
             --hs.alert.show("execute on: " .. currentApp)
             --logger.i("execute on: " .. currentApp)
-            callback()
+            if callback then
+                callback()
+            end
+        elseif passThroughWhenBlocked then
+            passThroughKeystroke()
         else
             --hs.alert.show("no function at: " .. currentApp)
             --logger.i("no function at: " .. currentApp)
-            hotkeyDisableSilent(hotkeyHandler)
-            hs.eventtap.keyStroke(modifier, key)
-            hotkeyEnableSilent(hotkeyHandler)
         end
-    end)
+    end
+
+    local function optionalHandlerFor(callback, passThroughWhenBlocked)
+        if not callback then
+            return nil
+        end
+
+        return function()
+            handleHotkeyEvent(callback, passThroughWhenBlocked)
+        end
+    end
+
+    local function requiredHandlerFor(callback, passThroughWhenBlocked)
+        return function()
+            handleHotkeyEvent(callback, passThroughWhenBlocked)
+        end
+    end
+
+    hotkeyHandler = hs.hotkey.bind(
+            modifier,
+            key,
+            message,
+            requiredHandlerFor(pressedfn, true),
+            optionalHandlerFor(releasedfn, false),
+            optionalHandlerFor(repeatfn, true)
+    )
 end
 
 ---@class hs.hotkey.whenBuilder
----@field bind fun(modifier: table|string, key: string|number, message: string|nil, callback: function)
+---@field bind fun(modifier: table|string, key: string|number, message: string|nil, pressedfn: function|nil, releasedfn: function|nil, repeatfn: function|nil)
 ---@field block fun(modifier: table|string, key: string|number, message: string|nil, debugMessage: string|nil)
 
 ---@param shouldHandleHotkey HotkeyCondition
@@ -266,8 +322,8 @@ end
 ---@field when fun(shouldHandleHotkey: HotkeyCondition): hs.hotkey.whenBuilder
 function hs.hotkey.when(shouldHandleHotkey)
     return {
-        bind = function(modifier, key, message, callback)
-            hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, callback)
+        bind = function(modifier, key, message, pressedfn, releasedfn, repeatfn)
+            hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, pressedfn, releasedfn, repeatfn)
         end,
         block = function(modifier, key, message, debugMessage)
             hs.hotkey.blockWhen(shouldHandleHotkey, modifier, key, message, debugMessage)

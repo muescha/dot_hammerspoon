@@ -292,8 +292,11 @@ If you like to handle hotkeys only in some apps or exclude some apps from your g
 
 The `AppCondition` decides when Hammerspoon should handle the hotkey itself:
 
-- `true` runs the callback.
-- `false` passes the original keystroke through to the frontmost app.
+- `true` runs the configured callback.
+- `false` skips the configured callback and passes blocked press/repeat events through to the frontmost app.
+
+Blocked press and repeat events are passed through with `hs.eventtap.keyStroke`.
+Blocked release events are ignored.
 
 This means `conditions.notInApps("Google Chrome")` handles the hotkey everywhere except in Google Chrome. In Google Chrome the original shortcut is passed through.
 
@@ -302,9 +305,9 @@ This means `conditions.notInApps("Google Chrome")` handles the hotkey everywhere
 ```lua
 local conditions = hs.hotkey.conditions
 
-hs.hotkey.when(AppCondition).bind(modifier, key, message, function)
+hs.hotkey.when(AppCondition).bind(modifier, key, message, pressedfn, releasedfn, repeatfn)
 hs.hotkey.when(AppCondition).block(modifier, key, message, debugMessage)
-hs.hotkey.bindWhen(AppCondition, modifier, key, message, function)
+hs.hotkey.bindWhen(AppCondition, modifier, key, message, pressedfn, releasedfn, repeatfn)
 ```
 
 - where `AppCondition` := 
@@ -315,9 +318,11 @@ hs.hotkey.bindWhen(AppCondition, modifier, key, message, function)
   - `conditions.notInApps(apps)`
   - `conditions.inAppAndTab(appName, tabPattern)`
   - `conditions.inAppsAndTabs({appName, tabPattern}, ...)`
+  - `conditions.inAppsAndTabs(appTabPair)`
   - `conditions.inAppsAndTabs(appTabPairs)`
   - `conditions.notInAppAndTab(appName, tabPattern)`
   - `conditions.notInAppsAndTabs({appName, tabPattern}, ...)`
+  - `conditions.notInAppsAndTabs(appTabPair)`
   - `conditions.notInAppsAndTabs(appTabPairs)`
   - `conditions.anyOf(condition, ...)`
   - `conditions.noneOf(condition, ...)`
@@ -326,6 +331,7 @@ hs.hotkey.bindWhen(AppCondition, modifier, key, message, function)
   - `apps` := table of app names, for example `{"Google Chrome", "code"}`
   - `appName` := string
   - `tabPattern` := pattern to match a tab
+  - `appTabPair` := `{appName, tabPattern}` pair, for example `{"ChatGPT", "ChatGPT"}`
   - `appTabPairs` := table of `{appName, tabPattern}` pairs, for example `{{"MailMate", "essages%)$"}, {"WhatsApp", "pattern"}}`
   
 Examples:
@@ -333,18 +339,21 @@ Examples:
 ```lua
 local conditions = hs.hotkey.conditions
 
-hs.hotkey.when(conditions.inApps("Google Chrome", "code")).bind(modifier, key, message, myFunction)
-hs.hotkey.when(conditions.inApps({"Google Chrome", "code"})).bind(modifier, key, message, myFunction)
+hs.hotkey.when(conditions.inApps("Google Chrome", "code")).bind(modifier, key, message, pressedfn)
+hs.hotkey.when(conditions.inApps({"Google Chrome", "code"})).bind(modifier, key, message, pressedfn)
 
-hs.hotkey.when(conditions.notInApps("Google Chrome")).bind(modifier, key, message, myFunction)
-hs.hotkey.when(conditions.notInApps("Google Chrome", "whatsapp")).bind(modifier, key, message, myFunction)
+hs.hotkey.when(conditions.notInApps("Google Chrome")).bind(modifier, key, message, pressedfn)
+hs.hotkey.when(conditions.notInApps("Google Chrome", "whatsapp")).bind(modifier, key, message, pressedfn)
 
-hs.hotkey.when(conditions.inAppAndTab("MailMate", "essages%)$")).bind({"cmd"}, "n", "info", myFunction)
-hs.hotkey.when(conditions.inAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"})).bind({"cmd"}, "n", "info", myFunction)
+hs.hotkey.when(conditions.inAppAndTab("MailMate", "essages%)$")).bind({"cmd"}, "n", "info", pressedfn)
+hs.hotkey.when(conditions.inAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"})).bind({"cmd"}, "n", "info", pressedfn)
+
+local appTabPair = {"ChatGPT", "ChatGPT"}
+hs.hotkey.when(conditions.inAppsAndTabs(appTabPair)).bind({"cmd"}, "n", "info", pressedfn)
 
 local appTabPairs = {{"MailMate", "essages%)$"}, {"WhatsApp", "pattern"}}
-hs.hotkey.when(conditions.inAppsAndTabs(appTabPairs)).bind({"cmd"}, "n", "info", myFunction)
-hs.hotkey.when(conditions.notInAppsAndTabs(appTabPairs)).bind({"cmd"}, "n", "info", myFunction)
+hs.hotkey.when(conditions.inAppsAndTabs(appTabPairs)).bind({"cmd"}, "n", "info", pressedfn)
+hs.hotkey.when(conditions.notInAppsAndTabs(appTabPairs)).bind({"cmd"}, "n", "info", pressedfn)
 
 hs.hotkey.when(conditions.inApps("MailMate")).block({"cmd"}, "W", "block cmd+w", "blocked cmd+w in MailMate")
 ```
