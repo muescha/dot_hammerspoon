@@ -121,36 +121,41 @@ function hotkeyConditions.notInAppsAndTabs(...)
 end
 
 -- hs.hotkey.bindWhen(AppCondition, modifier, key, function)
+-- hs.hotkey.when(AppCondition).bind(modifier, key, message, function)
+-- hs.hotkey.when(AppCondition).block(modifier, key, message, debugMessage)
 
--- AppCondition := hotkeyConditions.inApps(apps) | hotkeyConditions.notInApps(apps)
+-- local conditions = hs.hotkey.conditions
+
+-- AppCondition :=
+--   conditions.allApps
+--   conditions.inApps(apps)
+--   conditions.notInApps(apps)
+--   conditions.inAppAndTab(appName, tabPattern)
+--   conditions.inAppsAndTabs({appName, tabPattern}, ...)
+--   conditions.notInAppAndTab(appName, tabPattern)
+--   conditions.notInAppsAndTabs({appName, tabPattern}, ...)
+--   conditions.anyOf(condition, ...)
+--   conditions.noneOf(condition, ...)
 
 -- `apps` := can be a list of parameters or a table
 
--- hs.hotkey.bindWhen(hotkeyConditions.inApps("Google Chrome","code"), modifier, key, message, function)
--- hs.hotkey.bindWhen(hotkeyConditions.inApps({"Google Chrome","code"}), modifier, key, message, function)
+-- hs.hotkey.when(conditions.inApps("Google Chrome", "code")).bind(modifier, key, message, myFunction)
+-- hs.hotkey.when(conditions.inApps({"Google Chrome", "code"})).bind(modifier, key, message, myFunction)
 
--- hs.hotkey.bindWhen(hotkeyConditions.notInApps("Google Chrome"), modifier, key, message, function)
--- hs.hotkey.bindWhen(hotkeyConditions.notInApps("Google Chrome","whatsapp"), modifier, key, message, function)
+-- hs.hotkey.when(conditions.notInApps("Google Chrome")).bind(modifier, key, message, myFunction)
+-- hs.hotkey.when(conditions.notInApps("Google Chrome", "whatsapp")).bind(modifier, key, message, myFunction)
 
--- hs.hotkey.bindWhen(hotkeyConditions.inApps("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
--- hs.hotkey.bindWhen(hotkeyConditions.notInApps("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
+-- hs.hotkey.when(conditions.inApps("Google Chrome", "IntelliJ IDEA")).bind({"cmd"}, "n", "info", myFunction)
+-- hs.hotkey.when(conditions.notInApps("Google Chrome", "IntelliJ IDEA")).bind({"cmd"}, "n", "info", myFunction)
 
--- hs.hotkey.bindWhen(hotkeyConditions.inAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
--- hs.hotkey.bindWhen(hotkeyConditions.inAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
--- hs.hotkey.bindWhen(hotkeyConditions.anyOf(hotkeyConditions.inAppAndTab("MailMate", "essages%)$"), hotkeyConditions.inAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
+-- hs.hotkey.when(conditions.inAppAndTab("MailMate", "essages%)$")).bind({"cmd"}, "n", "info", myFunction)
+-- hs.hotkey.when(conditions.inAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"})).bind({"cmd"}, "n", "info", myFunction)
+-- hs.hotkey.when(conditions.anyOf(conditions.inAppAndTab("MailMate", "essages%)$"), conditions.inAppAndTab("WhatsApp", "pattern"))).bind({"cmd"}, "n", "info", myFunction)
 
--- hs.hotkey.bindWhen(hotkeyConditions.notInAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
--- hs.hotkey.bindWhen(hotkeyConditions.notInAppsAndTabs({"MailMate","essages%)$"},{"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
--- hs.hotkey.bindWhen(hotkeyConditions.noneOf(hotkeyConditions.notInAppAndTab("MailMate","essages%)$",hotkeyConditions.notInAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
-
--- local apps = {"Google Chrome","IntelliJ IDEA"}
--- hs.hotkey.bindWhen(hotkeyConditions.inApps(apps), {"cmd"}, "n", nil, myFunction)
-
--- AllApps:
---   hs.hotkey.bindWhen(hotkeyConditions.allApps, {"cmd"}, "n", nil, myFunction)
-
--- One app:
---   hs.hotkey.bindWhen(hotkeyConditions.inApps("Google Chrome"), {"cmd"}, "n", nil, myFunction)
+-- hs.hotkey.when(conditions.notInAppAndTab("MailMate", "essages%)$")).bind({"cmd"}, "n", "info", myFunction)
+-- hs.hotkey.when(conditions.notInAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"})).bind({"cmd"}, "n", "info", myFunction)
+-- hs.hotkey.when(conditions.allApps).bind({"cmd"}, "n", nil, myFunction)
+-- hs.hotkey.when(conditions.inApps("MailMate")).block({"cmd"}, "W", "block cmd+w", "blocked cmd+w in MailMate")
 
 function hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, callback)
 
