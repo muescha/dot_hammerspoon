@@ -116,7 +116,7 @@ function hotkeyConditions.notInAppsAndTabs(...)
     return hotkeyConditions.noneOf(table.unpack(conditions))
 end
 
--- hs.hotkey.bindWhen(AppCondition, modifier, key, function)
+-- hs.hotkey.bindWhen(AppCondition, modifier, key, message, function)
 -- hs.hotkey.when(AppCondition).bind(modifier, key, message, function)
 -- hs.hotkey.when(AppCondition).block(modifier, key, message, debugMessage)
 
@@ -124,7 +124,9 @@ end
 
 -- AppCondition :=
 --   conditions.allApps
+--   conditions.inApps(appName, ...)
 --   conditions.inApps(apps)
+--   conditions.notInApps(appName, ...)
 --   conditions.notInApps(apps)
 --   conditions.inAppAndTab(appName, tabPattern)
 --   conditions.inAppsAndTabs({appName, tabPattern}, ...)
@@ -135,7 +137,8 @@ end
 --   conditions.anyOf(condition, ...)
 --   conditions.noneOf(condition, ...)
 
--- `apps` := can be a list of parameters or a table
+-- `apps` := table of app names, for example {"Google Chrome", "code"}
+-- `appTabPairs` := table of {appName, tabPattern} pairs
 
 -- hs.hotkey.when(conditions.inApps("Google Chrome", "code")).bind(modifier, key, message, myFunction)
 -- hs.hotkey.when(conditions.inApps({"Google Chrome", "code"})).bind(modifier, key, message, myFunction)
