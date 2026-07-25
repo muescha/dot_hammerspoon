@@ -10,6 +10,7 @@ local logger = hs.logger.new("HotkeyBindWhen")
 ---@field conditions hs.hotkey.conditions
 
 ---@alias HotkeyCondition fun(currentAppName: string, currentTab: string): boolean
+---@alias AppTabPair { [1]: string, [2]: string }
 ---@type hs.hotkey.conditions
 hs.hotkey.conditions = hs.hotkey.conditions or {}
 local hotkeyConditions = hs.hotkey.conditions
@@ -110,7 +111,7 @@ function hotkeyConditions.inAppAndTab(appName,tabPattern)
 end
 
 ---@class hs.hotkey.conditions
----@field inAppsAndTabs fun(appTabPair: table, ...: table): HotkeyCondition
+---@field inAppsAndTabs fun(appTabPair: AppTabPair, ...: AppTabPair): HotkeyCondition
 function hotkeyConditions.inAppsAndTabs(...)
     local conditions = {}
     for _, pair in ipairs(listFromVarargs(...)) do
@@ -132,7 +133,7 @@ function hotkeyConditions.notInAppAndTab(appName,tabPattern)
 end
 
 ---@class hs.hotkey.conditions
----@field notInAppsAndTabs fun(appTabPair: table, ...: table): HotkeyCondition
+---@field notInAppsAndTabs fun(appTabPair: AppTabPair, ...: AppTabPair): HotkeyCondition
 function hotkeyConditions.notInAppsAndTabs(...)
     local conditions = {}
     for _, pair in ipairs(listFromVarargs(...)) do
