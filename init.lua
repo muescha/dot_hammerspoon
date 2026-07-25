@@ -46,7 +46,7 @@ require("Helpers.RetryWhile")
 require("Helpers.RetryWhileOnComplete")
 
 require("Helpers.HotkeySilence")
-require("Helpers.SendKeysOnlyInApp")
+require("Helpers.HotkeyBindWhen")
 require("Helpers.HotkeyBindModal")
 require("Helpers.HotkeyBindSafe")
 require("Helpers.ApplicationSelectMenuItemApplySameFrame")

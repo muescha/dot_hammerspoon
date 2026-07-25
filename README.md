@@ -286,7 +286,7 @@ if you add a scriptname to the description then it is grouped by scriptname. Exa
 
 This helper catches errors and prints them to the console. It is useful for debugging purposes, as it allows you to see the source of an error when it is crashing your script.
 
-### [BindHotkey with app conditions](/Helpers/SendKeysOnlyInApp.lua)
+### [BindHotkey with app conditions](/Helpers/HotkeyBindWhen.lua)
 
 If you like to handle hotkeys only in some apps or exclude some apps from your global hotkeys, then the helper `bindHotkey` helps you.
 
