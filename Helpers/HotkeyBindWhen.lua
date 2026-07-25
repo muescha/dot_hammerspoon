@@ -50,15 +50,15 @@ function allApps()
     return true
 end
 
-function to(...)
+function inApps(...)
     return curryCondition(conditionTo, ...)
 end
 
-function exclude(...)
+function notInApps(...)
     return curryCondition(conditionExclude, ...)
 end
 
-function any(...)
+function anyOf(...)
     local conditions = { ... }
     return function(currentAppName, currentTab)
         for _, cond in ipairs(conditions) do
@@ -70,7 +70,7 @@ function any(...)
     end
 end
 
-function none(...)
+function noneOf(...)
     local conditions = { ... }
     return function(currentAppName, currentTab)
         for _, cond in ipairs(conditions) do
@@ -83,7 +83,7 @@ function none(...)
 end
 
 -- for patterns see https://www.lua.org/manual/5.1/manual.html#5.4.1
-function toAppAndTab(appName,tabPattern)
+function inAppAndTab(appName,tabPattern)
     local function condition(currentAppName, currentTab)
         --return currentAppName == appName and string.match(currentTab,tabPattern)
         return string.match(currentAppName, appName) and string.match(currentTab,tabPattern)
@@ -91,17 +91,17 @@ function toAppAndTab(appName,tabPattern)
     return condition
 end
 
-function toAppsAndTabs(...)
+function inAppsAndTabs(...)
     local conditions = {}
     for _, pair in ipairs({...}) do
         local appName, tabPattern = table.unpack(pair)
-        table.insert(conditions, toAppAndTab(appName, tabPattern))
+        table.insert(conditions, inAppAndTab(appName, tabPattern))
     end
-    return any(table.unpack(conditions))
+    return anyOf(table.unpack(conditions))
 end
 
 -- for patterns see https://www.lua.org/manual/5.1/manual.html#5.4.1
-function excludeAppAndTab(appName,tabPattern)
+function notInAppAndTab(appName,tabPattern)
     local function condition(currentAppName, currentTab)
         --return not (currentAppName == appName and string.match(currentTab,tabPattern))
         return not (string.match(currentAppName, appName) and string.match(currentTab,tabPattern))
@@ -109,40 +109,40 @@ function excludeAppAndTab(appName,tabPattern)
     return condition
 end
 
-function excludeAppsAndTabs(...)
+function notInAppsAndTabs(...)
     local conditions = {}
     for _, pair in ipairs({...}) do
         local appName, tabPattern = table.unpack(pair)
-        table.insert(conditions, excludeAppAndTab(appName, tabPattern))
+        table.insert(conditions, notInAppAndTab(appName, tabPattern))
     end
-    return none(table.unpack(conditions))
+    return noneOf(table.unpack(conditions))
 end
 
 -- bindHotkeyWhen(AppCondition, modifier, key, function)
 
--- AppCondition := to(apps) | exclude(apps)
+-- AppCondition := inApps(apps) | notInApps(apps)
 
 -- `apps` := can be a list of parameters or a table
 
--- bindHotkeyWhen(to("Google Chrome","code"), modifier, key, message, function)
--- bindHotkeyWhen(to({"Google Chrome","code"}), modifier, key, message, function)
+-- bindHotkeyWhen(inApps("Google Chrome","code"), modifier, key, message, function)
+-- bindHotkeyWhen(inApps({"Google Chrome","code"}), modifier, key, message, function)
 
--- bindHotkeyWhen(exclude("Google Chrome"), modifier, key, message, function)
--- bindHotkeyWhen(exclude("Google Chrome","whatsapp"), modifier, key, message, function)
+-- bindHotkeyWhen(notInApps("Google Chrome"), modifier, key, message, function)
+-- bindHotkeyWhen(notInApps("Google Chrome","whatsapp"), modifier, key, message, function)
 
--- bindHotkeyWhen(to("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
--- bindHotkeyWhen(exclude("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(inApps("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(notInApps("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
 
--- bindHotkeyWhen(toAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
--- bindHotkeyWhen(toAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
--- bindHotkeyWhen(any(toAppAndTab("MailMate", "essages%)$"), toAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(inAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(inAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(anyOf(inAppAndTab("MailMate", "essages%)$"), inAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
 
--- bindHotkeyWhen(excludeAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
--- bindHotkeyWhen(excludeAppsAndTabs({"MailMate","essages%)$"},{"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
--- bindHotkeyWhen(none(excludeAppAndTab("MailMate","essages%)$",excludeAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(notInAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(notInAppsAndTabs({"MailMate","essages%)$"},{"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(noneOf(notInAppAndTab("MailMate","essages%)$",notInAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
 
 -- local apps = {"Google Chrome","IntelliJ IDEA"}
--- bindHotkeyWhen(to(apps), {"cmd"}, "n", nil, myFunction)
+-- bindHotkeyWhen(inApps(apps), {"cmd"}, "n", nil, myFunction)
 
 -- AllApps:
 --   bindHotkeyWhen(allApps, {"cmd"}, "n", nil, myFunction)
@@ -199,5 +199,5 @@ end
 -- Bind Hotkey only to one app
 
 function bindHotkeyOnlyTo(appname, modifier, key, message, callback)
-    bindHotkeyWhen(to(appname), modifier, key, message, callback)
+    bindHotkeyWhen(inApps(appname), modifier, key, message, callback)
 end

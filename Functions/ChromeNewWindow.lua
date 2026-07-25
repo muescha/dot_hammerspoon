@@ -7,7 +7,7 @@
 
 fileInfo()
 
-bindHotkeyWhen(to("Google Chrome"), { "cmd" }, "n", keyInfo("New Window (only in Chrome)"), function()
+bindHotkeyWhen(inApps("Google Chrome"), { "cmd" }, "n", keyInfo("New Window (only in Chrome)"), function()
     local menuItemNames = { "Neues Fenster", "New Window" }
     local options = { alertPrefix = "New Window" }
     applicationSelectMenuItemApplySameFrame(menuItemNames, options)

@@ -13,4 +13,4 @@ local noop = function()
     debugInfo("blocked cmd+w in MailMate or WhatsApp main view")
 end
 
-bindHotkeyWhen(toAppsAndTabs(mailMateCondition, whatsAppCondition),{"cmd"}, "W", keyInfo("block cmd+w in MailMate and WhatsApp"), noop)
+bindHotkeyWhen(inAppsAndTabs(mailMateCondition, whatsAppCondition),{"cmd"}, "W", keyInfo("block cmd+w in MailMate and WhatsApp"), noop)
