@@ -120,36 +120,36 @@ function hotkeyConditions.notInAppsAndTabs(...)
     return hotkeyConditions.noneOf(table.unpack(conditions))
 end
 
--- bindHotkeyWhen(AppCondition, modifier, key, function)
+-- hs.hotkey.bindWhen(AppCondition, modifier, key, function)
 
 -- AppCondition := hotkeyConditions.inApps(apps) | hotkeyConditions.notInApps(apps)
 
 -- `apps` := can be a list of parameters or a table
 
--- bindHotkeyWhen(hotkeyConditions.inApps("Google Chrome","code"), modifier, key, message, function)
--- bindHotkeyWhen(hotkeyConditions.inApps({"Google Chrome","code"}), modifier, key, message, function)
+-- hs.hotkey.bindWhen(hotkeyConditions.inApps("Google Chrome","code"), modifier, key, message, function)
+-- hs.hotkey.bindWhen(hotkeyConditions.inApps({"Google Chrome","code"}), modifier, key, message, function)
 
--- bindHotkeyWhen(hotkeyConditions.notInApps("Google Chrome"), modifier, key, message, function)
--- bindHotkeyWhen(hotkeyConditions.notInApps("Google Chrome","whatsapp"), modifier, key, message, function)
+-- hs.hotkey.bindWhen(hotkeyConditions.notInApps("Google Chrome"), modifier, key, message, function)
+-- hs.hotkey.bindWhen(hotkeyConditions.notInApps("Google Chrome","whatsapp"), modifier, key, message, function)
 
--- bindHotkeyWhen(hotkeyConditions.inApps("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
--- bindHotkeyWhen(hotkeyConditions.notInApps("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
+-- hs.hotkey.bindWhen(hotkeyConditions.inApps("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
+-- hs.hotkey.bindWhen(hotkeyConditions.notInApps("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
 
--- bindHotkeyWhen(hotkeyConditions.inAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
--- bindHotkeyWhen(hotkeyConditions.inAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
--- bindHotkeyWhen(hotkeyConditions.anyOf(hotkeyConditions.inAppAndTab("MailMate", "essages%)$"), hotkeyConditions.inAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
+-- hs.hotkey.bindWhen(hotkeyConditions.inAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
+-- hs.hotkey.bindWhen(hotkeyConditions.inAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
+-- hs.hotkey.bindWhen(hotkeyConditions.anyOf(hotkeyConditions.inAppAndTab("MailMate", "essages%)$"), hotkeyConditions.inAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
 
--- bindHotkeyWhen(hotkeyConditions.notInAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
--- bindHotkeyWhen(hotkeyConditions.notInAppsAndTabs({"MailMate","essages%)$"},{"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
--- bindHotkeyWhen(hotkeyConditions.noneOf(hotkeyConditions.notInAppAndTab("MailMate","essages%)$",hotkeyConditions.notInAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
+-- hs.hotkey.bindWhen(hotkeyConditions.notInAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
+-- hs.hotkey.bindWhen(hotkeyConditions.notInAppsAndTabs({"MailMate","essages%)$"},{"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
+-- hs.hotkey.bindWhen(hotkeyConditions.noneOf(hotkeyConditions.notInAppAndTab("MailMate","essages%)$",hotkeyConditions.notInAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
 
 -- local apps = {"Google Chrome","IntelliJ IDEA"}
--- bindHotkeyWhen(hotkeyConditions.inApps(apps), {"cmd"}, "n", nil, myFunction)
+-- hs.hotkey.bindWhen(hotkeyConditions.inApps(apps), {"cmd"}, "n", nil, myFunction)
 
 -- AllApps:
---   bindHotkeyWhen(hotkeyConditions.allApps, {"cmd"}, "n", nil, myFunction)
+--   hs.hotkey.bindWhen(hotkeyConditions.allApps, {"cmd"}, "n", nil, myFunction)
 
-function bindHotkeyWhen(shouldHandleHotkey, modifier, key, message, callback)
+function hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, callback)
 
     -- in case someone forget to set the message to nil
     if not callback then
@@ -201,5 +201,5 @@ end
 -- Bind Hotkey only to one app
 
 function bindHotkeyOnlyTo(appname, modifier, key, message, callback)
-    bindHotkeyWhen(hotkeyConditions.inApps(appname), modifier, key, message, callback)
+    hs.hotkey.bindWhen(hotkeyConditions.inApps(appname), modifier, key, message, callback)
 end

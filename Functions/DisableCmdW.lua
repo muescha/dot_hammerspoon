@@ -6,7 +6,7 @@
 
 local scriptInfo = fileInfo()
 
-local hotkeyConditions = hs.hotkey.conditions
+local conditions = hs.hotkey.conditions
 
 local mailMateCondition =  {"MailMate","essages%)$"}
 local whatsAppCondition = {"WhatsApp", "WhatsApp"}
@@ -15,4 +15,4 @@ local noop = function()
     debugInfo("blocked cmd+w in MailMate or WhatsApp main view")
 end
 
-bindHotkeyWhen(hotkeyConditions.inAppsAndTabs(mailMateCondition, whatsAppCondition),{"cmd"}, "W", keyInfo("block cmd+w in MailMate and WhatsApp"), noop)
+hs.hotkey.bindWhen(conditions.inAppsAndTabs(mailMateCondition, whatsAppCondition),{"cmd"}, "W", keyInfo("block cmd+w in MailMate and WhatsApp"), noop)

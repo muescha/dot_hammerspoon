@@ -6,9 +6,9 @@
 
 fileInfo()
 
-local hotkeyConditions = hs.hotkey.conditions
+local conditions = hs.hotkey.conditions
 
-bindHotkeyWhen(hotkeyConditions.inApps("Google Chrome"), hyper, "t", keyInfo("Open Tab in new Window"), function()
+hs.hotkey.bindWhen(conditions.inApps("Google Chrome"), hyper, "t", keyInfo("Open Tab in new Window"), function()
     local menuItemNames = { "Tab in ein neues Fenster verschieben", "Move Tab to New Window" }
     local options = { alertPrefix = "Move Tab" }
     applicationSelectMenuItemApplySameFrame(menuItemNames, options)
