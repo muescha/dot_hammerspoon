@@ -6,13 +6,11 @@
 
 local scriptInfo = fileInfo()
 
-local conditions = hs.hotkey.conditions
-
-local mailMateCondition =  {"MailMate","essages%)$"}
-local whatsAppCondition = {"WhatsApp", "WhatsApp"}
+local mailMateTarget = { app = "MailMate", tab = "essages%)$" }
+local whatsAppTarget = { app = "WhatsApp", tab = "WhatsApp" }
 
 hs.hotkey
-    .when(conditions.inAppsAndTabs(mailMateCondition, whatsAppCondition))
+    .when(mailMateTarget, whatsAppTarget)
     .block(
         {"cmd"},
         "W",

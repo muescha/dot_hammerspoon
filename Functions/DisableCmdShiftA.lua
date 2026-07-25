@@ -6,12 +6,8 @@
 
 local scriptInfo = fileInfo()
 
-local conditions = hs.hotkey.conditions
-
-local chatGptCondition = {"ChatGPT", "ChatGPT"}
-
 hs.hotkey
-    .when(conditions.inAppsAndTabs(chatGptCondition))
+    .when("ChatGPT")
     .block(
         {"cmd", "shift"},
         "A",
