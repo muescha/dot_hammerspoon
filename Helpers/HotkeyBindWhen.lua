@@ -147,11 +147,11 @@ end
 --- app condition curry functions
 
 local function conditionInApp(set, app)
-    return set[app]
+    return set[app] == true
 end
 
 local function conditionNotInApp(set, app)
-    return not set[app]
+    return set[app] ~= true
 end
 
 local function curryCondition(condition, ...)
@@ -216,7 +216,8 @@ end
 function hotkeyConditions.inAppAndTab(appName,tabPattern)
     local function condition(currentAppName, currentTab)
         --return currentAppName == appName and string.match(currentTab,tabPattern)
-        return string.match(currentAppName, appName) and string.match(currentTab,tabPattern)
+        return string.match(currentAppName, appName) ~= nil
+                and string.match(currentTab,tabPattern) ~= nil
     end
     return condition
 end
@@ -238,7 +239,10 @@ end
 function hotkeyConditions.notInAppAndTab(appName,tabPattern)
     local function condition(currentAppName, currentTab)
         --return not (currentAppName == appName and string.match(currentTab,tabPattern))
-        return not (string.match(currentAppName, appName) and string.match(currentTab,tabPattern))
+        return not (
+                string.match(currentAppName, appName) ~= nil
+                and string.match(currentTab,tabPattern) ~= nil
+        )
     end
     return condition
 end
