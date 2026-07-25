@@ -58,16 +58,38 @@ local function conditionFromTarget(target)
     error("Unknown hotkey target kind: " .. tostring(target.kind), 3)
 end
 
-local function conditionFrom(shouldHandleHotkey)
-    if type(shouldHandleHotkey) == "function" then
-        return shouldHandleHotkey
+local function conditionFromOne(conditionOrTarget)
+    if type(conditionOrTarget) == "function" then
+        return conditionOrTarget
     end
 
-    if type(shouldHandleHotkey) == "table" and shouldHandleHotkey.kind then
-        return conditionFromTarget(shouldHandleHotkey)
+    if type(conditionOrTarget) == "table" and conditionOrTarget.kind then
+        return conditionFromTarget(conditionOrTarget)
     end
 
-    error("Expected a hotkey condition or target", 3)
+    error("Expected a hotkey condition or target, got "
+            .. type(conditionOrTarget)
+            .. ": "
+            .. tostring(conditionOrTarget), 3)
+end
+
+local function conditionFrom(...)
+    local args = { ... }
+
+    if #args == 0 then
+        error("Expected at least one hotkey condition or target", 3)
+    end
+
+    if #args == 1 then
+        return conditionFromOne(args[1])
+    end
+
+    local conditions = {}
+    for _, conditionOrTarget in ipairs(args) do
+        table.insert(conditions, conditionFromOne(conditionOrTarget))
+    end
+
+    return hotkeyConditions.anyOf(table.unpack(conditions))
 end
 
 -- Helper Function
@@ -372,11 +394,13 @@ end
 ---@field bind fun(modifier: table|string, key: string|number, message: string|nil, pressedfn: function|nil, releasedfn: function|nil, repeatfn: function|nil)
 ---@field block fun(modifier: table|string, key: string|number, message: string|nil, debugMessage: string|nil)
 
----@param shouldHandleHotkey HotkeyCondition|HotkeyTarget
+---@param ... HotkeyCondition|HotkeyTarget
 ---@return hs.hotkey.whenBuilder
 ---@class hs.hotkey
----@field when fun(shouldHandleHotkey: HotkeyCondition|HotkeyTarget): hs.hotkey.whenBuilder
-function hs.hotkey.when(shouldHandleHotkey)
+---@field when fun(...: HotkeyCondition|HotkeyTarget): hs.hotkey.whenBuilder
+function hs.hotkey.when(...)
+    local shouldHandleHotkey = conditionFrom(...)
+
     return {
         bind = function(modifier, key, message, pressedfn, releasedfn, repeatfn)
             hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, pressedfn, releasedfn, repeatfn)
