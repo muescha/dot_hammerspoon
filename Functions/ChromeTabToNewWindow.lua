@@ -6,10 +6,8 @@
 
 fileInfo()
 
-local conditions = hs.hotkey.conditions
-
 hs.hotkey
-    .when(conditions.inApps("Google Chrome"))
+    .when("Google Chrome")
     .bind(
         hyper,
         "t",
