@@ -3,6 +3,14 @@
 -- https://stackoverflow.com/questions/63795560/how-can-i-prevent-hammerspoon-hotkeys-from-overriding-hotkeys-in-other-applicati
 
 local logger = hs.logger.new("HotkeyBindWhen")
+
+---@class hs.hotkey.conditions
+
+---@class hs.hotkey
+---@field conditions hs.hotkey.conditions
+
+---@alias HotkeyCondition fun(currentAppName: string, currentTab: string): boolean
+---@type hs.hotkey.conditions
 hs.hotkey.conditions = hs.hotkey.conditions or {}
 local hotkeyConditions = hs.hotkey.conditions
 
@@ -44,18 +52,26 @@ end
 
 --- app select options
 
+---@class hs.hotkey.conditions
+---@field allApps HotkeyCondition
 function hotkeyConditions.allApps()
     return true
 end
 
+---@class hs.hotkey.conditions
+---@field inApps fun(apps: table|string, ...: string): HotkeyCondition
 function hotkeyConditions.inApps(...)
     return curryCondition(conditionTo, ...)
 end
 
+---@class hs.hotkey.conditions
+---@field notInApps fun(apps: table|string, ...: string): HotkeyCondition
 function hotkeyConditions.notInApps(...)
     return curryCondition(conditionExclude, ...)
 end
 
+---@class hs.hotkey.conditions
+---@field anyOf fun(condition: HotkeyCondition, ...: HotkeyCondition): HotkeyCondition
 function hotkeyConditions.anyOf(...)
     local conditions = { ... }
     return function(currentAppName, currentTab)
@@ -68,6 +84,8 @@ function hotkeyConditions.anyOf(...)
     end
 end
 
+---@class hs.hotkey.conditions
+---@field noneOf fun(condition: HotkeyCondition, ...: HotkeyCondition): HotkeyCondition
 function hotkeyConditions.noneOf(...)
     local conditions = { ... }
     return function(currentAppName, currentTab)
@@ -81,6 +99,8 @@ function hotkeyConditions.noneOf(...)
 end
 
 -- for patterns see https://www.lua.org/manual/5.1/manual.html#5.4.1
+---@class hs.hotkey.conditions
+---@field inAppAndTab fun(appName: string, tabPattern: string): HotkeyCondition
 function hotkeyConditions.inAppAndTab(appName,tabPattern)
     local function condition(currentAppName, currentTab)
         --return currentAppName == appName and string.match(currentTab,tabPattern)
@@ -89,6 +109,8 @@ function hotkeyConditions.inAppAndTab(appName,tabPattern)
     return condition
 end
 
+---@class hs.hotkey.conditions
+---@field inAppsAndTabs fun(appTabPair: table, ...: table): HotkeyCondition
 function hotkeyConditions.inAppsAndTabs(...)
     local conditions = {}
     for _, pair in ipairs(listFromVarargs(...)) do
@@ -99,6 +121,8 @@ function hotkeyConditions.inAppsAndTabs(...)
 end
 
 -- for patterns see https://www.lua.org/manual/5.1/manual.html#5.4.1
+---@class hs.hotkey.conditions
+---@field notInAppAndTab fun(appName: string, tabPattern: string): HotkeyCondition
 function hotkeyConditions.notInAppAndTab(appName,tabPattern)
     local function condition(currentAppName, currentTab)
         --return not (currentAppName == appName and string.match(currentTab,tabPattern))
@@ -107,6 +131,8 @@ function hotkeyConditions.notInAppAndTab(appName,tabPattern)
     return condition
 end
 
+---@class hs.hotkey.conditions
+---@field notInAppsAndTabs fun(appTabPair: table, ...: table): HotkeyCondition
 function hotkeyConditions.notInAppsAndTabs(...)
     local conditions = {}
     for _, pair in ipairs(listFromVarargs(...)) do
@@ -162,6 +188,13 @@ end
 -- hs.hotkey.when(conditions.allApps).bind({"cmd"}, "n", nil, myFunction)
 -- hs.hotkey.when(conditions.inApps("MailMate")).block({"cmd"}, "W", "block cmd+w", "blocked cmd+w in MailMate")
 
+---@param shouldHandleHotkey HotkeyCondition
+---@param modifier table|string
+---@param key string|number
+---@param message string|nil
+---@param callback function
+---@class hs.hotkey
+---@field bindWhen fun(shouldHandleHotkey: HotkeyCondition, modifier: table|string, key: string|number, message: string|nil, callback: function)
 function hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, callback)
 
     -- in case someone forget to set the message to nil
@@ -210,6 +243,14 @@ function hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, callback
     end)
 end
 
+---@class hs.hotkey.whenBuilder
+---@field bind fun(modifier: table|string, key: string|number, message: string|nil, callback: function)
+---@field block fun(modifier: table|string, key: string|number, message: string|nil, debugMessage: string|nil)
+
+---@param shouldHandleHotkey HotkeyCondition
+---@return hs.hotkey.whenBuilder
+---@class hs.hotkey
+---@field when fun(shouldHandleHotkey: HotkeyCondition): hs.hotkey.whenBuilder
 function hs.hotkey.when(shouldHandleHotkey)
     return {
         bind = function(modifier, key, message, callback)
@@ -221,6 +262,13 @@ function hs.hotkey.when(shouldHandleHotkey)
     }
 end
 
+---@param shouldHandleHotkey HotkeyCondition
+---@param modifier table|string
+---@param key string|number
+---@param message string|nil
+---@param debugMessage string|nil
+---@class hs.hotkey
+---@field blockWhen fun(shouldHandleHotkey: HotkeyCondition, modifier: table|string, key: string|number, message: string|nil, debugMessage: string|nil)
 function hs.hotkey.blockWhen(shouldHandleHotkey, modifier, key, message, debugMessage)
     local noop = function()
         if debugMessage then
