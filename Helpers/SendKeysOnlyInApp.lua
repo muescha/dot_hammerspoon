@@ -199,26 +199,5 @@ end
 -- Bind Hotkey only to one app
 
 function bindHotkeyOnlyTo(appname, modifier, key, message, callback)
-
-    -- in case someone forget to set the message to nil
-    if not callback then
-        callback = message
-        message = nil
-    end
-
-    local hotkeyHandler
-    hotkeyHandler = hs.hotkey.bind(modifier, key, message, function()
-
-        -- guard: frontmostApplication may be nil briefly
-        local frontmost = hs.application.frontmostApplication()
-        local currentApp = frontmost and frontmost:name() or ""
-
-        if (appname == currentApp) then
-            callback()
-        else
-            hotkeyDisableSilent(hotkeyHandler)
-            hs.eventtap.keyStroke(modifier, key)
-            hotkeyEnableSilent(hotkeyHandler)
-        end
-    end)
+    bindHotkey(to(appname), modifier, key, message, callback)
 end
