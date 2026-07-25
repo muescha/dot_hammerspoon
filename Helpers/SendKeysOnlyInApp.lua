@@ -156,9 +156,32 @@ function bindHotkey(runWithAppCondition, modifier, key, message, callback)
     end
     local hotkeyHandler
     hotkeyHandler = hs.hotkey.bind(modifier, key, message, function()
-        local currentApp = hs.application.frontmostApplication():name()
-        local currentTab = hs.window.focusedWindow():title()
-        if runWithAppCondition(currentApp, currentTab) then
+        -- guard: frontmostApplication may be nil briefly
+        local frontmost = hs.application.frontmostApplication()
+        local currentApp = frontmost and frontmost:name() or ""
+        debugInfo("currentApp = hs.application.frontmostApplication():name()")
+        debugInfo("currentApp: ", currentApp)
+
+        -- guard: focusedWindow may be nil (e.g., Desktop focus or no windows)
+        local focusedWindow = hs.window.focusedWindow()
+        debugInfo("focusedWindow = hs.window.focusedWindow():")
+        debugInfo("focusedWindow: ", focusedWindow)
+
+        local currentTab
+        if focusedWindow and focusedWindow.title then
+            currentTab = focusedWindow:title()
+        else
+            currentTab = ""
+        end
+        debugInfo("currentTab=focusedWindow:title()")
+        debugInfo("currentTab: ", currentTab)
+
+        local canRun = runWithAppCondition(currentApp, currentTab)
+
+        debugInfo("canRun = runWithAppCondition(currentApp, currentTab)")
+        debugInfo("canRun: ", canRun)
+
+        if canRun then
             --hs.alert.show("execute on: " .. currentApp)
             --logger.i("execute on: " .. currentApp)
             callback()
