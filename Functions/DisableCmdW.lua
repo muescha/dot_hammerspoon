@@ -6,12 +6,10 @@
 
 local scriptInfo = fileInfo()
 
--- Define a variable to store the MailMate bundle ID
 local mailMateCondition =  {"MailMate","essages%)$"}
 local whatsAppCondition = {"WhatsApp", "WhatsApp"}
 
--- Disable the Cmd + W shortcut in Mailmate's viewer window
-bindHotkey(toAppsAndTabs(mailMateCondition, whatsAppCondition),{"cmd"}, "W", keyInfo("disable cmd+w on MailMate and WhatsApp"), function()
+bindHotkey(toAppsAndTabs(mailMateCondition, whatsAppCondition),{"cmd"}, "W", keyInfo("block cmd+w in MailMate and WhatsApp"), function()
     -- noop
-    debugInfo("ignore shortcut cmd+w on MailMate or WhatsApp in main view")
+    debugInfo("blocked cmd+w in MailMate or WhatsApp main view")
 end)

@@ -8,8 +8,7 @@ local scriptInfo = fileInfo()
 
 local chatGptCondition = {"ChatGPT", "ChatGPT"}
 
--- Disable the Cmd + W shortcut in Mailmate's viewer window
-bindHotkey(toAppsAndTabs(chatGptCondition),{"cmd", "shift"}, "A", keyInfo("disable cmd+shift+a on ChatGPT"), function()
+bindHotkey(toAppsAndTabs(chatGptCondition),{"cmd", "shift"}, "A", keyInfo("block cmd+shift+a in ChatGPT"), function()
     -- noop
-    debugInfo("ignore shortcut cmd+shift+a on ChatGPT")
+    debugInfo("blocked cmd+shift+a in ChatGPT")
 end)

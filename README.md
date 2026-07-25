@@ -286,9 +286,16 @@ if you add a scriptname to the description then it is grouped by scriptname. Exa
 
 This helper catches errors and prints them to the console. It is useful for debugging purposes, as it allows you to see the source of an error when it is crashing your script.
 
-### [BindHotkey only to some apps](/Helpers/SendKeysOnlyInApp.lua)
+### [BindHotkey with app conditions](/Helpers/SendKeysOnlyInApp.lua)
 
-If you like to have hotkeys only in some apps or exclude some apps from your global hotkeys, then the helper `bindHotkey` help you.
+If you like to handle hotkeys only in some apps or exclude some apps from your global hotkeys, then the helper `bindHotkey` helps you.
+
+The `AppCondition` decides when Hammerspoon should handle the hotkey itself:
+
+- `true` runs the callback.
+- `false` passes the original keystroke through to the frontmost app.
+
+This means `exclude("Google Chrome")` handles the hotkey everywhere except in Google Chrome. In Google Chrome the original shortcut is passed through.
 
 #### Syntax
 
