@@ -186,7 +186,9 @@ function bindHotkeyOnlyTo(appname, modifier, key, message, callback)
     local hotkeyHandler
     hotkeyHandler = hs.hotkey.bind(modifier, key, message, function()
 
-        local currentApp = hs.application.frontmostApplication():name()
+        -- guard: frontmostApplication may be nil briefly
+        local frontmost = hs.application.frontmostApplication()
+        local currentApp = frontmost and frontmost:name() or ""
 
         if (appname == currentApp) then
             callback()
