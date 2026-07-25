@@ -3,6 +3,8 @@
 -- https://stackoverflow.com/questions/63795560/how-can-i-prevent-hammerspoon-hotkeys-from-overriding-hotkeys-in-other-applicati
 
 local logger = hs.logger.new("HotkeyBindWhen")
+hs.hotkey.conditions = hs.hotkey.conditions or {}
+local hotkeyConditions = hs.hotkey.conditions
 
 -- Helper Function
 
@@ -46,19 +48,19 @@ end
 
 --- app select options
 
-function allApps()
+function hotkeyConditions.allApps()
     return true
 end
 
-function inApps(...)
+function hotkeyConditions.inApps(...)
     return curryCondition(conditionTo, ...)
 end
 
-function notInApps(...)
+function hotkeyConditions.notInApps(...)
     return curryCondition(conditionExclude, ...)
 end
 
-function anyOf(...)
+function hotkeyConditions.anyOf(...)
     local conditions = { ... }
     return function(currentAppName, currentTab)
         for _, cond in ipairs(conditions) do
@@ -70,7 +72,7 @@ function anyOf(...)
     end
 end
 
-function noneOf(...)
+function hotkeyConditions.noneOf(...)
     local conditions = { ... }
     return function(currentAppName, currentTab)
         for _, cond in ipairs(conditions) do
@@ -83,7 +85,7 @@ function noneOf(...)
 end
 
 -- for patterns see https://www.lua.org/manual/5.1/manual.html#5.4.1
-function inAppAndTab(appName,tabPattern)
+function hotkeyConditions.inAppAndTab(appName,tabPattern)
     local function condition(currentAppName, currentTab)
         --return currentAppName == appName and string.match(currentTab,tabPattern)
         return string.match(currentAppName, appName) and string.match(currentTab,tabPattern)
@@ -91,17 +93,17 @@ function inAppAndTab(appName,tabPattern)
     return condition
 end
 
-function inAppsAndTabs(...)
+function hotkeyConditions.inAppsAndTabs(...)
     local conditions = {}
     for _, pair in ipairs({...}) do
         local appName, tabPattern = table.unpack(pair)
-        table.insert(conditions, inAppAndTab(appName, tabPattern))
+        table.insert(conditions, hotkeyConditions.inAppAndTab(appName, tabPattern))
     end
-    return anyOf(table.unpack(conditions))
+    return hotkeyConditions.anyOf(table.unpack(conditions))
 end
 
 -- for patterns see https://www.lua.org/manual/5.1/manual.html#5.4.1
-function notInAppAndTab(appName,tabPattern)
+function hotkeyConditions.notInAppAndTab(appName,tabPattern)
     local function condition(currentAppName, currentTab)
         --return not (currentAppName == appName and string.match(currentTab,tabPattern))
         return not (string.match(currentAppName, appName) and string.match(currentTab,tabPattern))
@@ -109,43 +111,43 @@ function notInAppAndTab(appName,tabPattern)
     return condition
 end
 
-function notInAppsAndTabs(...)
+function hotkeyConditions.notInAppsAndTabs(...)
     local conditions = {}
     for _, pair in ipairs({...}) do
         local appName, tabPattern = table.unpack(pair)
-        table.insert(conditions, notInAppAndTab(appName, tabPattern))
+        table.insert(conditions, hotkeyConditions.notInAppAndTab(appName, tabPattern))
     end
-    return noneOf(table.unpack(conditions))
+    return hotkeyConditions.noneOf(table.unpack(conditions))
 end
 
 -- bindHotkeyWhen(AppCondition, modifier, key, function)
 
--- AppCondition := inApps(apps) | notInApps(apps)
+-- AppCondition := hotkeyConditions.inApps(apps) | hotkeyConditions.notInApps(apps)
 
 -- `apps` := can be a list of parameters or a table
 
--- bindHotkeyWhen(inApps("Google Chrome","code"), modifier, key, message, function)
--- bindHotkeyWhen(inApps({"Google Chrome","code"}), modifier, key, message, function)
+-- bindHotkeyWhen(hotkeyConditions.inApps("Google Chrome","code"), modifier, key, message, function)
+-- bindHotkeyWhen(hotkeyConditions.inApps({"Google Chrome","code"}), modifier, key, message, function)
 
--- bindHotkeyWhen(notInApps("Google Chrome"), modifier, key, message, function)
--- bindHotkeyWhen(notInApps("Google Chrome","whatsapp"), modifier, key, message, function)
+-- bindHotkeyWhen(hotkeyConditions.notInApps("Google Chrome"), modifier, key, message, function)
+-- bindHotkeyWhen(hotkeyConditions.notInApps("Google Chrome","whatsapp"), modifier, key, message, function)
 
--- bindHotkeyWhen(inApps("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
--- bindHotkeyWhen(notInApps("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(hotkeyConditions.inApps("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(hotkeyConditions.notInApps("Google Chrome","IntelliJ IDEA"), {"cmd"}, "n", "info", myFunction)
 
--- bindHotkeyWhen(inAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
--- bindHotkeyWhen(inAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
--- bindHotkeyWhen(anyOf(inAppAndTab("MailMate", "essages%)$"), inAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(hotkeyConditions.inAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(hotkeyConditions.inAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(hotkeyConditions.anyOf(hotkeyConditions.inAppAndTab("MailMate", "essages%)$"), hotkeyConditions.inAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
 
--- bindHotkeyWhen(notInAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
--- bindHotkeyWhen(notInAppsAndTabs({"MailMate","essages%)$"},{"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
--- bindHotkeyWhen(noneOf(notInAppAndTab("MailMate","essages%)$",notInAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(hotkeyConditions.notInAppAndTab("MailMate","essages%)$"), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(hotkeyConditions.notInAppsAndTabs({"MailMate","essages%)$"},{"WhatsApp", "pattern"}), {"cmd"}, "n", "info", myFunction)
+-- bindHotkeyWhen(hotkeyConditions.noneOf(hotkeyConditions.notInAppAndTab("MailMate","essages%)$",hotkeyConditions.notInAppAndTab("WhatsApp", "pattern")), {"cmd"}, "n", "info", myFunction)
 
 -- local apps = {"Google Chrome","IntelliJ IDEA"}
--- bindHotkeyWhen(inApps(apps), {"cmd"}, "n", nil, myFunction)
+-- bindHotkeyWhen(hotkeyConditions.inApps(apps), {"cmd"}, "n", nil, myFunction)
 
 -- AllApps:
---   bindHotkeyWhen(allApps, {"cmd"}, "n", nil, myFunction)
+--   bindHotkeyWhen(hotkeyConditions.allApps, {"cmd"}, "n", nil, myFunction)
 
 function bindHotkeyWhen(shouldHandleHotkey, modifier, key, message, callback)
 
@@ -199,5 +201,5 @@ end
 -- Bind Hotkey only to one app
 
 function bindHotkeyOnlyTo(appname, modifier, key, message, callback)
-    bindHotkeyWhen(inApps(appname), modifier, key, message, callback)
+    bindHotkeyWhen(hotkeyConditions.inApps(appname), modifier, key, message, callback)
 end
