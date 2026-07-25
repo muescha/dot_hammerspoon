@@ -10,8 +10,11 @@ local conditions = hs.hotkey.conditions
 
 local chatGptCondition = {"ChatGPT", "ChatGPT"}
 
-local noop = function()
-    debugInfo("blocked cmd+shift+a in ChatGPT")
-end
-
-hs.hotkey.bindWhen(conditions.inAppsAndTabs(chatGptCondition),{"cmd", "shift"}, "A", keyInfo("block cmd+shift+a in ChatGPT"), noop)
+hs.hotkey
+    .when(conditions.inAppsAndTabs(chatGptCondition))
+    .block(
+        {"cmd", "shift"},
+        "A",
+        keyInfo("block cmd+shift+a in ChatGPT"),
+        "blocked cmd+shift+a in ChatGPT"
+    )

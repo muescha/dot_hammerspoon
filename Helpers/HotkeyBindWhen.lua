@@ -201,8 +201,21 @@ function hs.hotkey.when(shouldHandleHotkey)
     return {
         bind = function(modifier, key, message, callback)
             hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, callback)
+        end,
+        block = function(modifier, key, message, debugMessage)
+            hs.hotkey.blockWhen(shouldHandleHotkey, modifier, key, message, debugMessage)
         end
     }
+end
+
+function hs.hotkey.blockWhen(shouldHandleHotkey, modifier, key, message, debugMessage)
+    local noop = function()
+        if debugMessage then
+            debugInfo(debugMessage)
+        end
+    end
+
+    hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, noop)
 end
 
 
