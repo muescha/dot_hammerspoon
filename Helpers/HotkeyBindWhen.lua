@@ -6,14 +6,45 @@ local logger = hs.logger.new("HotkeyBindWhen")
 
 ---@class hs.hotkey.conditions
 
+---@class hs.hotkey.target
+---@field app fun(appName: string): HotkeyTarget
+---@field appTab fun(appName: string, tabPattern: string): HotkeyTarget
+
 ---@class hs.hotkey
 ---@field conditions hs.hotkey.conditions
+---@field target hs.hotkey.target
 
 ---@alias HotkeyCondition fun(currentAppName: string, currentTab: string): boolean
+---@alias HotkeyTarget { kind: "app"|"appTab", app: string, tab: string|nil, withTab: function|nil }
 ---@alias AppTabPair { [1]: string, [2]: string }
 ---@type hs.hotkey.conditions
 hs.hotkey.conditions = hs.hotkey.conditions or {}
 local hotkeyConditions = hs.hotkey.conditions
+
+---@type hs.hotkey.target
+hs.hotkey.target = hs.hotkey.target or {}
+local hotkeyTarget = hs.hotkey.target
+
+---@class hs.hotkey.target
+---@field app fun(appName: string): HotkeyTarget
+---@field appTab fun(appName: string, tabPattern: string): HotkeyTarget
+function hotkeyTarget.appTab(appName, tabPattern)
+    return {
+        kind = "appTab",
+        app = appName,
+        tab = tabPattern
+    }
+end
+
+function hotkeyTarget.app(appName)
+    return {
+        kind = "app",
+        app = appName,
+        withTab = function(tabPattern)
+            return hotkeyTarget.appTab(appName, tabPattern)
+        end
+    }
+end
 
 -- Helper Function
 
