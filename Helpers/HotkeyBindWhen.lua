@@ -33,6 +33,18 @@ local function listFromVarargs(...)
     return args
 end
 
+local function appTabPairsFromVarargs(...)
+    local args = { ... }
+    if #args == 1 and type(args[1]) == 'table' then
+        local first = args[1][1]
+        if type(first) == 'table' then
+            return args[1]
+        end
+        return args
+    end
+    return args
+end
+
 --- app condition curry functions
 
 local function conditionInApp(set, app)
@@ -114,7 +126,7 @@ end
 ---@field inAppsAndTabs fun(appTabPair: AppTabPair, ...: AppTabPair): HotkeyCondition
 function hotkeyConditions.inAppsAndTabs(...)
     local conditions = {}
-    for _, pair in ipairs(listFromVarargs(...)) do
+    for _, pair in ipairs(appTabPairsFromVarargs(...)) do
         local appName, tabPattern = table.unpack(pair)
         table.insert(conditions, hotkeyConditions.inAppAndTab(appName, tabPattern))
     end
@@ -136,7 +148,7 @@ end
 ---@field notInAppsAndTabs fun(appTabPair: AppTabPair, ...: AppTabPair): HotkeyCondition
 function hotkeyConditions.notInAppsAndTabs(...)
     local conditions = {}
-    for _, pair in ipairs(listFromVarargs(...)) do
+    for _, pair in ipairs(appTabPairsFromVarargs(...)) do
         local appName, tabPattern = table.unpack(pair)
         table.insert(conditions, hotkeyConditions.inAppAndTab(appName, tabPattern))
     end
