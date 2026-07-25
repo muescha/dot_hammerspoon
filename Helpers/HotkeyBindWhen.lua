@@ -86,7 +86,7 @@ local function conditionFromOne(conditionOrTarget)
             .. tostring(conditionOrTarget), 3)
 end
 
-local function conditionFrom(...)
+local function conditionsFrom(...)
     local args = { ... }
     if #args == 1 and type(args[1]) == "table" and not args[1].kind and not args[1].app then
         args = args[1]
@@ -96,13 +96,19 @@ local function conditionFrom(...)
         error("Expected at least one hotkey condition or target", 3)
     end
 
-    if #args == 1 then
-        return conditionFromOne(args[1])
-    end
-
     local conditions = {}
     for _, conditionOrTarget in ipairs(args) do
         table.insert(conditions, conditionFromOne(conditionOrTarget))
+    end
+
+    return conditions
+end
+
+local function conditionFrom(...)
+    local conditions = conditionsFrom(...)
+
+    if #conditions == 1 then
+        return conditions[1]
     end
 
     return hotkeyConditions.anyOf(table.unpack(conditions))
@@ -177,9 +183,9 @@ function hotkeyConditions.notInApps(...)
 end
 
 ---@class hs.hotkey.conditions
----@field anyOf fun(condition: HotkeyCondition, ...: HotkeyCondition): HotkeyCondition
+---@field anyOf fun(conditionOrTarget: HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string, ...: HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string): HotkeyCondition
 function hotkeyConditions.anyOf(...)
-    local conditions = { ... }
+    local conditions = conditionsFrom(...)
     return function(currentAppName, currentTab)
         for _, cond in ipairs(conditions) do
             if cond(currentAppName, currentTab) then
@@ -191,9 +197,9 @@ function hotkeyConditions.anyOf(...)
 end
 
 ---@class hs.hotkey.conditions
----@field noneOf fun(condition: HotkeyCondition, ...: HotkeyCondition): HotkeyCondition
+---@field noneOf fun(conditionOrTarget: HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string, ...: HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string): HotkeyCondition
 function hotkeyConditions.noneOf(...)
-    local conditions = { ... }
+    local conditions = conditionsFrom(...)
     return function(currentAppName, currentTab)
         for _, cond in ipairs(conditions) do
             if cond(currentAppName, currentTab) then
@@ -432,12 +438,7 @@ end
 ---@class hs.hotkey
 ---@field whenNot fun(...: HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string): hs.hotkey.whenBuilder
 function hs.hotkey.whenNot(...)
-    local shouldHandleHotkey = conditionFrom(...)
-    local shouldNotHandleHotkey = function(currentAppName, currentTab)
-        return not shouldHandleHotkey(currentAppName, currentTab)
-    end
-
-    return hs.hotkey.when(shouldNotHandleHotkey)
+    return hs.hotkey.when(hotkeyConditions.noneOf(...))
 end
 
 ---@param shouldHandleHotkey HotkeyCondition|HotkeyTarget
