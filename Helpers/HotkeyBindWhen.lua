@@ -427,6 +427,19 @@ function hs.hotkey.when(...)
     }
 end
 
+---@param ... HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string
+---@return hs.hotkey.whenBuilder
+---@class hs.hotkey
+---@field whenNot fun(...: HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string): hs.hotkey.whenBuilder
+function hs.hotkey.whenNot(...)
+    local shouldHandleHotkey = conditionFrom(...)
+    local shouldNotHandleHotkey = function(currentAppName, currentTab)
+        return not shouldHandleHotkey(currentAppName, currentTab)
+    end
+
+    return hs.hotkey.when(shouldNotHandleHotkey)
+end
+
 ---@param shouldHandleHotkey HotkeyCondition|HotkeyTarget
 ---@param modifier table|string
 ---@param key string|number
