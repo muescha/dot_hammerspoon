@@ -8,7 +8,8 @@ local scriptInfo = fileInfo()
 
 local chatGptCondition = {"ChatGPT", "ChatGPT"}
 
-bindHotkey(toAppsAndTabs(chatGptCondition),{"cmd", "shift"}, "A", keyInfo("block cmd+shift+a in ChatGPT"), function()
-    -- noop
+local noop = function()
     debugInfo("blocked cmd+shift+a in ChatGPT")
-end)
+end
+
+bindHotkey(toAppsAndTabs(chatGptCondition),{"cmd", "shift"}, "A", keyInfo("block cmd+shift+a in ChatGPT"), noop)

@@ -9,7 +9,8 @@ local scriptInfo = fileInfo()
 local mailMateCondition =  {"MailMate","essages%)$"}
 local whatsAppCondition = {"WhatsApp", "WhatsApp"}
 
-bindHotkey(toAppsAndTabs(mailMateCondition, whatsAppCondition),{"cmd"}, "W", keyInfo("block cmd+w in MailMate and WhatsApp"), function()
-    -- noop
+local noop = function()
     debugInfo("blocked cmd+w in MailMate or WhatsApp main view")
-end)
+end
+
+bindHotkey(toAppsAndTabs(mailMateCondition, whatsAppCondition),{"cmd"}, "W", keyInfo("block cmd+w in MailMate and WhatsApp"), noop)
