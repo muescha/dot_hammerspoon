@@ -49,14 +49,25 @@ local function matchesPattern(value, pattern)
     return string.match(value, pattern) ~= nil
 end
 
+local function assertString(value, name)
+    if type(value) ~= "string" then
+        error(name .. " must be a string, got " .. type(value) .. ": " .. tostring(value), 3)
+    end
+end
+
 local function conditionFromTarget(target)
     if target.kind == "app" then
+        assertString(target.app, "target.app")
+
         return function(currentAppName)
             return matchesPattern(currentAppName, target.app)
         end
     end
 
     if target.kind == "appTab" then
+        assertString(target.app, "target.app")
+        assertString(target.tab, "target.tab")
+
         return function(currentAppName, currentTab)
             return matchesPattern(currentAppName, target.app)
                     and matchesPattern(currentTab, target.tab)
