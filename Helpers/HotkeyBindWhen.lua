@@ -49,11 +49,16 @@ end
 
 local function conditionFromTarget(target)
     if target.kind == "app" then
-        return hotkeyConditions.inApps(target.app)
+        return function(currentAppName)
+            return string.match(currentAppName, target.app) ~= nil
+        end
     end
 
     if target.kind == "appTab" then
-        return hotkeyConditions.inAppAndTab(target.app, target.tab)
+        return function(currentAppName, currentTab)
+            return string.match(currentAppName, target.app) ~= nil
+                    and string.match(currentTab, target.tab) ~= nil
+        end
     end
 
     error("Unknown hotkey target kind: " .. tostring(target.kind), 3)
