@@ -45,17 +45,21 @@ function hotkeyTarget.app(appName)
     }
 end
 
+local function matchesPattern(value, pattern)
+    return string.match(value, pattern) ~= nil
+end
+
 local function conditionFromTarget(target)
     if target.kind == "app" then
         return function(currentAppName)
-            return string.match(currentAppName, target.app) ~= nil
+            return matchesPattern(currentAppName, target.app)
         end
     end
 
     if target.kind == "appTab" then
         return function(currentAppName, currentTab)
-            return string.match(currentAppName, target.app) ~= nil
-                    and string.match(currentTab, target.tab) ~= nil
+            return matchesPattern(currentAppName, target.app)
+                    and matchesPattern(currentTab, target.tab)
         end
     end
 
