@@ -15,6 +15,7 @@
 ---@alias HotkeyCondition fun(currentAppName: string, currentTab: string): boolean
 ---@alias HotkeyTarget { kind: "app"|"appTab", app: string, tab: string|nil, withTab: function|nil }
 ---@alias HotkeyTargetSpec { app: string, tab: string|nil }
+---@alias HotkeyTargetInput HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string
 ---@type hs.hotkey.conditions
 hs.hotkey.conditions = hs.hotkey.conditions or {}
 local hotkeyConditions = hs.hotkey.conditions
@@ -125,7 +126,7 @@ function hotkeyConditions.allApps()
 end
 
 ---@class hs.hotkey.conditions
----@field anyOf fun(conditionOrTarget: HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string, ...: HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string): HotkeyCondition
+---@field anyOf fun(conditionOrTarget: HotkeyTargetInput, ...: HotkeyTargetInput): HotkeyCondition
 function hotkeyConditions.anyOf(...)
     local conditions = conditionsFrom(...)
     return function(currentAppName, currentTab)
@@ -139,7 +140,7 @@ function hotkeyConditions.anyOf(...)
 end
 
 ---@class hs.hotkey.conditions
----@field noneOf fun(conditionOrTarget: HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string, ...: HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string): HotkeyCondition
+---@field noneOf fun(conditionOrTarget: HotkeyTargetInput, ...: HotkeyTargetInput): HotkeyCondition
 function hotkeyConditions.noneOf(...)
     local conditions = conditionsFrom(...)
     return function(currentAppName, currentTab)
@@ -191,7 +192,7 @@ end
 -- hs.hotkey.when(conditions.allApps).bind({"cmd"}, "n", nil, pressedfn)
 -- hs.hotkey.when("MailMate").block({"cmd"}, "W", "block cmd+w", "blocked cmd+w in MailMate")
 
----@param shouldHandleHotkey HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string
+---@param shouldHandleHotkey HotkeyTargetInput
 ---@param modifier table|string
 ---@param key string|number
 ---@param message string|nil
@@ -199,7 +200,7 @@ end
 ---@param releasedfn function|nil
 ---@param repeatfn function|nil
 ---@class hs.hotkey
----@field bindWhen fun(shouldHandleHotkey: HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string, modifier: table|string, key: string|number, message: string|nil, pressedfn: function|nil, releasedfn: function|nil, repeatfn: function|nil)
+---@field bindWhen fun(shouldHandleHotkey: HotkeyTargetInput, modifier: table|string, key: string|number, message: string|nil, pressedfn: function|nil, releasedfn: function|nil, repeatfn: function|nil)
 function hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, pressedfn, releasedfn, repeatfn)
     shouldHandleHotkey = conditionFrom(shouldHandleHotkey)
 
@@ -299,10 +300,10 @@ end
 ---@field bind fun(modifier: table|string, key: string|number, message: string|nil, pressedfn: function|nil, releasedfn: function|nil, repeatfn: function|nil)
 ---@field block fun(modifier: table|string, key: string|number, message: string|nil, debugMessage: string|nil)
 
----@param ... HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string
+---@param ... HotkeyTargetInput
 ---@return hs.hotkey.whenBuilder
 ---@class hs.hotkey
----@field when fun(...: HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string): hs.hotkey.whenBuilder
+---@field when fun(...: HotkeyTargetInput): hs.hotkey.whenBuilder
 function hs.hotkey.when(...)
     local shouldHandleHotkey = conditionFrom(...)
 
@@ -316,21 +317,21 @@ function hs.hotkey.when(...)
     }
 end
 
----@param ... HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string
+---@param ... HotkeyTargetInput
 ---@return hs.hotkey.whenBuilder
 ---@class hs.hotkey
----@field whenNot fun(...: HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string): hs.hotkey.whenBuilder
+---@field whenNot fun(...: HotkeyTargetInput): hs.hotkey.whenBuilder
 function hs.hotkey.whenNot(...)
     return hs.hotkey.when(hotkeyConditions.noneOf(...))
 end
 
----@param shouldHandleHotkey HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string
+---@param shouldHandleHotkey HotkeyTargetInput
 ---@param modifier table|string
 ---@param key string|number
 ---@param message string|nil
 ---@param debugMessage string|nil
 ---@class hs.hotkey
----@field blockWhen fun(shouldHandleHotkey: HotkeyCondition|HotkeyTarget|HotkeyTargetSpec|string, modifier: table|string, key: string|number, message: string|nil, debugMessage: string|nil)
+---@field blockWhen fun(shouldHandleHotkey: HotkeyTargetInput, modifier: table|string, key: string|number, message: string|nil, debugMessage: string|nil)
 function hs.hotkey.blockWhen(shouldHandleHotkey, modifier, key, message, debugMessage)
     local noop = function()
         if debugMessage then
