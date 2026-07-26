@@ -218,7 +218,7 @@ function hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, pressedf
 
     local hotkeyHandler
 
-    local function shouldHandle()
+    local function shouldHandleCurrentContext()
         -- guard: frontmostApplication may be nil briefly
         local frontmost = hs.application.frontmostApplication()
         local currentApp = frontmost and frontmost:name() or ""
@@ -239,12 +239,12 @@ function hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, pressedf
         debugInfo("currentTab=focusedWindow:title()")
         debugInfo("currentTab: ", currentTab)
 
-        local shouldHandle = shouldHandleHotkey(currentApp, currentTab)
+        local shouldHandleCurrentHotkey = shouldHandleHotkey(currentApp, currentTab)
 
-        debugInfo("shouldHandle = shouldHandleHotkey(currentApp, currentTab)")
-        debugInfo("shouldHandle: ", shouldHandle)
+        debugInfo("shouldHandleCurrentHotkey = shouldHandleHotkey(currentApp, currentTab)")
+        debugInfo("shouldHandleCurrentHotkey: ", shouldHandleCurrentHotkey)
 
-        return shouldHandle
+        return shouldHandleCurrentHotkey
     end
 
     local function passThroughKeystroke()
@@ -254,9 +254,9 @@ function hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, pressedf
     end
 
     local function handleHotkeyEvent(callback, passThroughWhenBlocked)
-        local shouldHandle = shouldHandle()
+        local shouldHandleCurrentHotkey = shouldHandleCurrentContext()
 
-        if shouldHandle then
+        if shouldHandleCurrentHotkey then
             --hs.alert.show("execute on: " .. currentApp)
             --logger.i("execute on: " .. currentApp)
             if callback then
