@@ -116,7 +116,7 @@ local function conditionFrom(...)
     return hotkeyConditions.anyOf(table.unpack(conditions))
 end
 
---- app select options
+--- condition combinators
 
 ---@class hs.hotkey.conditions
 ---@field allApps HotkeyCondition
@@ -156,6 +156,7 @@ end
 -- hs.hotkey.when(HotkeyTargetInput, ...).bind(modifier, key, message, pressedfn, releasedfn, repeatfn)
 -- hs.hotkey.when(HotkeyTargetInput, ...).block(modifier, key, message, debugMessage)
 -- hs.hotkey.whenNot(HotkeyTargetInput, ...).bind(modifier, key, message, pressedfn, releasedfn, repeatfn)
+-- hs.hotkey.whenNot(HotkeyTargetInput, ...).block(modifier, key, message, debugMessage)
 -- Blocked press and repeat events are passed through with hs.eventtap.keyStroke.
 -- Blocked release events are ignored.
 

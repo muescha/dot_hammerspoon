@@ -24,7 +24,7 @@ I don't like it when MailMate switches the focus to Chrome when I click on a lin
 ### [DisableCmdW](/Functions/DisableCmdW.lua)
 
 This blocks the shortcut `cmd+w` at the main screen of MailMate and WhatsApp so it does not close the MailMate main window.
-It uses my helper `hs.hotkey.when(conditions.inAppsAndTabs(...)).block(...)` (see below).
+It uses my helper `hs.hotkey.when(...).block(...)` with app/tab targets (see below).
 
 ### [MacZoom](/Functions/MacZoom.lua)
 
@@ -286,11 +286,11 @@ if you add a scriptname to the description then it is grouped by scriptname. Exa
 
 This helper catches errors and prints them to the console. It is useful for debugging purposes, as it allows you to see the source of an error when it is crashing your script.
 
-### [HotkeyBindWhen with app conditions](/Helpers/HotkeyBindWhen.lua)
+### [HotkeyBindWhen with app targets](/Helpers/HotkeyBindWhen.lua)
 
 If you like to handle hotkeys only in some apps or exclude some apps from your global hotkeys, then the helper `HotkeyBindWhen` helps you.
 
-The `AppCondition` decides when Hammerspoon should handle the hotkey itself:
+The target input decides when Hammerspoon should handle the hotkey itself:
 
 - `true` runs the configured callback.
 - `false` skips the configured callback and passes blocked press/repeat events through to the frontmost app.
@@ -298,64 +298,71 @@ The `AppCondition` decides when Hammerspoon should handle the hotkey itself:
 Blocked press and repeat events are passed through with `hs.eventtap.keyStroke`.
 Blocked release events are ignored.
 
-This means `conditions.notInApps("Google Chrome")` handles the hotkey everywhere except in Google Chrome. In Google Chrome the original shortcut is passed through.
+This means `hs.hotkey.whenNot("Google Chrome")` handles the hotkey everywhere except in Google Chrome. In Google Chrome the original shortcut is passed through.
 
 #### Syntax
 
 ```lua
+local at = hs.hotkey.target
 local conditions = hs.hotkey.conditions
 
-hs.hotkey.when(AppCondition).bind(modifier, key, message, pressedfn, releasedfn, repeatfn)
-hs.hotkey.when(AppCondition).block(modifier, key, message, debugMessage)
-hs.hotkey.bindWhen(AppCondition, modifier, key, message, pressedfn, releasedfn, repeatfn)
+hs.hotkey.when(HotkeyTargetInput, ...).bind(modifier, key, message, pressedfn, releasedfn, repeatfn)
+hs.hotkey.when(HotkeyTargetInput, ...).block(modifier, key, message, debugMessage)
+hs.hotkey.whenNot(HotkeyTargetInput, ...).bind(modifier, key, message, pressedfn, releasedfn, repeatfn)
+hs.hotkey.whenNot(HotkeyTargetInput, ...).block(modifier, key, message, debugMessage)
+hs.hotkey.bindWhen(HotkeyTargetInput, modifier, key, message, pressedfn, releasedfn, repeatfn)
+hs.hotkey.blockWhen(HotkeyTargetInput, modifier, key, message, debugMessage)
 ```
 
-- where `AppCondition` := 
+- where `HotkeyTargetInput` :=
+  - `appName`
+  - `{ app = appName }`
+  - `{ app = appName, tab = tabPattern }`
+  - `at.app(appName)`
+  - `at.app(appName).withTab(tabPattern)`
+  - `at.appTab(appName, tabPattern)`
+  - `condition`
+  - `{ targetOrCondition, ... }`
+
+- condition combinators:
   - `conditions.allApps`
-  - `conditions.inApps(appName, ...)`
-  - `conditions.inApps(apps)`
-  - `conditions.notInApps(appName, ...)`
-  - `conditions.notInApps(apps)`
-  - `conditions.inAppAndTab(appName, tabPattern)`
-  - `conditions.inAppsAndTabs({appName, tabPattern}, ...)`
-  - `conditions.inAppsAndTabs(appTabPair)`
-  - `conditions.inAppsAndTabs(appTabPairs)`
-  - `conditions.notInAppAndTab(appName, tabPattern)`
-  - `conditions.notInAppsAndTabs({appName, tabPattern}, ...)`
-  - `conditions.notInAppsAndTabs(appTabPair)`
-  - `conditions.notInAppsAndTabs(appTabPairs)`
-  - `conditions.anyOf(condition, ...)`
-  - `conditions.noneOf(condition, ...)`
+  - `conditions.anyOf(targetOrCondition, ...)`
+  - `conditions.noneOf(targetOrCondition, ...)`
 
 - and where:
-  - `apps` := table of app names, for example `{"Google Chrome", "code"}`
-  - `appName` := string
-  - `tabPattern` := pattern to match a tab
-  - `appTabPair` := `{appName, tabPattern}` pair, for example `{"ChatGPT", "ChatGPT"}`
-  - `appTabPairs` := table of `{appName, tabPattern}` pairs, for example `{{"MailMate", "essages%)$"}, {"WhatsApp", "pattern"}}`
-  
+  - `appName` := app name pattern, for example `"Google Chrome"`
+  - `tabPattern` := focused window title pattern, for example `"essages%)$"`
+  - `condition` := `fun(currentAppName: string, currentTab: string): boolean`
+  - `targetOrCondition` := a `HotkeyTargetInput` except nested lists
+
 Examples:
 
 ```lua
+local at = hs.hotkey.target
 local conditions = hs.hotkey.conditions
 
-hs.hotkey.when(conditions.inApps("Google Chrome", "code")).bind(modifier, key, message, pressedfn)
-hs.hotkey.when(conditions.inApps({"Google Chrome", "code"})).bind(modifier, key, message, pressedfn)
+hs.hotkey.when("Google Chrome").bind(modifier, key, message, pressedfn)
+hs.hotkey.when("Google Chrome", "Safari").bind(modifier, key, message, pressedfn)
 
-hs.hotkey.when(conditions.notInApps("Google Chrome")).bind(modifier, key, message, pressedfn)
-hs.hotkey.when(conditions.notInApps("Google Chrome", "whatsapp")).bind(modifier, key, message, pressedfn)
+local browsers = { "Google Chrome", "Safari" }
+hs.hotkey.when(browsers).bind(modifier, key, message, pressedfn)
 
-hs.hotkey.when(conditions.inAppAndTab("MailMate", "essages%)$")).bind({"cmd"}, "n", "info", pressedfn)
-hs.hotkey.when(conditions.inAppsAndTabs({"MailMate", "essages%)$"}, {"WhatsApp", "pattern"})).bind({"cmd"}, "n", "info", pressedfn)
+hs.hotkey.whenNot("Google Chrome").bind(modifier, key, message, pressedfn)
 
-local appTabPair = {"ChatGPT", "ChatGPT"}
-hs.hotkey.when(conditions.inAppsAndTabs(appTabPair)).bind({"cmd"}, "n", "info", pressedfn)
+hs.hotkey.when({ app = "MailMate", tab = "essages%)$" }).bind({"cmd"}, "n", "info", pressedfn)
+hs.hotkey.when(at.app("MailMate").withTab("essages%)$")).bind({"cmd"}, "n", "info", pressedfn)
 
-local appTabPairs = {{"MailMate", "essages%)$"}, {"WhatsApp", "pattern"}}
-hs.hotkey.when(conditions.inAppsAndTabs(appTabPairs)).bind({"cmd"}, "n", "info", pressedfn)
-hs.hotkey.when(conditions.notInAppsAndTabs(appTabPairs)).bind({"cmd"}, "n", "info", pressedfn)
+local mailMateTarget = { app = "MailMate", tab = "essages%)$" }
+local whatsAppTarget = { app = "WhatsApp", tab = "WhatsApp" }
+hs.hotkey.when(mailMateTarget, whatsAppTarget).block({"cmd"}, "W", "block cmd+w", "blocked cmd+w in MailMate or WhatsApp main view")
 
-hs.hotkey.when(conditions.inApps("MailMate")).block({"cmd"}, "W", "block cmd+w", "blocked cmd+w in MailMate")
+local writingTargets = conditions.anyOf(
+    { app = "MailMate", tab = "essages%)$" },
+    { app = "WhatsApp", tab = "WhatsApp" }
+)
+hs.hotkey.when(writingTargets).block({"cmd"}, "W", "block cmd+w", "blocked cmd+w in MailMate or WhatsApp main view")
+
+hs.hotkey.when(conditions.allApps).bind({"cmd"}, "n", nil, pressedfn)
 ```
 
 for patterns see:
