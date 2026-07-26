@@ -2,8 +2,6 @@
 
 -- https://stackoverflow.com/questions/63795560/how-can-i-prevent-hammerspoon-hotkeys-from-overriding-hotkeys-in-other-applicati
 
-local logger = hs.logger.new("HotkeyBindWhen")
-
 ---@class hs.hotkey.conditions
 
 ---@class hs.hotkey.target

@@ -4,7 +4,7 @@
 --- DateTime: 28.01.23 23:50
 ---
 
-local scriptInfo = fileInfo()
+fileInfo()
 
 local mailMateTarget = { app = "MailMate", tab = "essages%)$" }
 local whatsAppTarget = { app = "WhatsApp", tab = "WhatsApp" }
