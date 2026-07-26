@@ -217,7 +217,7 @@ end
 ---@class hs.hotkey
 ---@field bindWhen fun(shouldHandleHotkey: HotkeyTargetInput, modifier: table|string, key: string|number, message: string|nil, pressedfn: function|nil, releasedfn: function|nil, repeatfn: function|nil)
 function hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, pressedfn, releasedfn, repeatfn)
-    shouldHandleHotkey = conditionFrom(shouldHandleHotkey)
+    local shouldHandleCondition = conditionFrom(shouldHandleHotkey)
 
     -- in case someone forget to set the message to nil
     if type(message) == "function" then
@@ -254,9 +254,9 @@ function hs.hotkey.bindWhen(shouldHandleHotkey, modifier, key, message, pressedf
         debugInfo("currentTab=focusedWindow:title()")
         debugInfo("currentTab: ", currentTab)
 
-        local shouldHandleCurrentHotkey = shouldHandleHotkey(currentApp, currentTab)
+        local shouldHandleCurrentHotkey = shouldHandleCondition(currentApp, currentTab)
 
-        debugInfo("shouldHandleCurrentHotkey = shouldHandleHotkey(currentApp, currentTab)")
+        debugInfo("shouldHandleCurrentHotkey = shouldHandleCondition(currentApp, currentTab)")
         debugInfo("shouldHandleCurrentHotkey: ", shouldHandleCurrentHotkey)
 
         return shouldHandleCurrentHotkey
