@@ -17,7 +17,6 @@ local logger = hs.logger.new("HotkeyBindWhen")
 ---@alias HotkeyCondition fun(currentAppName: string, currentTab: string): boolean
 ---@alias HotkeyTarget { kind: "app"|"appTab", app: string, tab: string|nil, withTab: function|nil }
 ---@alias HotkeyTargetSpec { app: string, tab: string|nil }
----@alias AppTabPair { [1]: string, [2]: string }
 ---@type hs.hotkey.conditions
 hs.hotkey.conditions = hs.hotkey.conditions or {}
 local hotkeyConditions = hs.hotkey.conditions
@@ -119,72 +118,12 @@ local function conditionFrom(...)
     return hotkeyConditions.anyOf(table.unpack(conditions))
 end
 
--- Helper Function
-
-local function listToSet (list)
-    local set = {}
-    for _, l in ipairs(list) do
-        set[l] = true
-    end
-    return set
-end
-
-local function listFromVarargs(...)
-    local args = { ... }
-    if #args == 1 and type(args[1]) == 'table' then
-        return args[1]
-    end
-    return args
-end
-
-local function appTabPairsFromVarargs(...)
-    local args = { ... }
-    if #args == 1 and type(args[1]) == 'table' then
-        local first = args[1][1]
-        if type(first) == 'table' then
-            return args[1]
-        end
-        return args
-    end
-    return args
-end
-
---- app condition curry functions
-
-local function conditionInApp(set, app)
-    return set[app] == true
-end
-
-local function conditionNotInApp(set, app)
-    return set[app] ~= true
-end
-
-local function curryCondition(condition, ...)
-    local appSet = listToSet(listFromVarargs(...))
-    local function curried(currentAppName)
-        return condition(appSet, currentAppName)
-    end
-    return curried
-end
-
 --- app select options
 
 ---@class hs.hotkey.conditions
 ---@field allApps HotkeyCondition
 function hotkeyConditions.allApps()
     return true
-end
-
----@class hs.hotkey.conditions
----@field inApps fun(apps: table|string, ...: string): HotkeyCondition
-function hotkeyConditions.inApps(...)
-    return curryCondition(conditionInApp, ...)
-end
-
----@class hs.hotkey.conditions
----@field notInApps fun(apps: table|string, ...: string): HotkeyCondition
-function hotkeyConditions.notInApps(...)
-    return curryCondition(conditionNotInApp, ...)
 end
 
 ---@class hs.hotkey.conditions
@@ -215,54 +154,6 @@ function hotkeyConditions.noneOf(...)
     end
 end
 
--- for patterns see https://www.lua.org/manual/5.1/manual.html#5.4.1
----@class hs.hotkey.conditions
----@field inAppAndTab fun(appName: string, tabPattern: string): HotkeyCondition
-function hotkeyConditions.inAppAndTab(appName,tabPattern)
-    local function condition(currentAppName, currentTab)
-        --return currentAppName == appName and string.match(currentTab,tabPattern)
-        return string.match(currentAppName, appName) ~= nil
-                and string.match(currentTab,tabPattern) ~= nil
-    end
-    return condition
-end
-
----@class hs.hotkey.conditions
----@field inAppsAndTabs fun(appTabPair: AppTabPair, ...: AppTabPair): HotkeyCondition
-function hotkeyConditions.inAppsAndTabs(...)
-    local conditions = {}
-    for _, pair in ipairs(appTabPairsFromVarargs(...)) do
-        local appName, tabPattern = table.unpack(pair)
-        table.insert(conditions, hotkeyConditions.inAppAndTab(appName, tabPattern))
-    end
-    return hotkeyConditions.anyOf(table.unpack(conditions))
-end
-
--- for patterns see https://www.lua.org/manual/5.1/manual.html#5.4.1
----@class hs.hotkey.conditions
----@field notInAppAndTab fun(appName: string, tabPattern: string): HotkeyCondition
-function hotkeyConditions.notInAppAndTab(appName,tabPattern)
-    local function condition(currentAppName, currentTab)
-        --return not (currentAppName == appName and string.match(currentTab,tabPattern))
-        return not (
-                string.match(currentAppName, appName) ~= nil
-                and string.match(currentTab,tabPattern) ~= nil
-        )
-    end
-    return condition
-end
-
----@class hs.hotkey.conditions
----@field notInAppsAndTabs fun(appTabPair: AppTabPair, ...: AppTabPair): HotkeyCondition
-function hotkeyConditions.notInAppsAndTabs(...)
-    local conditions = {}
-    for _, pair in ipairs(appTabPairsFromVarargs(...)) do
-        local appName, tabPattern = table.unpack(pair)
-        table.insert(conditions, hotkeyConditions.inAppAndTab(appName, tabPattern))
-    end
-    return hotkeyConditions.noneOf(table.unpack(conditions))
-end
-
 -- hs.hotkey.bindWhen(HotkeyTargetInput, modifier, key, message, pressedfn, releasedfn, repeatfn)
 -- hs.hotkey.when(HotkeyTargetInput, ...).bind(modifier, key, message, pressedfn, releasedfn, repeatfn)
 -- hs.hotkey.when(HotkeyTargetInput, ...).block(modifier, key, message, debugMessage)
@@ -282,25 +173,11 @@ end
 --   at.appTab(appName, tabPattern)
 --   condition
 --   { targetOrCondition, ... }
+
+-- Condition combinators:
+--   conditions.allApps
 --   conditions.anyOf(targetOrCondition, ...)
 --   conditions.noneOf(targetOrCondition, ...)
-
--- Legacy AppCondition helpers:
---   conditions.allApps
---   conditions.inApps(appName, ...)
---   conditions.inApps(apps)
---   conditions.notInApps(appName, ...)
---   conditions.notInApps(apps)
---   conditions.inAppAndTab(appName, tabPattern)
---   conditions.inAppsAndTabs({appName, tabPattern}, ...)
---   conditions.inAppsAndTabs(appTabPair)
---   conditions.inAppsAndTabs(appTabPairs)
---   conditions.notInAppAndTab(appName, tabPattern)
---   conditions.notInAppsAndTabs({appName, tabPattern}, ...)
---   conditions.notInAppsAndTabs(appTabPair)
---   conditions.notInAppsAndTabs(appTabPairs)
---   conditions.anyOf(condition, ...)
---   conditions.noneOf(condition, ...)
 
 -- `appName` := app name pattern, for example "Google Chrome"
 -- `tabPattern` := focused window title pattern, for example "essages%)$"
@@ -310,6 +187,7 @@ end
 -- hs.hotkey.when({ "Google Chrome", "IntelliJ IDEA" }).bind({"cmd"}, "n", "info", pressedfn)
 -- hs.hotkey.when({ app = "MailMate", tab = "essages%)$" }).bind({"cmd"}, "n", "info", pressedfn)
 -- hs.hotkey.when(at.app("MailMate").withTab("essages%)$"), at.app("WhatsApp").withTab("WhatsApp")).bind({"cmd"}, "n", "info", pressedfn)
+-- hs.hotkey.when(conditions.anyOf("Google Chrome", "IntelliJ IDEA")).bind({"cmd"}, "n", "info", pressedfn)
 -- hs.hotkey.whenNot("Google Chrome").bind({"cmd"}, "n", "info", pressedfn)
 -- hs.hotkey.when(conditions.allApps).bind({"cmd"}, "n", nil, pressedfn)
 -- hs.hotkey.when("MailMate").block({"cmd"}, "W", "block cmd+w", "blocked cmd+w in MailMate")
