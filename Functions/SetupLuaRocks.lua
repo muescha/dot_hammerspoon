@@ -17,9 +17,9 @@ package.path = package.path .. ";" .. luarocks_path
 package.cpath = package.cpath .. ";" .. luarocks_cpath
 
 --print("Luarocks Paths:")
---local cmd_check = 'zsh -l -c "which /Users/muescha/.asdf/shims/luarocks"'
+--local cmd_check = 'zsh -l -c "which /Users/muescha/.local/share/mise/installs/lua/5.4.4/luarocks/bin/luarocks"'
 --print(hs.execute(cmd_check))
---local cmd_test = 'zsh -l -c "/Users/muescha/.asdf/shims/luarocks --lua-version ' .. lVer .. ' list"'
+--local cmd_test = 'zsh -l -c "/Users/muescha/.local/share/mise/installs/lua/5.4.4/luarocks/bin/luarocks --lua-version ' .. lVer .. ' list"'
 --print(hs.execute(cmd_test))
 --print("lVer: ".. _VERSION)
 --print("lVer: ".. lVer)
