@@ -5,7 +5,7 @@ fileInfo()
 local lVer = _VERSION:match("Lua (.+)$")
 
 --local luarocks = hs.execute("which luarocks"):gsub("\n", "")
-local luarocks = "/Users/muescha/.asdf/shims/luarocks"
+local luarocks = "/Users/muescha/.local/share/mise/installs/lua/5.4.4/luarocks/bin/luarocks"
 
 local cmd_path = luarocks .. " --lua-version " .. lVer .. " path --lr-path "
 local cmd_cpath = luarocks .. " --lua-version " .. lVer .. " path --lr-cpath"
@@ -31,4 +31,3 @@ package.cpath = package.cpath .. ";" .. luarocks_cpath
 --print("luarocks_cpath: " .. luarocks_cpath)
 --print(package.path:gsub(';', ";\n"))
 --print(package.cpath:gsub(';', ";\n"))
-
