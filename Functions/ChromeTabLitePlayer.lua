@@ -11,8 +11,9 @@
 ---                              (the <video> is cross-origin here); d= just rides
 ---                              along, YouTube ignores it
 ---
---- The URL is only rewritten on youtube.com or liteplayer.pages.dev; on any other
---- page the hotkey does nothing (guards against an accidental hyper+g elsewhere).
+--- The URL is only rewritten on youtube.com/watch, www.youtube.com/watch, or
+--- liteplayer.pages.dev; on any other page the hotkey does nothing (guards
+--- against an accidental hyper+g elsewhere, including YouTube Shorts and Live).
 ---
 --- Requires:
 --- Chrome:
@@ -34,8 +35,9 @@ local JXA = [[
     const tab = windows[0].activeTab();
     const src = `(function () {
         var host = location.hostname;
-        var yt = host.indexOf('youtube.com') > -1;
-        var lp = host.indexOf('liteplayer.pages.dev') > -1;
+        var isYoutubeHost = host === 'youtube.com' || host === 'www.youtube.com';
+        var yt = isYoutubeHost && location.pathname === '/watch';
+        var lp = host === 'liteplayer.pages.dev';
         if (!yt && !lp) { return 'skip'; }
 
         var url = new URL(
