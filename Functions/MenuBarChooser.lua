@@ -640,13 +640,6 @@ local function firstNonEmpty(...)
     return nil
 end
 
-local function appendDetail(parts, label, value)
-    local cleaned = cleanValue(value)
-    if cleaned then
-        table.insert(parts, label .. "=" .. cleaned)
-    end
-end
-
 local function sortActionNames(names)
     if not names then
         return {}
@@ -1112,22 +1105,6 @@ local function buildMenuChoiceSubText(app, metadata, appText)
     return table.concat(summaryParts, " | ")
 end
 
-local function buildMenuChoiceDebugText(app, item, metadata, actionName)
-    local detailParts = {}
-    appendDetail(detailParts, "action", actionName)
-    appendDetail(detailParts, "desc", item:actionDescription(actionName))
-    appendDetail(detailParts, "id", metadata.identifier)
-    appendDetail(detailParts, "title", metadata.title)
-    appendDetail(detailParts, "valueDesc", metadata.valueDescription)
-    appendDetail(detailParts, "value", metadata.value)
-    appendDetail(detailParts, "role", metadata.role)
-    appendDetail(detailParts, "subrole", metadata.subrole)
-    appendDetail(detailParts, "roleDesc", metadata.roleDescription)
-    appendDetail(detailParts, "help", metadata.help)
-    appendDetail(detailParts, "bundle", app:bundleID())
-    return table.concat(detailParts, " | ")
-end
-
 local function buildMenuChoice(app, item, actionName, selectionMap)
     local perf = selectionMap.perf
     local metadataStartedAt = perfNow()
@@ -1144,12 +1121,6 @@ local function buildMenuChoice(app, item, actionName, selectionMap)
     perfAdd(perf, "labels", labelElapsedMs)
     perfRecordSlowItem(perf, app, appText, "labels", labelElapsedMs)
 
-    local debugStartedAt = perfNow()
-    local debugText = buildMenuChoiceDebugText(app, item, metadata, actionName)
-    local debugElapsedMs = perfElapsedMs(debugStartedAt)
-    perfAdd(perf, "debugText", debugElapsedMs)
-    perfRecordSlowItem(perf, app, appText, "debugText", debugElapsedMs)
-
     local appKey = addMenuItem(selectionMap, item)
     local imageStartedAt = perfNow()
     local appImage = preferredChoiceImage(app, item, appText)
@@ -1164,8 +1135,7 @@ local function buildMenuChoice(app, item, actionName, selectionMap)
         element = {
             key = appKey,
             action = actionName
-        },
-        debugText = debugText
+        }
     }
 end
 
@@ -1280,7 +1250,21 @@ function MenuBarChooser()
                     return menuItem:performAction(selection.element.action)
                 end)
                 if not ok or result == false then
-                    hs.printf("MenuBarChooser action failed: %s", selection.debugText or selection.text or "<unknown>")
+                    local debugStartedAt = perfNow()
+                    local metadata = collectMenuItemMetadata(menuItem)
+                    local actionDescription = nil
+                    pcall(function()
+                        actionDescription = menuItem:actionDescription(selection.element.action)
+                    end)
+                    perfAdd(selectionMap.perf, "debugText", perfElapsedMs(debugStartedAt))
+                    hs.printf(
+                            "MenuBarChooser action failed: text=%s subText=%s action=%s actionDescription=%s metadata=%s",
+                            selection.text or "<unknown>",
+                            selection.subText or "-",
+                            selection.element.action or "-",
+                            actionDescription or "-",
+                            hs.inspect(metadata)
+                    )
                     debugElement(menuItem, selection.text or "MenuBarChooser selection")
                     hs.alert.show("Aktion fehlgeschlagen: " .. (selection.text or selection.element.action), 1.5)
                 end
