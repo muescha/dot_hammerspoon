@@ -630,16 +630,6 @@ local function firstNonEmptyAttributeValue(item, ...)
     return nil
 end
 
-local function firstNonEmpty(...)
-    for i = 1, select("#", ...) do
-        local value = cleanValue(select(i, ...))
-        if value then
-            return value
-        end
-    end
-    return nil
-end
-
 local function sortActionNames(names)
     if not names then
         return {}
