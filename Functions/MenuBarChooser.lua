@@ -611,6 +611,15 @@ local function cleanValue(value)
     return nil
 end
 
+local function itemMetadataValue(item, attributeName)
+    local shortcutValue = cleanValue(item[attributeName])
+    if shortcutValue then
+        return shortcutValue
+    end
+
+    return cleanValue(safeAttributeValue(item, attributeName))
+end
+
 local function firstNonEmpty(...)
     for i = 1, select("#", ...) do
         local value = cleanValue(select(i, ...))
@@ -810,7 +819,7 @@ local function shouldSkipMenuItem(app, item, names)
         return false
     end
 
-    local identifier = cleanValue(firstNonEmpty(item.AXIdentifier, safeAttributeValue(item, "AXIdentifier")))
+    local identifier = itemMetadataValue(item, "AXIdentifier")
     local enabled = safeAttributeValue(item, "AXEnabled")
 
     if identifier then
@@ -1017,15 +1026,6 @@ end
 
 local function preferredChoiceImage(app, item, debugLabel)
     return snapshotChoiceImageForHostApp(app, item, debugLabel) or fallbackChoiceImageForApp(app, debugLabel)
-end
-
-local function itemMetadataValue(item, attributeName)
-    local shortcutValue = cleanValue(item[attributeName])
-    if shortcutValue then
-        return shortcutValue
-    end
-
-    return cleanValue(safeAttributeValue(item, attributeName))
 end
 
 local function collectMenuItemMetadata(item)
