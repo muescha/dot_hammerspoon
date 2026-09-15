@@ -295,8 +295,18 @@ end
 
 perfResetLogFile()
 
+local function safeApplicationPath(app)
+    local ok, path = pcall(function()
+        return app:path()
+    end)
+    if ok then
+        return path
+    end
+    return nil
+end
+
 local function appCacheKey(app)
-    return app:bundleID() or app:path() or app:name()
+    return app:bundleID() or safeApplicationPath(app) or app:name()
 end
 
 local function appIdentity(app)
@@ -995,7 +1005,7 @@ local function fallbackChoiceImageForApp(app, debugLabel)
         return hs.image.imageFromAppBundle(bundleID)
     end
 
-    local path = app:path()
+    local path = safeApplicationPath(app)
     if path then
         logIcon("[MenuBarChooser][icon] using file fallback %s path=%s", debugLabel or "-", path)
         return hs.image.iconForFile(path)
