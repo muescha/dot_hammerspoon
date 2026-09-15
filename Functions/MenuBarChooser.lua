@@ -38,6 +38,13 @@ local DEBUG = {
     iconLogs = false
 }
 
+local PERF_CONFIG = {
+    enabled = true,
+    slowAppThresholdMs = 20,
+    slowItemThresholdMs = 10,
+    maxSlowEntries = 10
+}
+
 local function newTTLCache(defaultTTLSeconds)
     local store = {}
 
@@ -100,6 +107,144 @@ end
 
 local function logIcon(message, ...)
     debugLog(DEBUG.iconLogs, message, ...)
+end
+
+local function perfNow()
+    return hs.timer.secondsSinceEpoch()
+end
+
+local function perfElapsedMs(startedAt)
+    return (perfNow() - startedAt) * 1000
+end
+
+local function newPerfStats()
+    if not PERF_CONFIG.enabled then
+        return nil
+    end
+
+    return {
+        startedAt = perfNow(),
+        phases = {},
+        slowApps = {},
+        slowItems = {}
+    }
+end
+
+local function perfAdd(perf, phaseName, elapsedMs)
+    if not perf then
+        return
+    end
+
+    perf.phases[phaseName] = (perf.phases[phaseName] or 0) + elapsedMs
+end
+
+local function perfCount(perf, counterName, amount)
+    if not perf then
+        return
+    end
+
+    perf[counterName] = (perf[counterName] or 0) + (amount or 1)
+end
+
+local function perfRecordSlowEntry(entries, thresholdMs, entry)
+    if entry.elapsedMs < thresholdMs then
+        return
+    end
+
+    table.insert(entries, entry)
+end
+
+local function perfRecordSlowApp(perf, app, phaseName, elapsedMs)
+    if not perf then
+        return
+    end
+
+    perfRecordSlowEntry(perf.slowApps, PERF_CONFIG.slowAppThresholdMs, {
+        appName = app:name() or app:bundleID() or "<unknown>",
+        bundleID = app:bundleID() or "",
+        phaseName = phaseName,
+        elapsedMs = elapsedMs
+    })
+end
+
+local function perfRecordSlowItem(perf, app, label, phaseName, elapsedMs)
+    if not perf then
+        return
+    end
+
+    perfRecordSlowEntry(perf.slowItems, PERF_CONFIG.slowItemThresholdMs, {
+        appName = app:name() or app:bundleID() or "<unknown>",
+        label = label or "-",
+        phaseName = phaseName,
+        elapsedMs = elapsedMs
+    })
+end
+
+local function perfTopEntries(entries)
+    table.sort(entries, function(a, b)
+        return a.elapsedMs > b.elapsedMs
+    end)
+
+    local topEntries = {}
+    local limit = math.min(#entries, PERF_CONFIG.maxSlowEntries)
+    for index = 1, limit do
+        table.insert(topEntries, entries[index])
+    end
+    return topEntries
+end
+
+local function perfFormatPhases(phases)
+    local names = {}
+    for name, _ in pairs(phases) do
+        table.insert(names, name)
+    end
+    table.sort(names)
+
+    local parts = {}
+    for _, name in ipairs(names) do
+        table.insert(parts, string.format("%s=%.1fms", name, phases[name]))
+    end
+    return table.concat(parts, " ")
+end
+
+local function perfLogSummary(perf, scannedCount, foundAppsCount, foundItemsCount)
+    if not perf then
+        return
+    end
+
+    local totalMs = perfElapsedMs(perf.startedAt)
+    hs.printf(
+            "[MenuBarChooser][perf] total=%.1fms apps=%d matchedApps=%d items=%d phases: %s",
+            totalMs,
+            scannedCount,
+            foundAppsCount,
+            foundItemsCount,
+            perfFormatPhases(perf.phases)
+    )
+
+    local slowApps = perfTopEntries(perf.slowApps)
+    for index, entry in ipairs(slowApps) do
+        hs.printf(
+                "[MenuBarChooser][perf] slow app #%d %.1fms phase=%s app=%s bundle=%s",
+                index,
+                entry.elapsedMs,
+                entry.phaseName,
+                entry.appName,
+                entry.bundleID
+        )
+    end
+
+    local slowItems = perfTopEntries(perf.slowItems)
+    for index, entry in ipairs(slowItems) do
+        hs.printf(
+                "[MenuBarChooser][perf] slow item #%d %.1fms phase=%s app=%s item=%s",
+                index,
+                entry.elapsedMs,
+                entry.phaseName,
+                entry.appName,
+                entry.label
+        )
+    end
 end
 
 local function appCacheKey(app)
@@ -837,13 +982,18 @@ local function collectMenuItemMetadata(item)
     return metadata
 end
 
-local function buildBaseMenuChoiceText(app, item, metadata)
+local function buildBaseMenuChoiceText(app, item, metadata, perf)
     local isGenericHost = isGenericHostApp(app)
     local appName = fallbackDisplayAppName(app)
     local appText = metadata.label and (metadata.label ~= appName) and (appName .. ": " .. metadata.label) or appName
 
     if isGenericHost then
-        appText = inferSemanticNameFromMenu(item) or appName
+        local inferStartedAt = perfNow()
+        local inferredName = inferSemanticNameFromMenu(item)
+        local inferElapsedMs = perfElapsedMs(inferStartedAt)
+        perfAdd(perf, "inferSemanticName", inferElapsedMs)
+        perfRecordSlowItem(perf, app, metadata.label or appName, "inferSemanticName", inferElapsedMs)
+        appText = inferredName or appName
     elseif metadata.derivedLabel then
         appText = metadata.derivedLabel
     end
@@ -910,13 +1060,33 @@ local function buildMenuChoiceDebugText(app, item, metadata, actionName)
 end
 
 local function buildMenuChoice(app, item, actionName, selectionMap)
+    local perf = selectionMap.perf
+    local metadataStartedAt = perfNow()
     local metadata = collectMenuItemMetadata(item)
-    local baseText = buildBaseMenuChoiceText(app, item, metadata)
+    local metadataElapsedMs = perfElapsedMs(metadataStartedAt)
+    perfAdd(perf, "metadata", metadataElapsedMs)
+    perfRecordSlowItem(perf, app, metadata.label or metadata.title or metadata.identifier, "metadata", metadataElapsedMs)
+
+    local labelStartedAt = perfNow()
+    local baseText = buildBaseMenuChoiceText(app, item, metadata, perf)
     local appText = buildMenuChoiceText(baseText, actionName)
     local appSubText = buildMenuChoiceSubText(app, metadata, baseText)
+    local labelElapsedMs = perfElapsedMs(labelStartedAt)
+    perfAdd(perf, "labels", labelElapsedMs)
+    perfRecordSlowItem(perf, app, appText, "labels", labelElapsedMs)
+
+    local debugStartedAt = perfNow()
     local debugText = buildMenuChoiceDebugText(app, item, metadata, actionName)
+    local debugElapsedMs = perfElapsedMs(debugStartedAt)
+    perfAdd(perf, "debugText", debugElapsedMs)
+    perfRecordSlowItem(perf, app, appText, "debugText", debugElapsedMs)
+
     local appKey = addMenuItem(selectionMap, item)
+    local imageStartedAt = perfNow()
     local appImage = preferredChoiceImage(app, item, appText)
+    local imageElapsedMs = perfElapsedMs(imageStartedAt)
+    perfAdd(perf, "images", imageElapsedMs)
+    perfRecordSlowItem(perf, app, appText, "images", imageElapsedMs)
 
     return {
         text = appText,
@@ -944,15 +1114,28 @@ end
 
 local function appendChoicesForApp(app, children, selectionMap)
     local addedChoices = 0
+    local perf = selectionMap.perf
 
     for _, item in ipairs(children) do
+        local actionNamesStartedAt = perfNow()
         local names = item:actionNames()
-        if not shouldSkipMenuItem(app, item, names) then
+        local actionNamesElapsedMs = perfElapsedMs(actionNamesStartedAt)
+        perfAdd(perf, "actionNames", actionNamesElapsedMs)
+        perfRecordSlowItem(perf, app, nil, "actionNames", actionNamesElapsedMs)
+
+        local skipStartedAt = perfNow()
+        local shouldSkip = shouldSkipMenuItem(app, item, names)
+        local skipElapsedMs = perfElapsedMs(skipStartedAt)
+        perfAdd(perf, "skipChecks", skipElapsedMs)
+        perfRecordSlowItem(perf, app, nil, "skipChecks", skipElapsedMs)
+
+        if not shouldSkip then
             local primaryActionName, sortedNames = choosePrimaryAction(names)
             if primaryActionName then
                 local choice = buildMenuChoice(app, item, primaryActionName, selectionMap)
                 table.insert(selectionMap.chooserItems, choice)
                 addedChoices = addedChoices + 1
+                perfCount(perf, "builtChoices")
                 logDiscoveredMenuItem(app, item, choice, sortedNames)
             end
         end
@@ -962,7 +1145,9 @@ local function appendChoicesForApp(app, children, selectionMap)
 end
 
 local function applyChoices(selectionMap)
+    local startedAt = perfNow()
     FuzzyMatcher.setChoices(selectionMap.chooserItems, chooser, false, FuzzyMatcher.Sorter.byScore)
+    perfAdd(selectionMap.perf, "applyChoices", perfElapsedMs(startedAt))
 end
 
 local function updateProgressHud(scannedCount, totalCount, foundAppsCount, foundItemsCount, lastAppName, state)
@@ -994,17 +1179,22 @@ function MenuBarChooser()
     stopScanTimer()
     hideProgressHud()
     debugLoggedElementCount = 0
+    local perf = newPerfStats()
 
     if chooser then
         chooser:delete()
         chooser = nil
     end
 
+    local runningApplicationsStartedAt = perfNow()
     local runningApplications = hs.application.runningApplications()
+    perfAdd(perf, "runningApplications", perfElapsedMs(runningApplicationsStartedAt))
+
     local selectionMap = {
         chooserItems = {},
         menuItems = {},
-        menuItemsCounter = 0
+        menuItemsCounter = 0,
+        perf = perf
     }
     local scannedCount = 0
     local foundAppsCount = 0
@@ -1079,6 +1269,7 @@ function MenuBarChooser()
             updateProgressHud(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, lastStatusAppName, "Suche abgeschlossen")
             hideProgressHud()
             applyChoices(selectionMap)
+            perfLogSummary(perf, scannedCount, foundAppsCount, foundItemsCount)
             if not SCAN_CONFIG.showChooserDuringScan then
                 chooser:show(chooserTopLeft)
             end
@@ -1091,11 +1282,21 @@ function MenuBarChooser()
 
         scannedCount = scannedCount + 1
 
+        local findStartedAt = perfNow()
         local children = findMenuExtrasMenuBarForApplication(app)
+        local findElapsedMs = perfElapsedMs(findStartedAt)
+        perfAdd(perf, "findMenuExtras", findElapsedMs)
+        perfRecordSlowApp(perf, app, "findMenuExtras", findElapsedMs)
+
         local lastAppName = app:name()
         local foundItemsAtStart = foundItemsCount
         if children then
+            local appendStartedAt = perfNow()
             local addedChoices = appendChoicesForApp(app, children, selectionMap)
+            local appendElapsedMs = perfElapsedMs(appendStartedAt)
+            perfAdd(perf, "appendChoicesForApp", appendElapsedMs)
+            perfRecordSlowApp(perf, app, "appendChoicesForApp", appendElapsedMs)
+
             if addedChoices > 0 then
                 foundAppsCount = foundAppsCount + 1
                 foundItemsCount = foundItemsCount + addedChoices
