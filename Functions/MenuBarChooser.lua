@@ -1024,13 +1024,18 @@ local function collectMenuItemMetadata(item)
         valueDescription = itemMetadataValue(item, "AXValueDescription"),
         description = itemMetadataValue(item, "AXDescription"),
         help = itemMetadataValue(item, "AXHelp"),
-        value = itemMetadataValue(item, "AXValue"),
-        role = itemMetadataValue(item, "AXRole"),
-        subrole = itemMetadataValue(item, "AXSubrole"),
-        roleDescription = itemMetadataValue(item, "AXRoleDescription")
+        value = itemMetadataValue(item, "AXValue")
     }
     metadata.label = preferredLabelValue(metadata.description, metadata.title, metadata.valueDescription, metadata.help)
     metadata.derivedLabel = deriveGenericNameFromMenuLabel(metadata.label)
+    return metadata
+end
+
+local function collectMenuItemMetadataDebug(item)
+    local metadata = collectMenuItemMetadata(item)
+    metadata.role = itemMetadataValue(item, "AXRole")
+    metadata.subrole = itemMetadataValue(item, "AXSubrole")
+    metadata.roleDescription = itemMetadataValue(item, "AXRoleDescription")
     return metadata
 end
 
@@ -1241,7 +1246,7 @@ function MenuBarChooser()
                 end)
                 if not ok or result == false then
                     local debugStartedAt = perfNow()
-                    local metadata = collectMenuItemMetadata(menuItem)
+                    local metadata = collectMenuItemMetadataDebug(menuItem)
                     local actionDescription = nil
                     pcall(function()
                         actionDescription = menuItem:actionDescription(selection.element.action)
