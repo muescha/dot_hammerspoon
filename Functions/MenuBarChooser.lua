@@ -42,7 +42,10 @@ local PERF_CONFIG = {
     enabled = true,
     slowAppThresholdMs = 20,
     slowItemThresholdMs = 10,
-    maxSlowEntries = 10
+    maxSlowEntries = 10,
+    logToFile = true,
+    logDir = hs.configdir .. "/Logs",
+    logFileName = "MenuBarChooser.log"
 }
 
 local function newTTLCache(defaultTTLSeconds)
@@ -207,13 +210,56 @@ local function perfFormatPhases(phases)
     return table.concat(parts, " ")
 end
 
+local function perfLogFilePath()
+    return PERF_CONFIG.logDir .. "/" .. PERF_CONFIG.logFileName
+end
+
+local function perfWriteLogLine(line, mode)
+    if not PERF_CONFIG.enabled or not PERF_CONFIG.logToFile then
+        return
+    end
+
+    local ok, err = pcall(function()
+        hs.fs.mkdir(PERF_CONFIG.logDir)
+        local file = assert(io.open(perfLogFilePath(), mode or "a"))
+        file:write(os.date("%Y-%m-%d %H:%M:%S"), " ", line, "\n")
+        file:close()
+    end)
+
+    if not ok then
+        hs.printf("[MenuBarChooser][perf] failed to write log file: %s", tostring(err))
+    end
+end
+
+local function perfResetLogFile()
+    if not PERF_CONFIG.enabled or not PERF_CONFIG.logToFile then
+        return
+    end
+
+    local ok, err = pcall(function()
+        hs.fs.mkdir(PERF_CONFIG.logDir)
+        local file = assert(io.open(perfLogFilePath(), "w"))
+        file:close()
+    end)
+
+    if not ok then
+        hs.printf("[MenuBarChooser][perf] failed to reset log file: %s", tostring(err))
+    end
+end
+
+local function perfLog(message, ...)
+    local line = string.format(message, ...)
+    hs.printf("%s", line)
+    perfWriteLogLine(line)
+end
+
 local function perfLogSummary(perf, scannedCount, foundAppsCount, foundItemsCount)
     if not perf then
         return
     end
 
     local totalMs = perfElapsedMs(perf.startedAt)
-    hs.printf(
+    perfLog(
             "[MenuBarChooser][perf] total=%.1fms apps=%d matchedApps=%d items=%d phases: %s",
             totalMs,
             scannedCount,
@@ -224,7 +270,7 @@ local function perfLogSummary(perf, scannedCount, foundAppsCount, foundItemsCoun
 
     local slowApps = perfTopEntries(perf.slowApps)
     for index, entry in ipairs(slowApps) do
-        hs.printf(
+        perfLog(
                 "[MenuBarChooser][perf] slow app #%d %.1fms phase=%s app=%s bundle=%s",
                 index,
                 entry.elapsedMs,
@@ -236,7 +282,7 @@ local function perfLogSummary(perf, scannedCount, foundAppsCount, foundItemsCoun
 
     local slowItems = perfTopEntries(perf.slowItems)
     for index, entry in ipairs(slowItems) do
-        hs.printf(
+        perfLog(
                 "[MenuBarChooser][perf] slow item #%d %.1fms phase=%s app=%s item=%s",
                 index,
                 entry.elapsedMs,
@@ -246,6 +292,8 @@ local function perfLogSummary(perf, scannedCount, foundAppsCount, foundItemsCoun
         )
     end
 end
+
+perfResetLogFile()
 
 local function appCacheKey(app)
     return app:bundleID() or app:path() or app:name()
