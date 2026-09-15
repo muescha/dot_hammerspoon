@@ -620,6 +620,16 @@ local function itemMetadataValue(item, attributeName)
     return cleanValue(safeAttributeValue(item, attributeName))
 end
 
+local function firstNonEmptyAttributeValue(item, ...)
+    for i = 1, select("#", ...) do
+        local value = cleanValue(safeAttributeValue(item, select(i, ...)))
+        if value then
+            return value
+        end
+    end
+    return nil
+end
+
 local function firstNonEmpty(...)
     for i = 1, select("#", ...) do
         local value = cleanValue(select(i, ...))
@@ -786,11 +796,7 @@ local function inferSemanticNameFromMenu(item)
             local menuItems = safeAttributeValue(child, "AXChildren")
             if menuItems and #menuItems > 0 then
                 for index = #menuItems, 1, -1 do
-                    local menuLabel = firstNonEmpty(
-                            safeAttributeValue(menuItems[index], "AXTitle"),
-                            safeAttributeValue(menuItems[index], "AXDescription"),
-                            safeAttributeValue(menuItems[index], "AXValue")
-                    )
+                    local menuLabel = firstNonEmptyAttributeValue(menuItems[index], "AXTitle", "AXDescription", "AXValue")
                     local genericName = deriveGenericNameFromMenuLabel(menuLabel)
                     if genericName then
                         return genericName
