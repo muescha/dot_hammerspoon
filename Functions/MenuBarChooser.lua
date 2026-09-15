@@ -22,7 +22,7 @@ local CHOOSER_LAYOUT = {
 }
 
 local ICON_CONFIG = {
-    snapshotMode = "all", -- off | all
+    snapshotMode = "off", -- off | all
     snapshotPadding = 2,
     snapshotSize = 18,
     snapshotWideAspectLimit = 2.2,
