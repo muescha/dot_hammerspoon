@@ -1010,7 +1010,12 @@ local function preferredChoiceImage(app, item, debugLabel)
 end
 
 local function itemMetadataValue(item, attributeName)
-    return firstNonEmpty(item[attributeName], safeAttributeValue(item, attributeName))
+    local shortcutValue = cleanValue(item[attributeName])
+    if shortcutValue then
+        return shortcutValue
+    end
+
+    return cleanValue(safeAttributeValue(item, attributeName))
 end
 
 local function collectMenuItemMetadata(item)
