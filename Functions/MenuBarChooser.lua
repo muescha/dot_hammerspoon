@@ -43,9 +43,16 @@ local PERF_CONFIG = {
     slowAppThresholdMs = 20,
     slowItemThresholdMs = 10,
     maxSlowEntries = 10,
+    semanticTraceThresholdMs = 20,
+    semanticTraceMaxLabels = 12,
     logToFile = true,
     logDir = hs.configdir .. "/Logs",
     logFileName = "MenuBarChooser.log"
+}
+
+local SEMANTIC_NAME_INFER_EXCLUDED_APPS = {
+    ["com.apple.TextInputMenuAgent"] = true,
+    TextInputMenuAgent = true
 }
 
 local function newTTLCache(defaultTTLSeconds)
@@ -569,6 +576,13 @@ local function ensureProgressHud()
         fillColor = { red = 0.24, green = 0.48, blue = 0.98, alpha = 0.92 },
         frame = { x = 20, y = barY, w = 0, h = 10 }
     }
+    progressHud[11] = {
+        type = "text",
+        text = "",
+        textSize = 14,
+        textColor = { white = 0.42, alpha = 1 },
+        frame = { x = 28, y = 130, w = innerWidth - 12, h = 20 }
+    }
     progressHud:show()
     return progressHud
 end
@@ -666,6 +680,16 @@ local function isGenericHostApp(app)
             or identity.bundleID == "com.apple.systemuiserver"
             or identity.appName == "TextInputMenuAgent"
             or identity.appName == "SystemUIServer"
+end
+
+local function shouldInferSemanticName(app)
+    local identity = appIdentity(app)
+    if SEMANTIC_NAME_INFER_EXCLUDED_APPS[identity.bundleID]
+            or SEMANTIC_NAME_INFER_EXCLUDED_APPS[identity.appName] then
+        return false
+    end
+
+    return isGenericHostApp(app)
 end
 
 local function shouldDebugFullDump(app)
@@ -769,25 +793,62 @@ local function fallbackDisplayAppName(app)
 end
 
 local function inferSemanticNameFromMenu(item)
+    local trace = {
+        menus = 0,
+        menuItems = 0,
+        labels = {}
+    }
+
     local children = safeAttributeValue(item, "AXChildren")
     if not children or #children == 0 then
-        return
+        return nil, trace
     end
 
     for _, child in ipairs(children) do
         if safeAttributeValue(child, "AXRole") == "AXMenu" then
+            trace.menus = trace.menus + 1
             local menuItems = safeAttributeValue(child, "AXChildren")
             if menuItems and #menuItems > 0 then
+                trace.menuItems = trace.menuItems + #menuItems
                 for index = #menuItems, 1, -1 do
                     local menuLabel = firstNonEmptyAttributeValue(menuItems[index], "AXTitle", "AXDescription", "AXValue")
+                    if #trace.labels < PERF_CONFIG.semanticTraceMaxLabels then
+                        table.insert(trace.labels, string.format("#%d=%s", index, menuLabel or "<empty>"))
+                    end
                     local genericName = deriveGenericNameFromMenuLabel(menuLabel)
                     if genericName then
-                        return genericName
+                        trace.matched = genericName
+                        return genericName, trace
                     end
                 end
             end
         end
     end
+
+    return nil, trace
+end
+
+local function perfLogSemanticTrace(app, itemLabel, elapsedMs, trace)
+    if not trace or elapsedMs < PERF_CONFIG.semanticTraceThresholdMs then
+        return
+    end
+
+    local labels = table.concat(trace.labels or {}, " | ")
+    if trace.menuItems and trace.menuItems > #(trace.labels or {}) then
+        labels = labels .. string.format(" | ... +%d more", trace.menuItems - #trace.labels)
+    end
+
+    perfLog(
+            "[MenuBarChooser][perf] semantic trace %.1fms app=%s bundle=%s item=%s menus=%d menuItems=%d matched=%s labels=%s",
+            elapsedMs,
+            app:name() or app:bundleID() or "<unknown>",
+            app:bundleID() or "",
+            itemLabel or "-",
+            trace.menus or 0,
+            trace.menuItems or 0,
+            trace.matched or "-",
+            labels ~= "" and labels or "-"
+    )
 end
 
 local function isZeroSizedFrame(item)
@@ -1044,12 +1105,13 @@ local function buildBaseMenuChoiceText(app, item, metadata, perf)
     local appName = fallbackDisplayAppName(app)
     local appText = metadata.label and (metadata.label ~= appName) and (appName .. ": " .. metadata.label) or appName
 
-    if isGenericHost then
+    if shouldInferSemanticName(app) then
         local inferStartedAt = perfNow()
-        local inferredName = inferSemanticNameFromMenu(item)
+        local inferredName, semanticTrace = inferSemanticNameFromMenu(item)
         local inferElapsedMs = perfElapsedMs(inferStartedAt)
         perfAdd(perf, "inferSemanticName", inferElapsedMs)
         perfRecordSlowItem(perf, app, metadata.label or appName, "inferSemanticName", inferElapsedMs)
+        perfLogSemanticTrace(app, metadata.label or appName, inferElapsedMs, semanticTrace)
         appText = inferredName or appName
     elseif metadata.derivedLabel then
         appText = metadata.derivedLabel
@@ -1170,7 +1232,11 @@ local function appendChoicesForApp(app, children, selectionMap)
                 table.insert(selectionMap.chooserItems, choice)
                 addedChoices = addedChoices + 1
                 perfCount(perf, "builtChoices")
+                local logStartedAt = perfNow()
                 logDiscoveredMenuItem(app, item, choice, sortedNames)
+                local logElapsedMs = perfElapsedMs(logStartedAt)
+                perfAdd(perf, "logDiscoveredMenuItem", logElapsedMs)
+                perfRecordSlowItem(perf, app, choice.text, "logDiscoveredMenuItem", logElapsedMs)
             end
         end
     end
@@ -1184,7 +1250,7 @@ local function applyChoices(selectionMap)
     perfAdd(selectionMap.perf, "applyChoices", perfElapsedMs(startedAt))
 end
 
-local function updateProgressHud(scannedCount, totalCount, foundAppsCount, foundItemsCount, lastAppName, state)
+local function updateProgressHud(scannedCount, totalCount, foundAppsCount, foundItemsCount, lastAppName, lastBundleID, state)
     local hud = ensureProgressHud()
     local progress = 0
     if totalCount > 0 then
@@ -1192,6 +1258,7 @@ local function updateProgressHud(scannedCount, totalCount, foundAppsCount, found
     end
     local currentFrame = hud:frame()
     local barWidth = math.floor((currentFrame.w - 40) * progress)
+    local currentIdentity = lastBundleID or lastAppName or "-"
 
     hud[5].text = string.format(
             "%s  %d/%d",
@@ -1200,6 +1267,7 @@ local function updateProgressHud(scannedCount, totalCount, foundAppsCount, found
             totalCount
     )
     hud[6].text = string.format("%d%%", math.floor(progress * 100))
+    hud[11].text = currentIdentity
     hud[8].text = string.format(
             "%d Apps mit Menueleiste   %d Eintraege\nZuletzt: %s",
             foundAppsCount,
@@ -1234,17 +1302,23 @@ function MenuBarChooser()
     local foundAppsCount = 0
     local foundItemsCount = 0
     local scanIndex = 1
-    local lastStatusAppName = nil
     local scanComplete = false
 
     local chooserCallback = function(selection)
         if selection and selection.element and selection.element.key then
             local menuItem = selectionMap.menuItems[selection.element.key]
             if menuItem then
-                local ok, result = pcall(function()
+                local ok, result, actionError = pcall(function()
                     return menuItem:performAction(selection.element.action)
                 end)
-                if not ok or result == false then
+                if result == false then
+                    hs.printf(
+                            "MenuBarChooser action returned false: text=%s subText=%s action=%s",
+                            selection.text or "<unknown>",
+                            selection.subText or "-",
+                            selection.element.action or "-"
+                    )
+                elseif not ok or result == nil then
                     local debugStartedAt = perfNow()
                     local metadata = collectMenuItemMetadataDebug(menuItem)
                     local actionDescription = nil
@@ -1253,10 +1327,12 @@ function MenuBarChooser()
                     end)
                     perfAdd(selectionMap.perf, "debugText", perfElapsedMs(debugStartedAt))
                     hs.printf(
-                            "MenuBarChooser action failed: text=%s subText=%s action=%s actionDescription=%s metadata=%s",
+                            "MenuBarChooser action failed: text=%s subText=%s action=%s result=%s error=%s actionDescription=%s metadata=%s",
                             selection.text or "<unknown>",
                             selection.subText or "-",
                             selection.element.action or "-",
+                            tostring(result),
+                            actionError or "-",
                             actionDescription or "-",
                             hs.inspect(metadata)
                     )
@@ -1295,7 +1371,7 @@ function MenuBarChooser()
     if SCAN_CONFIG.showChooserDuringScan then
         chooser:show(chooserTopLeft)
     end
-    updateProgressHud(0, #runningApplications, 0, 0, nil, "Suche startet...")
+    updateProgressHud(0, #runningApplications, 0, 0, nil, nil, "Suche startet...")
     logScan("[MenuBarChooser] scan started, apps=%d", #runningApplications)
 
     scanTimer = hs.timer.doEvery(SCAN_CONFIG.intervalSeconds, function()
@@ -1313,8 +1389,7 @@ function MenuBarChooser()
         if not app then
             stopScanTimer()
             scanComplete = true
-            lastStatusAppName = "fertig"
-            updateProgressHud(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, lastStatusAppName, "Suche abgeschlossen")
+            updateProgressHud(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, "fertig", nil, "Suche abgeschlossen")
             hideProgressHud()
             applyChoices(selectionMap)
             perfLogSummary(perf, scannedCount, foundAppsCount, foundItemsCount)
@@ -1329,6 +1404,10 @@ function MenuBarChooser()
         end
 
         scannedCount = scannedCount + 1
+        local lastAppName = app:name()
+        local lastBundleID = app:bundleID()
+        local foundItemsAtStart = foundItemsCount
+        updateProgressHud(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, lastAppName, lastBundleID, "Lese App...")
 
         local findStartedAt = perfNow()
         local children = findMenuExtrasMenuBarForApplication(app)
@@ -1336,8 +1415,6 @@ function MenuBarChooser()
         perfAdd(perf, "findMenuExtras", findElapsedMs)
         perfRecordSlowApp(perf, app, "findMenuExtras", findElapsedMs)
 
-        local lastAppName = app:name()
-        local foundItemsAtStart = foundItemsCount
         if children then
             local appendStartedAt = perfNow()
             local addedChoices = appendChoicesForApp(app, children, selectionMap)
@@ -1352,9 +1429,8 @@ function MenuBarChooser()
             end
         end
 
-        lastStatusAppName = lastAppName
         scanIndex = scanIndex + 1
-        updateProgressHud(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, lastAppName, "Suche laeuft...")
+        updateProgressHud(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, lastAppName, lastBundleID, "Suche laeuft...")
         if foundItemsCount ~= foundItemsAtStart and not SCAN_CONFIG.deferChooserItemsUntilScanComplete then
             applyChoices(selectionMap)
         end
