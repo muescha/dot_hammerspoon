@@ -10,7 +10,7 @@ local SCAN_CONFIG = {
     intervalSeconds = 0.002,
     showChooserDuringScan = true,
     deferChooserItemsUntilScanComplete = false,
-    choiceSortMode = "discovery", -- discovery | score
+    choiceSortMode = "queryScore", -- discovery | score | queryScore
     negativeAppCacheTtlSeconds = 180
 }
 
@@ -1321,7 +1321,9 @@ end
 local function applyChoices(selectionMap)
     local startedAt = perfNow()
     local sorter = nil
-    if SCAN_CONFIG.choiceSortMode == "score" then
+    local query = chooser:query() or ""
+    if SCAN_CONFIG.choiceSortMode == "score"
+            or (SCAN_CONFIG.choiceSortMode == "queryScore" and #query > 0) then
         sorter = FuzzyMatcher.Sorter.byScore
     end
     FuzzyMatcher.setChoices(selectionMap.chooserItems, chooser, false, sorter)
