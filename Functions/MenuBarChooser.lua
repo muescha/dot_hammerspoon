@@ -1,5 +1,29 @@
 local axuielement = require("hs.axuielement")
 local canvas = require("hs.canvas")
+local perf = require("Helpers.Performance").init("MenuBarChooser", {
+    maxSlowEntries = 10,
+    fieldValueMaxLength = 80,
+    logToFile = true,
+    logDir = hs.configdir .. "/Logs",
+    logFileName = "MenuBarChooser.log",
+    summary = {
+        { key = "scannedApps", label = "apps" },
+        { key = "matchedApps", label = "matchedApps" },
+        { key = "items", label = "items" }
+    },
+    slow = {
+        app = {
+            thresholdMs = 20,
+            label = "slow app",
+            fields = { "phase", "app", "bundle" }
+        },
+        item = {
+            thresholdMs = 10,
+            label = "slow item",
+            fields = { "phase", "app", "item" }
+        }
+    }
+})
 
 local chooser = nil
 local scanTimer = nil
@@ -48,18 +72,10 @@ local DEBUG = {
     iconLogs = false
 }
 
-local PERF_CONFIG = {
-    enabled = true,
-    slowAppThresholdMs = 20,
-    slowItemThresholdMs = 10,
-    maxSlowEntries = 10,
-    semanticTraceThresholdMs = 20,
-    semanticTraceMaxLabels = 12,
-    metadataTraceThresholdMs = 30,
-    metadataTraceValueMaxLength = 80,
-    logToFile = true,
-    logDir = hs.configdir .. "/Logs",
-    logFileName = "MenuBarChooser.log"
+local PERF_TRACE = {
+    semanticThresholdMs = 20,
+    semanticMaxLabels = 12,
+    metadataThresholdMs = 30
 }
 
 local SEMANTIC_NAME_INFER_EXCLUDED_APPS = {
@@ -131,188 +147,7 @@ local function logIcon(message, ...)
     debugLog(DEBUG.iconLogs, message, ...)
 end
 
-local function perfNow()
-    return hs.timer.secondsSinceEpoch()
-end
-
-local function perfElapsedMs(startedAt)
-    return (perfNow() - startedAt) * 1000
-end
-
-local function newPerfStats()
-    if not PERF_CONFIG.enabled then
-        return nil
-    end
-
-    return {
-        startedAt = perfNow(),
-        phases = {},
-        slowApps = {},
-        slowItems = {}
-    }
-end
-
-local function perfAdd(perf, phaseName, elapsedMs)
-    if not perf then
-        return
-    end
-
-    perf.phases[phaseName] = (perf.phases[phaseName] or 0) + elapsedMs
-end
-
-local function perfCount(perf, counterName, amount)
-    if not perf then
-        return
-    end
-
-    perf[counterName] = (perf[counterName] or 0) + (amount or 1)
-end
-
-local function perfRecordSlowEntry(entries, thresholdMs, entry)
-    if entry.elapsedMs < thresholdMs then
-        return
-    end
-
-    table.insert(entries, entry)
-end
-
-local function perfRecordSlowApp(perf, app, phaseName, elapsedMs)
-    if not perf then
-        return
-    end
-
-    perfRecordSlowEntry(perf.slowApps, PERF_CONFIG.slowAppThresholdMs, {
-        appName = app:name() or app:bundleID() or "<unknown>",
-        bundleID = app:bundleID() or "",
-        phaseName = phaseName,
-        elapsedMs = elapsedMs
-    })
-end
-
-local function perfRecordSlowItem(perf, app, label, phaseName, elapsedMs)
-    if not perf then
-        return
-    end
-
-    perfRecordSlowEntry(perf.slowItems, PERF_CONFIG.slowItemThresholdMs, {
-        appName = app:name() or app:bundleID() or "<unknown>",
-        label = label or "-",
-        phaseName = phaseName,
-        elapsedMs = elapsedMs
-    })
-end
-
-local function perfTopEntries(entries)
-    table.sort(entries, function(a, b)
-        return a.elapsedMs > b.elapsedMs
-    end)
-
-    local topEntries = {}
-    local limit = math.min(#entries, PERF_CONFIG.maxSlowEntries)
-    for index = 1, limit do
-        table.insert(topEntries, entries[index])
-    end
-    return topEntries
-end
-
-local function perfFormatPhases(phases)
-    local names = {}
-    for name, _ in pairs(phases) do
-        table.insert(names, name)
-    end
-    table.sort(names)
-
-    local parts = {}
-    for _, name in ipairs(names) do
-        table.insert(parts, string.format("%s=%.1fms", name, phases[name]))
-    end
-    return table.concat(parts, " ")
-end
-
-local function perfLogFilePath()
-    return PERF_CONFIG.logDir .. "/" .. PERF_CONFIG.logFileName
-end
-
-local function perfWriteLogLine(line, mode)
-    if not PERF_CONFIG.enabled or not PERF_CONFIG.logToFile then
-        return
-    end
-
-    local ok, err = pcall(function()
-        hs.fs.mkdir(PERF_CONFIG.logDir)
-        local file = assert(io.open(perfLogFilePath(), mode or "a"))
-        file:write(os.date("%Y-%m-%d %H:%M:%S"), " ", line, "\n")
-        file:close()
-    end)
-
-    if not ok then
-        hs.printf("[MenuBarChooser][perf] failed to write log file: %s", tostring(err))
-    end
-end
-
-local function perfResetLogFile()
-    if not PERF_CONFIG.enabled or not PERF_CONFIG.logToFile then
-        return
-    end
-
-    local ok, err = pcall(function()
-        hs.fs.mkdir(PERF_CONFIG.logDir)
-        local file = assert(io.open(perfLogFilePath(), "w"))
-        file:close()
-    end)
-
-    if not ok then
-        hs.printf("[MenuBarChooser][perf] failed to reset log file: %s", tostring(err))
-    end
-end
-
-local function perfLog(message, ...)
-    local line = string.format(message, ...)
-    hs.printf("%s", line)
-    perfWriteLogLine(line)
-end
-
-local function perfLogSummary(perf, scannedCount, foundAppsCount, foundItemsCount)
-    if not perf then
-        return
-    end
-
-    local totalMs = perfElapsedMs(perf.startedAt)
-    perfLog(
-            "[MenuBarChooser][perf] total=%.1fms apps=%d matchedApps=%d items=%d phases: %s",
-            totalMs,
-            scannedCount,
-            foundAppsCount,
-            foundItemsCount,
-            perfFormatPhases(perf.phases)
-    )
-
-    local slowApps = perfTopEntries(perf.slowApps)
-    for index, entry in ipairs(slowApps) do
-        perfLog(
-                "[MenuBarChooser][perf] slow app #%d %.1fms phase=%s app=%s bundle=%s",
-                index,
-                entry.elapsedMs,
-                entry.phaseName,
-                entry.appName,
-                entry.bundleID
-        )
-    end
-
-    local slowItems = perfTopEntries(perf.slowItems)
-    for index, entry in ipairs(slowItems) do
-        perfLog(
-                "[MenuBarChooser][perf] slow item #%d %.1fms phase=%s app=%s item=%s",
-                index,
-                entry.elapsedMs,
-                entry.phaseName,
-                entry.appName,
-                entry.label
-        )
-    end
-end
-
-perfResetLogFile()
+perf.resetLogFile()
 
 local function safeApplicationPath(app)
     local ok, path = pcall(function()
@@ -333,6 +168,20 @@ local function appIdentity(app)
         bundleID = app:bundleID() or "",
         appName = app:name() or ""
     }
+end
+
+local function perfAppFields(app)
+    local identity = appIdentity(app)
+    return {
+        app = identity.appName ~= "" and identity.appName or "<unknown>",
+        bundle = identity.bundleID
+    }
+end
+
+local function perfItemFields(app, label)
+    local fields = perfAppFields(app)
+    fields.item = label or "-"
+    return fields
 end
 
 local function shouldSkipNegativeAppCache(app)
@@ -612,16 +461,15 @@ local function addMenuItem(selectionMap, value)
     return key
 end
 
-local function newSelectionMap(perf)
+local function newSelectionMap()
     return {
         chooserItems = {},
         menuItems = {},
-        menuItemsCounter = 0,
-        perf = perf
+        menuItemsCounter = 0
     }
 end
 
-local function selectionMapFromCache(cache, perf)
+local function selectionMapFromCache(cache)
     if not cache then
         return nil
     end
@@ -629,8 +477,7 @@ local function selectionMapFromCache(cache, perf)
     return {
         chooserItems = cache.chooserItems,
         menuItems = cache.menuItems,
-        menuItemsCounter = cache.menuItemsCounter,
-        perf = perf
+        menuItemsCounter = cache.menuItemsCounter
     }
 end
 
@@ -840,7 +687,7 @@ local function fallbackDisplayAppName(app)
 end
 
 local function inferSemanticNameFromMenu(item)
-    local trace = {
+    local details = {
         menus = 0,
         menuItems = 0,
         labels = {}
@@ -848,54 +695,51 @@ local function inferSemanticNameFromMenu(item)
 
     local children = safeAttributeValue(item, "AXChildren")
     if not children or #children == 0 then
-        return nil, trace
+        return nil, details
     end
 
     for _, child in ipairs(children) do
         if safeAttributeValue(child, "AXRole") == "AXMenu" then
-            trace.menus = trace.menus + 1
+            details.menus = details.menus + 1
             local menuItems = safeAttributeValue(child, "AXChildren")
             if menuItems and #menuItems > 0 then
-                trace.menuItems = trace.menuItems + #menuItems
+                details.menuItems = details.menuItems + #menuItems
                 for index = #menuItems, 1, -1 do
                     local menuLabel = firstNonEmptyAttributeValue(menuItems[index], "AXTitle", "AXDescription", "AXValue")
-                    if #trace.labels < PERF_CONFIG.semanticTraceMaxLabels then
-                        table.insert(trace.labels, string.format("#%d=%s", index, menuLabel or "<empty>"))
+                    if #details.labels < PERF_TRACE.semanticMaxLabels then
+                        table.insert(details.labels, string.format("#%d=%s", index, menuLabel or "<empty>"))
                     end
                     local genericName = deriveGenericNameFromMenuLabel(menuLabel)
                     if genericName then
-                        trace.matched = genericName
-                        return genericName, trace
+                        details.matched = genericName
+                        return genericName, details
                     end
                 end
             end
         end
     end
 
-    return nil, trace
+    return nil, details
 end
 
-local function perfLogSemanticTrace(app, itemLabel, elapsedMs, trace)
-    if not trace or elapsedMs < PERF_CONFIG.semanticTraceThresholdMs then
-        return
+local function semanticPerfFields(app, itemLabel, details)
+    local fields = perfItemFields(app, itemLabel)
+    local labels = table.concat(details.labels or {}, " | ")
+    if details.menuItems and details.menuItems > #(details.labels or {}) then
+        labels = labels .. string.format(" | ... +%d more", details.menuItems - #details.labels)
     end
 
-    local labels = table.concat(trace.labels or {}, " | ")
-    if trace.menuItems and trace.menuItems > #(trace.labels or {}) then
-        labels = labels .. string.format(" | ... +%d more", trace.menuItems - #trace.labels)
-    end
+    fields.menus = details.menus or 0
+    fields.menuItems = details.menuItems or 0
+    fields.matched = details.matched or "-"
+    fields.labels = labels ~= "" and labels or "-"
+    return fields
+end
 
-    perfLog(
-            "[MenuBarChooser][perf] semantic trace %.1fms app=%s bundle=%s item=%s menus=%d menuItems=%d matched=%s labels=%s",
-            elapsedMs,
-            app:name() or app:bundleID() or "<unknown>",
-            app:bundleID() or "",
-            itemLabel or "-",
-            trace.menus or 0,
-            trace.menuItems or 0,
-            trace.matched or "-",
-            labels ~= "" and labels or "-"
-    )
+local function metadataPerfFields(app, itemLabel)
+    local fields = perfItemFields(app, itemLabel)
+    fields.fields = perf.values("metadata")
+    return fields
 end
 
 local function isZeroSizedFrame(item)
@@ -1125,56 +969,11 @@ local function preferredChoiceImage(app, item, debugLabel)
     return snapshotChoiceImageForHostApp(app, item, debugLabel) or fallbackChoiceImageForApp(app, debugLabel)
 end
 
-local function perfFormatMetadataTraceValue(value)
-    local cleaned = cleanValue(value)
-    if not cleaned then
-        return "<empty>"
-    end
-
-    cleaned = cleaned:gsub("%s+", " ")
-    if #cleaned > PERF_CONFIG.metadataTraceValueMaxLength then
-        cleaned = cleaned:sub(1, PERF_CONFIG.metadataTraceValueMaxLength - 1) .. "…"
-    end
-    return cleaned
-end
-
-local function perfLogMetadataTrace(app, itemLabel, elapsedMs, trace)
-    if not trace or elapsedMs < PERF_CONFIG.metadataTraceThresholdMs then
-        return
-    end
-
-    local parts = {}
-    for _, entry in ipairs(trace) do
-        table.insert(parts, string.format(
-                "%s=%.1fms:%s",
-                entry.name,
-                entry.elapsedMs,
-                perfFormatMetadataTraceValue(entry.value)
-        ))
-    end
-
-    perfLog(
-            "[MenuBarChooser][perf] metadata trace %.1fms app=%s bundle=%s item=%s fields: %s",
-            elapsedMs,
-            app:name() or app:bundleID() or "<unknown>",
-            app:bundleID() or "",
-            itemLabel or "-",
-            table.concat(parts, " | ")
-    )
-end
-
 local function collectMenuItemMetadata(item)
-    local trace = {}
     local function readMetadata(name, attributeName)
-        local startedAt = perfNow()
-        local value = itemMetadataValue(item, attributeName)
-        table.insert(trace, {
-            name = name,
-            attributeName = attributeName,
-            value = value,
-            elapsedMs = perfElapsedMs(startedAt)
-        })
-        return value
+        return perf.value("metadata", name, function()
+            return itemMetadataValue(item, attributeName)
+        end)
     end
 
     local metadata = {
@@ -1198,7 +997,7 @@ local function collectMenuItemMetadata(item)
     end
 
     metadata.derivedLabel = deriveGenericNameFromMenuLabel(metadata.label)
-    return metadata, trace
+    return metadata
 end
 
 local function collectMenuItemMetadataDebug(item)
@@ -1209,18 +1008,25 @@ local function collectMenuItemMetadataDebug(item)
     return metadata
 end
 
-local function buildBaseMenuChoiceText(app, item, metadata, perf)
+local function buildBaseMenuChoiceText(app, item, metadata)
     local isGenericHost = isGenericHostApp(app)
     local appName = fallbackDisplayAppName(app)
     local appText = metadata.label and (metadata.label ~= appName) and (appName .. ": " .. metadata.label) or appName
 
     if shouldInferSemanticName(app) then
-        local inferStartedAt = perfNow()
-        local inferredName, semanticTrace = inferSemanticNameFromMenu(item)
-        local inferElapsedMs = perfElapsedMs(inferStartedAt)
-        perfAdd(perf, "inferSemanticName", inferElapsedMs)
-        perfRecordSlowItem(perf, app, metadata.label or appName, "inferSemanticName", inferElapsedMs)
-        perfLogSemanticTrace(app, metadata.label or appName, inferElapsedMs, semanticTrace)
+        perf.start("inferSemanticName")
+        local inferredName, semanticDetails = inferSemanticNameFromMenu(item)
+        perf.trace("inferSemanticName", {
+            bucket = "item",
+            phase = "inferSemanticName",
+            fields = perfItemFields(app, metadata.label or appName),
+            log = {
+                thresholdMs = PERF_TRACE.semanticThresholdMs,
+                label = "semantic trace",
+                fields = semanticPerfFields(app, metadata.label or appName, semanticDetails),
+                order = { "app", "bundle", "item", "menus", "menuItems", "matched", "labels" }
+            }
+        })
         appText = inferredName or appName
     elseif metadata.derivedLabel then
         appText = metadata.derivedLabel
@@ -1272,28 +1078,30 @@ local function buildMenuChoiceSubText(app, metadata, appText)
 end
 
 local function buildMenuChoice(app, item, actionName, selectionMap)
-    local perf = selectionMap.perf
-    local metadataStartedAt = perfNow()
-    local metadata, metadataTrace = collectMenuItemMetadata(item)
-    local metadataElapsedMs = perfElapsedMs(metadataStartedAt)
-    perfAdd(perf, "metadata", metadataElapsedMs)
-    perfRecordSlowItem(perf, app, metadata.label or metadata.title or metadata.identifier, "metadata", metadataElapsedMs)
-    perfLogMetadataTrace(app, metadata.label or metadata.title or metadata.identifier, metadataElapsedMs, metadataTrace)
+    perf.start("metadata")
+    local metadata = collectMenuItemMetadata(item)
+    perf.trace("metadata", {
+        bucket = "item",
+        phase = "metadata",
+        fields = perfItemFields(app, metadata.label or metadata.title or metadata.identifier),
+        log = {
+            thresholdMs = PERF_TRACE.metadataThresholdMs,
+            label = "metadata trace",
+            fields = metadataPerfFields(app, metadata.label or metadata.title or metadata.identifier),
+            order = { "app", "bundle", "item", "fields" }
+        }
+    })
 
-    local labelStartedAt = perfNow()
-    local baseText = buildBaseMenuChoiceText(app, item, metadata, perf)
+    perf.start("labels")
+    local baseText = buildBaseMenuChoiceText(app, item, metadata)
     local appText = buildMenuChoiceText(baseText, actionName)
     local appSubText = buildMenuChoiceSubText(app, metadata, baseText)
-    local labelElapsedMs = perfElapsedMs(labelStartedAt)
-    perfAdd(perf, "labels", labelElapsedMs)
-    perfRecordSlowItem(perf, app, appText, "labels", labelElapsedMs)
+    perf.trace("labels", { bucket = "item", phase = "labels", fields = perfItemFields(app, appText) })
 
     local appKey = addMenuItem(selectionMap, item)
-    local imageStartedAt = perfNow()
+    perf.start("images")
     local appImage = preferredChoiceImage(app, item, appText)
-    local imageElapsedMs = perfElapsedMs(imageStartedAt)
-    perfAdd(perf, "images", imageElapsedMs)
-    perfRecordSlowItem(perf, app, appText, "images", imageElapsedMs)
+    perf.trace("images", { bucket = "item", phase = "images", fields = perfItemFields(app, appText) })
 
     return {
         text = appText,
@@ -1320,20 +1128,15 @@ end
 
 local function appendChoicesForApp(app, children, selectionMap)
     local addedChoices = 0
-    local perf = selectionMap.perf
 
     for _, item in ipairs(children) do
-        local actionNamesStartedAt = perfNow()
+        perf.start("actionNames")
         local names = item:actionNames()
-        local actionNamesElapsedMs = perfElapsedMs(actionNamesStartedAt)
-        perfAdd(perf, "actionNames", actionNamesElapsedMs)
-        perfRecordSlowItem(perf, app, nil, "actionNames", actionNamesElapsedMs)
+        perf.trace("actionNames", { bucket = "item", phase = "actionNames", fields = perfItemFields(app) })
 
-        local skipStartedAt = perfNow()
+        perf.start("skipChecks")
         local shouldSkip = shouldSkipMenuItem(app, item, names)
-        local skipElapsedMs = perfElapsedMs(skipStartedAt)
-        perfAdd(perf, "skipChecks", skipElapsedMs)
-        perfRecordSlowItem(perf, app, nil, "skipChecks", skipElapsedMs)
+        perf.trace("skipChecks", { bucket = "item", phase = "skipChecks", fields = perfItemFields(app) })
 
         if not shouldSkip then
             local primaryActionName, sortedNames = choosePrimaryAction(names)
@@ -1341,12 +1144,10 @@ local function appendChoicesForApp(app, children, selectionMap)
                 local choice = buildMenuChoice(app, item, primaryActionName, selectionMap)
                 table.insert(selectionMap.chooserItems, choice)
                 addedChoices = addedChoices + 1
-                perfCount(perf, "builtChoices")
-                local logStartedAt = perfNow()
+                perf.count("builtChoices")
+                perf.start("logDiscoveredMenuItem")
                 logDiscoveredMenuItem(app, item, choice, sortedNames)
-                local logElapsedMs = perfElapsedMs(logStartedAt)
-                perfAdd(perf, "logDiscoveredMenuItem", logElapsedMs)
-                perfRecordSlowItem(perf, app, choice.text, "logDiscoveredMenuItem", logElapsedMs)
+                perf.trace("logDiscoveredMenuItem", { bucket = "item", phase = "logDiscoveredMenuItem", fields = perfItemFields(app, choice.text) })
             end
         end
     end
@@ -1355,7 +1156,7 @@ local function appendChoicesForApp(app, children, selectionMap)
 end
 
 local function applyChoices(selectionMap)
-    local startedAt = perfNow()
+    perf.start("applyChoices")
     local sorter = nil
     local query = chooser:query() or ""
     if SCAN_CONFIG.choiceSortMode == "score"
@@ -1363,7 +1164,7 @@ local function applyChoices(selectionMap)
         sorter = FuzzyMatcher.Sorter.byScore
     end
     FuzzyMatcher.setChoices(selectionMap.chooserItems, chooser, false, sorter)
-    perfAdd(selectionMap.perf, "applyChoices", perfElapsedMs(startedAt))
+    perf.finish("applyChoices", "applyChoices")
 end
 
 local function updateProgressHud(scannedCount, totalCount, foundAppsCount, foundItemsCount, lastAppName, lastBundleID, state)
@@ -1398,20 +1199,20 @@ function MenuBarChooser()
     stopScanTimer()
     hideProgressHud()
     debugLoggedElementCount = 0
-    local perf = newPerfStats()
+    perf.newRun()
 
     if chooser then
         chooser:delete()
         chooser = nil
     end
 
-    local runningApplicationsStartedAt = perfNow()
+    perf.start("runningApplications")
     local runningApplications = hs.application.runningApplications()
-    perfAdd(perf, "runningApplications", perfElapsedMs(runningApplicationsStartedAt))
+    perf.finish("runningApplications", "runningApplications")
 
-    local scanSelectionMap = newSelectionMap(perf)
+    local scanSelectionMap = newSelectionMap()
     local hasCachedSelectionMap = SCAN_CONFIG.useCachedChoicesImmediately and cachedSelectionMap ~= nil
-    local selectionMap = selectionMapFromCache(cachedSelectionMap, perf) or scanSelectionMap
+    local selectionMap = selectionMapFromCache(cachedSelectionMap) or scanSelectionMap
     local scannedCount = 0
     local foundAppsCount = 0
     local foundItemsCount = 0
@@ -1437,13 +1238,13 @@ function MenuBarChooser()
                             selection.element.action or "-"
                     )
                 elseif not ok or result == nil then
-                    local debugStartedAt = perfNow()
+                    perf.start("debugText")
                     local metadata = collectMenuItemMetadataDebug(menuItem)
                     local actionDescription = nil
                     pcall(function()
                         actionDescription = menuItem:actionDescription(selection.element.action)
                     end)
-                    perfAdd(selectionMap.perf, "debugText", perfElapsedMs(debugStartedAt))
+                    perf.finish("debugText", "debugText")
                     hs.printf(
                             "MenuBarChooser action failed: text=%s subText=%s action=%s result=%s error=%s actionDescription=%s metadata=%s",
                             selection.text or "<unknown>",
@@ -1519,7 +1320,7 @@ function MenuBarChooser()
                 selectionMap = scanSelectionMap
                 cacheSelectionMap(scanSelectionMap)
                 applyChoices(selectionMap)
-                perfLogSummary(perf, scannedCount, foundAppsCount, foundItemsCount)
+                perf.logSummary()
                 if not SCAN_CONFIG.showChooserDuringScan then
                     chooser:show(chooserTopLeft)
                 end
@@ -1535,22 +1336,21 @@ function MenuBarChooser()
             local lastBundleID = app:bundleID()
             updateProgressHud(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, lastAppName, lastBundleID, "Lese App...")
 
-            local findStartedAt = perfNow()
+            perf.count("scannedApps")
+            perf.start("findMenuExtras")
             local children = findMenuExtrasMenuBarForApplication(app)
-            local findElapsedMs = perfElapsedMs(findStartedAt)
-            perfAdd(perf, "findMenuExtras", findElapsedMs)
-            perfRecordSlowApp(perf, app, "findMenuExtras", findElapsedMs)
+            perf.trace("findMenuExtras", { bucket = "app", phase = "findMenuExtras", fields = perfAppFields(app) })
 
             if children then
-                local appendStartedAt = perfNow()
+                perf.start("appendChoicesForApp")
                 local addedChoices = appendChoicesForApp(app, children, scanSelectionMap)
-                local appendElapsedMs = perfElapsedMs(appendStartedAt)
-                perfAdd(perf, "appendChoicesForApp", appendElapsedMs)
-                perfRecordSlowApp(perf, app, "appendChoicesForApp", appendElapsedMs)
+                perf.trace("appendChoicesForApp", { bucket = "app", phase = "appendChoicesForApp", fields = perfAppFields(app) })
 
                 if addedChoices > 0 then
                     foundAppsCount = foundAppsCount + 1
                     foundItemsCount = foundItemsCount + addedChoices
+                    perf.count("matchedApps")
+                    perf.count("items", addedChoices)
                     lastAppName = string.format("%s (+%d)", lastAppName, addedChoices)
                 end
             end
