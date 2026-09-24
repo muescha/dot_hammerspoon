@@ -9,7 +9,8 @@ local debugLoggedElementCount = 0
 local SCAN_CONFIG = {
     intervalSeconds = 0.002,
     showChooserDuringScan = true,
-    deferChooserItemsUntilScanComplete = true,
+    deferChooserItemsUntilScanComplete = false,
+    choiceSortMode = "discovery", -- discovery | score
     negativeAppCacheTtlSeconds = 180
 }
 
@@ -17,7 +18,10 @@ local CHOOSER_LAYOUT = {
     widthPercent = 60,
     maxWidth = 1400,
     rows = 20,
-    hudOverlayOnChooser = true,
+    hudOverlayOnChooser = false,
+    hudPlacement = "searchRight", -- above | searchRight
+    hudHeight = 48,
+    hudGap = 8,
     topMarginLandscape = 120
 }
 
@@ -45,6 +49,8 @@ local PERF_CONFIG = {
     maxSlowEntries = 10,
     semanticTraceThresholdMs = 20,
     semanticTraceMaxLabels = 12,
+    metadataTraceThresholdMs = 1,
+    metadataTraceValueMaxLength = 80,
     logToFile = true,
     logDir = hs.configdir .. "/Logs",
     logFileName = "MenuBarChooser.log"
@@ -474,7 +480,32 @@ local function chooserFrameForScreen(screenFrame)
 end
 
 local function progressHudFrame()
-    return chooserFrameForScreen(hs.screen.mainScreen():frame())
+    local screenFrame = hs.screen.mainScreen():frame()
+    local chooserFrame = chooserFrameForScreen(screenFrame)
+    local hudHeight = CHOOSER_LAYOUT.hudHeight
+
+    if CHOOSER_LAYOUT.hudPlacement == "searchRight" then
+        local inset = 18
+        local width = math.floor((chooserFrame.w / 2) - inset)
+        return {
+            x = math.floor(chooserFrame.x + chooserFrame.w - width - inset),
+            y = math.floor(chooserFrame.y + 14),
+            w = width,
+            h = hudHeight
+        }
+    end
+
+    local y = chooserFrame.y - hudHeight - CHOOSER_LAYOUT.hudGap
+    if y < screenFrame.y + 8 then
+        y = chooserFrame.y + chooserFrame.h + CHOOSER_LAYOUT.hudGap
+    end
+
+    return {
+        x = chooserFrame.x,
+        y = math.floor(y),
+        w = chooserFrame.w,
+        h = hudHeight
+    }
 end
 
 local function ensureProgressHud()
@@ -483,105 +514,85 @@ local function ensureProgressHud()
     end
 
     local frame = progressHudFrame()
-    local innerWidth = frame.w - 48
-    local barY = 76
-    local outerFillAlpha = CHOOSER_LAYOUT.hudOverlayOnChooser and 0 or 0.985
-    local outerStrokeAlpha = CHOOSER_LAYOUT.hudOverlayOnChooser and 0 or 0.14
-    local searchFillAlpha = CHOOSER_LAYOUT.hudOverlayOnChooser and 0 or 0.98
-    local searchStrokeAlpha = CHOOSER_LAYOUT.hudOverlayOnChooser and 0 or 0.10
-    local placeholderAlpha = CHOOSER_LAYOUT.hudOverlayOnChooser and 0 or 1
-    local rowFillAlpha = CHOOSER_LAYOUT.hudOverlayOnChooser and 0 or 0.88
-    local rowStrokeAlpha = CHOOSER_LAYOUT.hudOverlayOnChooser and 0 or 0.12
-    local detailFillAlpha = CHOOSER_LAYOUT.hudOverlayOnChooser and 0 or 0.80
-    local detailStrokeAlpha = CHOOSER_LAYOUT.hudOverlayOnChooser and 0 or 0.10
-    local rowInset = 14
-    local rowWidth = frame.w - (rowInset * 2)
+    local innerWidth = frame.w - 24
+    local barY = frame.h - 8
 
     progressHud = canvas.new(frame)
-    progressHud:level(CHOOSER_LAYOUT.hudOverlayOnChooser and hs.canvas.windowLevels.overlay or hs.canvas.windowLevels.modalPanel)
+    progressHud:level(hs.canvas.windowLevels.overlay)
     progressHud[1] = {
         type = "rectangle",
         action = "fill",
-        roundedRectRadii = { xRadius = 16, yRadius = 16 },
-        fillColor = { alpha = outerFillAlpha, white = 0.94 },
-        strokeColor = { alpha = outerStrokeAlpha, white = 0.45 },
+        roundedRectRadii = { xRadius = 10, yRadius = 10 },
+        fillColor = { alpha = 0.94, white = 0.96 },
+        strokeColor = { alpha = 0.18, white = 0.42 },
         strokeWidth = 1
     }
     progressHud[2] = {
         type = "rectangle",
         action = "fill",
-        roundedRectRadii = { xRadius = 10, yRadius = 10 },
-        fillColor = { alpha = searchFillAlpha, white = 0.985 },
-        strokeColor = { alpha = searchStrokeAlpha, white = 0.45 },
-        strokeWidth = 1,
-        frame = { x = 20, y = 18, w = frame.w - 40, h = 44 }
+        fillColor = { alpha = 0, white = 1 },
+        frame = { x = 0, y = 0, w = 0, h = 0 }
     }
     progressHud[3] = {
         type = "text",
-        text = "Menu-Bar-Items werden geladen ...",
-        textSize = 20,
-        textColor = { white = 0.48, alpha = placeholderAlpha },
-        frame = { x = 34, y = 28, w = innerWidth - 20, h = 22 }
+        text = "",
+        textSize = 1,
+        textColor = { white = 0, alpha = 0 },
+        frame = { x = 0, y = 0, w = 0, h = 0 }
     }
     progressHud[4] = {
         type = "rectangle",
         action = "fill",
-        roundedRectRadii = { xRadius = 8, yRadius = 8 },
-        fillColor = { white = 0.97, alpha = rowFillAlpha },
-        strokeColor = { white = 0.62, alpha = rowStrokeAlpha },
-        strokeWidth = 1,
-        frame = { x = rowInset, y = 96, w = rowWidth, h = 40 }
+        fillColor = { alpha = 0, white = 1 },
+        frame = { x = 0, y = 0, w = 0, h = 0 }
     }
     progressHud[5] = {
         type = "text",
         text = "",
-        textSize = 26,
+        textSize = 15,
         textColor = { white = 0.10, alpha = 1 },
-        frame = { x = 28, y = 100, w = innerWidth - 110, h = 30 }
+        frame = { x = 10, y = 4, w = innerWidth - 64, h = 18 }
     }
     progressHud[6] = {
         type = "text",
         text = "0%",
-        textSize = 17,
+        textSize = 12,
         textColor = { white = 0.36, alpha = 1 },
-        frame = { x = frame.w - 96, y = 104, w = 64, h = 24 }
+        frame = { x = frame.w - 54, y = 6, w = 44, h = 16 }
     }
     progressHud[7] = {
         type = "rectangle",
         action = "fill",
-        roundedRectRadii = { xRadius = 8, yRadius = 8 },
-        fillColor = { white = 0.965, alpha = detailFillAlpha },
-        strokeColor = { white = 0.62, alpha = detailStrokeAlpha },
-        strokeWidth = 1,
-        frame = { x = rowInset, y = 128, w = rowWidth, h = 64 }
+        fillColor = { alpha = 0, white = 1 },
+        frame = { x = 0, y = 0, w = 0, h = 0 }
     }
     progressHud[8] = {
         type = "text",
         text = "",
-        textSize = 19,
-        textColor = { white = 0.30, alpha = 1 },
-        frame = { x = 28, y = 156, w = innerWidth - 12, h = 40 }
+        textSize = 1,
+        textColor = { white = 0, alpha = 0 },
+        frame = { x = 0, y = 0, w = 0, h = 0 }
     }
     progressHud[9] = {
         type = "rectangle",
         action = "fill",
         roundedRectRadii = { xRadius = 5, yRadius = 5 },
         fillColor = { white = 0.72, alpha = 0.20 },
-        frame = { x = 20, y = barY, w = frame.w - 40, h = 10 }
+        frame = { x = 10, y = barY, w = frame.w - 20, h = 4 }
     }
     progressHud[10] = {
         type = "rectangle",
         action = "fill",
         roundedRectRadii = { xRadius = 5, yRadius = 5 },
         fillColor = { red = 0.24, green = 0.48, blue = 0.98, alpha = 0.92 },
-        frame = { x = 20, y = barY, w = 0, h = 10 }
+        frame = { x = 10, y = barY, w = 0, h = 4 }
     }
     progressHud[11] = {
         type = "text",
         text = "",
-        textSize = 14,
+        textSize = 12,
         textColor = { white = 0.42, alpha = 1 },
-        frame = { x = 28, y = 130, w = innerWidth - 12, h = 20 }
+        frame = { x = 10, y = 23, w = innerWidth, h = 14 }
     }
     progressHud:show()
     return progressHud
@@ -1078,18 +1089,80 @@ local function preferredChoiceImage(app, item, debugLabel)
     return snapshotChoiceImageForHostApp(app, item, debugLabel) or fallbackChoiceImageForApp(app, debugLabel)
 end
 
+local function perfFormatMetadataTraceValue(value)
+    local cleaned = cleanValue(value)
+    if not cleaned then
+        return "<empty>"
+    end
+
+    cleaned = cleaned:gsub("%s+", " ")
+    if #cleaned > PERF_CONFIG.metadataTraceValueMaxLength then
+        cleaned = cleaned:sub(1, PERF_CONFIG.metadataTraceValueMaxLength - 1) .. "…"
+    end
+    return cleaned
+end
+
+local function perfLogMetadataTrace(app, itemLabel, elapsedMs, trace)
+    if not trace or elapsedMs < PERF_CONFIG.metadataTraceThresholdMs then
+        return
+    end
+
+    local parts = {}
+    for _, entry in ipairs(trace) do
+        table.insert(parts, string.format(
+                "%s=%.1fms:%s",
+                entry.name,
+                entry.elapsedMs,
+                perfFormatMetadataTraceValue(entry.value)
+        ))
+    end
+
+    perfLog(
+            "[MenuBarChooser][perf] metadata trace %.1fms app=%s bundle=%s item=%s fields: %s",
+            elapsedMs,
+            app:name() or app:bundleID() or "<unknown>",
+            app:bundleID() or "",
+            itemLabel or "-",
+            table.concat(parts, " | ")
+    )
+end
+
 local function collectMenuItemMetadata(item)
+    local trace = {}
+    local function readMetadata(name, attributeName)
+        local startedAt = perfNow()
+        local value = itemMetadataValue(item, attributeName)
+        table.insert(trace, {
+            name = name,
+            attributeName = attributeName,
+            value = value,
+            elapsedMs = perfElapsedMs(startedAt)
+        })
+        return value
+    end
+
     local metadata = {
-        identifier = itemMetadataValue(item, "AXIdentifier"),
-        title = itemMetadataValue(item, "AXTitle"),
-        valueDescription = itemMetadataValue(item, "AXValueDescription"),
-        description = itemMetadataValue(item, "AXDescription"),
-        help = itemMetadataValue(item, "AXHelp"),
-        value = itemMetadataValue(item, "AXValue")
+        identifier = readMetadata("identifier", "AXIdentifier"),
+        description = readMetadata("description", "AXDescription"),
+        value = readMetadata("value", "AXValue")
     }
-    metadata.label = preferredLabelValue(metadata.description, metadata.title, metadata.valueDescription, metadata.help)
+
+    metadata.label = preferredLabelValue(metadata.description)
+    if not metadata.label then
+        metadata.title = readMetadata("title", "AXTitle")
+        metadata.label = preferredLabelValue(metadata.title)
+    end
+    if not metadata.label then
+        metadata.valueDescription = readMetadata("valueDescription", "AXValueDescription")
+        metadata.label = preferredLabelValue(metadata.valueDescription)
+    end
+    if not metadata.label then
+        metadata.help = readMetadata("help", "AXHelp")
+        metadata.label = preferredLabelValue(metadata.help)
+    end
+
     metadata.derivedLabel = deriveGenericNameFromMenuLabel(metadata.label)
-    return metadata
+    return metadata, trace
 end
 
 local function collectMenuItemMetadataDebug(item)
@@ -1165,10 +1238,11 @@ end
 local function buildMenuChoice(app, item, actionName, selectionMap)
     local perf = selectionMap.perf
     local metadataStartedAt = perfNow()
-    local metadata = collectMenuItemMetadata(item)
+    local metadata, metadataTrace = collectMenuItemMetadata(item)
     local metadataElapsedMs = perfElapsedMs(metadataStartedAt)
     perfAdd(perf, "metadata", metadataElapsedMs)
     perfRecordSlowItem(perf, app, metadata.label or metadata.title or metadata.identifier, "metadata", metadataElapsedMs)
+    perfLogMetadataTrace(app, metadata.label or metadata.title or metadata.identifier, metadataElapsedMs, metadataTrace)
 
     local labelStartedAt = perfNow()
     local baseText = buildBaseMenuChoiceText(app, item, metadata, perf)
@@ -1246,7 +1320,11 @@ end
 
 local function applyChoices(selectionMap)
     local startedAt = perfNow()
-    FuzzyMatcher.setChoices(selectionMap.chooserItems, chooser, false, FuzzyMatcher.Sorter.byScore)
+    local sorter = nil
+    if SCAN_CONFIG.choiceSortMode == "score" then
+        sorter = FuzzyMatcher.Sorter.byScore
+    end
+    FuzzyMatcher.setChoices(selectionMap.chooserItems, chooser, false, sorter)
     perfAdd(selectionMap.perf, "applyChoices", perfElapsedMs(startedAt))
 end
 
@@ -1257,14 +1335,15 @@ local function updateProgressHud(scannedCount, totalCount, foundAppsCount, found
         progress = math.min(1, scannedCount / totalCount)
     end
     local currentFrame = hud:frame()
-    local barWidth = math.floor((currentFrame.w - 40) * progress)
+    local barX = 10
+    local barY = currentFrame.h - 8
+    local barWidth = math.floor((currentFrame.w - (barX * 2)) * progress)
     local currentIdentity = lastBundleID or lastAppName or "-"
 
     hud[5].text = string.format(
-            "%s  %d/%d",
-            state,
-            scannedCount,
-            totalCount
+            "Search: %d Apps - %d",
+            totalCount,
+            scannedCount
     )
     hud[6].text = string.format("%d%%", math.floor(progress * 100))
     hud[11].text = currentIdentity
@@ -1274,7 +1353,7 @@ local function updateProgressHud(scannedCount, totalCount, foundAppsCount, found
             foundItemsCount,
             lastAppName or "-"
     )
-    hud[10].frame = { x = 20, y = 76, w = barWidth, h = 10 }
+    hud[10].frame = { x = barX, y = barY, w = barWidth, h = 4 }
 end
 
 function MenuBarChooser()
