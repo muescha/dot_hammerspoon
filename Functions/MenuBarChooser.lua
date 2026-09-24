@@ -10,14 +10,14 @@ local cachedSelectionMap = nil
 
 local SCAN_CONFIG = {
     intervalSeconds = 0.002,
-    appsPerScanTickCold = 10,
-    appsPerScanTickWarm = 50,
-    appsPerScanTickCachedRefresh = 10,
+    appsPerScanTickCold = 10, -- first scan after Hammerspoon reload, no cached choices yet
+    appsPerScanTickWarm = 50, -- warm scan fallback when cached choices are unavailable
+    appsPerScanTickCachedRefresh = 10, -- background refresh while cached choices are shown
     useCachedChoicesImmediately = true,
     showChooserDuringScan = true,
     deferChooserItemsUntilScanComplete = false,
     choiceSortMode = "queryScore", -- discovery | score | queryScore
-    negativeAppCacheTtlSeconds = 180
+    negativeAppCacheTtlSeconds = 3600
 }
 
 local CHOOSER_LAYOUT = {
