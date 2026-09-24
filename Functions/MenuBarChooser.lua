@@ -5,9 +5,15 @@ local chooser = nil
 local scanTimer = nil
 local progressHud = nil
 local debugLoggedElementCount = 0
+local completedScanCount = 0
+local cachedSelectionMap = nil
 
 local SCAN_CONFIG = {
     intervalSeconds = 0.002,
+    appsPerScanTickCold = 10,
+    appsPerScanTickWarm = 50,
+    appsPerScanTickCachedRefresh = 10,
+    useCachedChoicesImmediately = true,
     showChooserDuringScan = true,
     deferChooserItemsUntilScanComplete = false,
     choiceSortMode = "queryScore", -- discovery | score | queryScore
@@ -49,7 +55,7 @@ local PERF_CONFIG = {
     maxSlowEntries = 10,
     semanticTraceThresholdMs = 20,
     semanticTraceMaxLabels = 12,
-    metadataTraceThresholdMs = 1,
+    metadataTraceThresholdMs = 30,
     metadataTraceValueMaxLength = 80,
     logToFile = true,
     logDir = hs.configdir .. "/Logs",
@@ -604,6 +610,36 @@ local function addMenuItem(selectionMap, value)
     local menuItems = selectionMap.menuItems
     menuItems[key] = value
     return key
+end
+
+local function newSelectionMap(perf)
+    return {
+        chooserItems = {},
+        menuItems = {},
+        menuItemsCounter = 0,
+        perf = perf
+    }
+end
+
+local function selectionMapFromCache(cache, perf)
+    if not cache then
+        return nil
+    end
+
+    return {
+        chooserItems = cache.chooserItems,
+        menuItems = cache.menuItems,
+        menuItemsCounter = cache.menuItemsCounter,
+        perf = perf
+    }
+end
+
+local function cacheSelectionMap(selectionMap)
+    cachedSelectionMap = {
+        chooserItems = selectionMap.chooserItems,
+        menuItems = selectionMap.menuItems,
+        menuItemsCounter = selectionMap.menuItemsCounter
+    }
 end
 
 local function safeAttributeValue(item, attributeName)
@@ -1373,17 +1409,18 @@ function MenuBarChooser()
     local runningApplications = hs.application.runningApplications()
     perfAdd(perf, "runningApplications", perfElapsedMs(runningApplicationsStartedAt))
 
-    local selectionMap = {
-        chooserItems = {},
-        menuItems = {},
-        menuItemsCounter = 0,
-        perf = perf
-    }
+    local scanSelectionMap = newSelectionMap(perf)
+    local hasCachedSelectionMap = SCAN_CONFIG.useCachedChoicesImmediately and cachedSelectionMap ~= nil
+    local selectionMap = selectionMapFromCache(cachedSelectionMap, perf) or scanSelectionMap
     local scannedCount = 0
     local foundAppsCount = 0
     local foundItemsCount = 0
     local scanIndex = 1
     local scanComplete = false
+    local appsPerScanTick = completedScanCount == 0 and SCAN_CONFIG.appsPerScanTickCold or SCAN_CONFIG.appsPerScanTickWarm
+    if hasCachedSelectionMap then
+        appsPerScanTick = SCAN_CONFIG.appsPerScanTickCachedRefresh
+    end
 
     local chooserCallback = function(selection)
         if selection and selection.element and selection.element.key then
@@ -1452,68 +1489,80 @@ function MenuBarChooser()
     if SCAN_CONFIG.showChooserDuringScan then
         chooser:show(chooserTopLeft)
     end
-    updateProgressHud(0, #runningApplications, 0, 0, nil, nil, "Suche startet...")
-    logScan("[MenuBarChooser] scan started, apps=%d", #runningApplications)
+    updateProgressHud(0, #runningApplications, 0, 0, nil, nil, hasCachedSelectionMap and "Cache wird aktualisiert..." or "Suche startet...")
+    logScan("[MenuBarChooser] scan started, apps=%d, appsPerScanTick=%d, cachedChoices=%s",
+            #runningApplications,
+            appsPerScanTick,
+            tostring(hasCachedSelectionMap))
 
     scanTimer = hs.timer.doEvery(SCAN_CONFIG.intervalSeconds, function()
-        if not chooser then
-            stopScanTimer()
-            return
-        end
-        if SCAN_CONFIG.showChooserDuringScan and not chooser:isVisible() then
-            stopScanTimer()
-            hideProgressHud()
-            return
-        end
+        local foundItemsAtTickStart = foundItemsCount
 
-        local app = runningApplications[scanIndex]
-        if not app then
-            stopScanTimer()
-            scanComplete = true
-            updateProgressHud(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, "fertig", nil, "Suche abgeschlossen")
-            hideProgressHud()
-            applyChoices(selectionMap)
-            perfLogSummary(perf, scannedCount, foundAppsCount, foundItemsCount)
-            if not SCAN_CONFIG.showChooserDuringScan then
-                chooser:show(chooserTopLeft)
+        for _ = 1, appsPerScanTick do
+            if not chooser then
+                stopScanTimer()
+                return
             end
-            logScan("[MenuBarChooser] scan finished, apps=%d, matchedApps=%d, items=%d",
-                    scannedCount,
-                    foundAppsCount,
-                    foundItemsCount)
-            return
-        end
-
-        scannedCount = scannedCount + 1
-        local lastAppName = app:name()
-        local lastBundleID = app:bundleID()
-        local foundItemsAtStart = foundItemsCount
-        updateProgressHud(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, lastAppName, lastBundleID, "Lese App...")
-
-        local findStartedAt = perfNow()
-        local children = findMenuExtrasMenuBarForApplication(app)
-        local findElapsedMs = perfElapsedMs(findStartedAt)
-        perfAdd(perf, "findMenuExtras", findElapsedMs)
-        perfRecordSlowApp(perf, app, "findMenuExtras", findElapsedMs)
-
-        if children then
-            local appendStartedAt = perfNow()
-            local addedChoices = appendChoicesForApp(app, children, selectionMap)
-            local appendElapsedMs = perfElapsedMs(appendStartedAt)
-            perfAdd(perf, "appendChoicesForApp", appendElapsedMs)
-            perfRecordSlowApp(perf, app, "appendChoicesForApp", appendElapsedMs)
-
-            if addedChoices > 0 then
-                foundAppsCount = foundAppsCount + 1
-                foundItemsCount = foundItemsCount + addedChoices
-                lastAppName = string.format("%s (+%d)", lastAppName, addedChoices)
+            if SCAN_CONFIG.showChooserDuringScan and not chooser:isVisible() then
+                stopScanTimer()
+                hideProgressHud()
+                return
             end
+
+            local app = runningApplications[scanIndex]
+            if not app then
+                stopScanTimer()
+                scanComplete = true
+                completedScanCount = completedScanCount + 1
+                updateProgressHud(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, "fertig", nil, "Suche abgeschlossen")
+                hideProgressHud()
+                selectionMap = scanSelectionMap
+                cacheSelectionMap(scanSelectionMap)
+                applyChoices(selectionMap)
+                perfLogSummary(perf, scannedCount, foundAppsCount, foundItemsCount)
+                if not SCAN_CONFIG.showChooserDuringScan then
+                    chooser:show(chooserTopLeft)
+                end
+                logScan("[MenuBarChooser] scan finished, apps=%d, matchedApps=%d, items=%d",
+                        scannedCount,
+                        foundAppsCount,
+                        foundItemsCount)
+                return
+            end
+
+            scannedCount = scannedCount + 1
+            local lastAppName = app:name()
+            local lastBundleID = app:bundleID()
+            updateProgressHud(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, lastAppName, lastBundleID, "Lese App...")
+
+            local findStartedAt = perfNow()
+            local children = findMenuExtrasMenuBarForApplication(app)
+            local findElapsedMs = perfElapsedMs(findStartedAt)
+            perfAdd(perf, "findMenuExtras", findElapsedMs)
+            perfRecordSlowApp(perf, app, "findMenuExtras", findElapsedMs)
+
+            if children then
+                local appendStartedAt = perfNow()
+                local addedChoices = appendChoicesForApp(app, children, scanSelectionMap)
+                local appendElapsedMs = perfElapsedMs(appendStartedAt)
+                perfAdd(perf, "appendChoicesForApp", appendElapsedMs)
+                perfRecordSlowApp(perf, app, "appendChoicesForApp", appendElapsedMs)
+
+                if addedChoices > 0 then
+                    foundAppsCount = foundAppsCount + 1
+                    foundItemsCount = foundItemsCount + addedChoices
+                    lastAppName = string.format("%s (+%d)", lastAppName, addedChoices)
+                end
+            end
+
+            scanIndex = scanIndex + 1
+            updateProgressHud(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, lastAppName, lastBundleID, "Suche laeuft...")
         end
 
-        scanIndex = scanIndex + 1
-        updateProgressHud(scannedCount, #runningApplications, foundAppsCount, foundItemsCount, lastAppName, lastBundleID, "Suche laeuft...")
-        if foundItemsCount ~= foundItemsAtStart and not SCAN_CONFIG.deferChooserItemsUntilScanComplete then
-            applyChoices(selectionMap)
+        if not hasCachedSelectionMap
+                and foundItemsCount ~= foundItemsAtTickStart
+                and not SCAN_CONFIG.deferChooserItemsUntilScanComplete then
+            applyChoices(scanSelectionMap)
         end
     end)
 end
