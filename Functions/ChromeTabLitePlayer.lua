@@ -6,14 +6,16 @@
 --- of clicking a bookmark:
 ---   * on youtube.com/watch  -> liteplayer.pages.dev/watch (adds t= from the live
 ---                              <video> currentTime and d= from its duration)
+---   * on youtube.com/live/<id> -> liteplayer.pages.dev/watch?v=<id> (same t=/d=;
+---                              the way back goes to youtube.com/watch, not /live)
 ---   * on liteplayer.pages.dev -> back to youtube.com/watch, setting t= to the
 ---                              current position read from the pgcYtState seed
 ---                              (the <video> is cross-origin here); d= just rides
 ---                              along, YouTube ignores it
 ---
---- The URL is only rewritten on youtube.com/watch, www.youtube.com/watch, or
+--- The URL is only rewritten on (www.)youtube.com/watch, (www.)youtube.com/live/<id>, or
 --- liteplayer.pages.dev; on any other page the hotkey does nothing (guards
---- against an accidental hyper+g elsewhere, including YouTube Shorts and Live).
+--- against an accidental hyper+g elsewhere, including YouTube Shorts).
 ---
 --- Requires:
 --- Chrome:
@@ -36,7 +38,12 @@ local JXA = [[
     const src = `(function () {
         var host = location.hostname;
         var isYoutubeHost = host === 'youtube.com' || host === 'www.youtube.com';
-        var yt = isYoutubeHost && location.pathname === '/watch';
+        // /live/<id> recordings share the video id with /watch?v=<id>.
+        // (No backslashes here: this source sits in a JXA template literal.)
+        var parts = location.pathname.split('/');
+        var liveId = isYoutubeHost && parts[1] === 'live'
+            && /^[A-Za-z0-9_-]{11}$/.test(parts[2] || '') ? parts[2] : null;
+        var yt = isYoutubeHost && (location.pathname === '/watch' || !!liveId);
         var lp = host === 'liteplayer.pages.dev';
         if (!yt && !lp) { return 'skip'; }
 
@@ -44,6 +51,10 @@ local JXA = [[
             yt ? 'https://liteplayer.pages.dev/watch' : 'https://www.youtube.com/watch'
         );
         url.search = location.search;
+        if (liveId) {
+            url.searchParams.delete('si');
+            url.searchParams.set('v', liveId);
+        }
 
         if (yt) {
             var v = document.querySelector('video');
