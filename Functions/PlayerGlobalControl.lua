@@ -130,6 +130,13 @@ end
 function BrowserDriver.getCurrentUrl(_target, callback)
     assert(callback, "BrowserDriver.getCurrentUrl requires callback")
 
+    local chromeApps = hs.application.applicationsForBundleID(bundleIdChrome)
+    if #chromeApps == 0 then
+        debugInfo("BrowserDriver.getCurrentUrl: Chrome is not running")
+        callback(nil)
+        return
+    end
+
     callback(getChromeUrl())
 end
 
@@ -138,10 +145,28 @@ function BrowserDriver.getDomain(target, callback)
 
     BrowserDriver.getCurrentUrl(target, function(url)
         debugInfo("current url: ", url)
+        if url == nil then
+            debugInfo("BrowserDriver.getDomain: no current URL")
+            callback(nil)
+            return
+        end
+
         local domain = helper.url.getDomain(url)
         debugInfo("current domain: ", domain)
         callback(domain)
     end)
+end
+
+function BrowserDriver.getDomainActions(domain, callback)
+    assert(callback, "BrowserDriver.getDomainActions requires callback")
+
+    local appActions = PlayerActions.getBrowserActions(domain)
+    if appActions == nil then
+        getGenericVideoActions(domain, callback)
+        return
+    end
+
+    callback(appActions, domain)
 end
 
 function BrowserDriver.getActions(target, callback)
@@ -154,14 +179,10 @@ function BrowserDriver.getActions(target, callback)
             return
         end
 
-        local appActions = PlayerActions.getBrowserActions(domain)
-        if appActions == nil then
-            getGenericVideoActions(domain, callback)
-            return
-        end
-
-        functionMemory['domain'] = domain
-        callback(appActions, domain)
+        BrowserDriver.getDomainActions(domain, function(appActions, actionDomain)
+            functionMemory['domain'] = actionDomain
+            callback(appActions, actionDomain)
+        end)
     end)
 end
 
@@ -186,7 +207,7 @@ function PlayerDriver.detect(bundleId)
 end
 
 local PlayerTarget = {
-    bundleId = bundleIdChrome,
+    bundleId = nil,
     window = nil
 }
 
@@ -204,11 +225,17 @@ function PlayerTarget.getBundleId()
 end
 
 function PlayerTarget.getDriver()
-    return PlayerDriver.detect(PlayerTarget.getBundleId())
+    local bundleId = PlayerTarget.getBundleId()
+    if bundleId == nil then
+        return nil
+    end
+
+    return PlayerDriver.detect(bundleId)
 end
 
 function PlayerTarget.isBrowser()
-    return PlayerTarget.getDriver().isBrowser
+    local driver = PlayerTarget.getDriver()
+    return driver ~= nil and driver.isBrowser
 end
 
 function PlayerTarget.supportsBundleId(bundleId)
@@ -218,7 +245,14 @@ end
 function PlayerTarget.getActions(callback)
     assert(callback, "PlayerTarget.getActions requires callback")
 
-    PlayerTarget.getDriver().getActions(PlayerTarget, callback)
+    local driver = PlayerTarget.getDriver()
+    if driver == nil then
+        debugInfo("PlayerTarget.getActions: no player target selected")
+        callback(nil, nil)
+        return
+    end
+
+    driver.getActions(PlayerTarget, callback)
 end
 
 function PlayerTarget.getReceiverApp()
@@ -229,7 +263,12 @@ function PlayerTarget.getReceiverApp()
         return savedWindow:application()
     end
 
-    return hs.application.applicationsForBundleID(PlayerTarget.getBundleId())[1]
+    local bundleId = PlayerTarget.getBundleId()
+    if bundleId == nil then
+        return nil
+    end
+
+    return hs.application.applicationsForBundleID(bundleId)[1]
 end
 
 -- Java Script Actions
