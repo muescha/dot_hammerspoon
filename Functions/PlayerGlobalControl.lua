@@ -4,6 +4,7 @@
 ---
 --- Current Apps / Sites
 ---   -> IINA
+---   -> LosslessCut (keystrokes, see PlayerGlobalControl-LosslessCut.md)
 ---   -> Chrome for Player in:
 ---      -> Generic HTML Video
 ---      -> [x] YouTube
@@ -33,6 +34,7 @@ fileInfo()
 local cache = {}
 
 local bundleIdIINA = "com.colliderli.iina"
+local bundleIdLosslessCut = "no.mifi.losslesscut-mac"
 local bundleIdChrome = "com.google.Chrome"
 local browserGoogleChrome = "Google Chrome"
 local browserGoogleDevTools = "Google DevTools"
@@ -463,6 +465,23 @@ PlayerActions.setAppActions(bundleIdIINA, {
         moveBackward = Key({}, "left"),
         maxSpeed = { actions.pause, actions.speedReset, actionRepeat(7, actions.speedInc), actions.pause},
         info = "IINA Player"
+    })
+
+-- keys follow keyBindings in ~/Library/Application Support/LosslessCut/config.json
+PlayerActions.setAppActions(bundleIdLosslessCut, {
+        start = {},
+        pause = Key({}, "k"), -- togglePlayNoResetSpeed
+        -- space = togglePlayResetSpeed: resets speed when starting playback,
+        -- so toggling twice resets speed and keeps the play state
+        speedReset = { Key({}, "space"), Key({}, "space") },
+        speedInc = Key({}, "l"), -- increasePlaybackRate (x 2^(1/3)); starts playback when paused
+        speedDec = Key({}, "j"), -- reducePlaybackRate
+        moveForward = Key({ "ctrl", "shift" }, "right"), -- seekForwards2 (10s)
+        moveBackward = Key({ "ctrl", "shift" }, "left"), -- seekBackwards2 (10s)
+        -- increasePlaybackRateMore (x 2), clamped at 16x: 4 steps from 1x,
+        -- one extra in case the first press only starts paused playback
+        maxSpeed = { actions.speedReset, actionRepeat(5, Key({ "shift" }, "l")) },
+        info = "LosslessCut Player"
     })
 
 PlayerActions.setBrowserActions({

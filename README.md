@@ -68,6 +68,7 @@ YouTube Ad Auto-skipper
 
 Supported Apps:
 - [IINA](https://iina.io/)
+- [LosslessCut](https://losslesscut.app/)
 - Google Chrome
 
 Shortcuts available for this websites:
