@@ -482,3 +482,15 @@ Uses [HotkeySilence](/Helpers/HotkeySilence.lua) to disable/enable the hotkey wi
 - `enumString({"a", "b"})` creates a named map: `{ a = "a", b = "b" }`
 
 See the `actions` in [PlayerGlobalControl](/Functions/PlayerGlobalControl.lua)
+
+### [ApplicationSelectMenuItemApplySameFrame](/Helpers/ApplicationSelectMenuItemApplySameFrame.lua)
+
+Trigger a menu item of the frontmost app which opens a new window (for example "New Window") and apply the frame of the previous window to the new one. Pass all localized menu titles.
+
+```lua
+applicationSelectMenuItemApplySameFrame({ "Neues Fenster", "New Window" }, { alertPrefix = "New Window" })
+```
+
+Options: `timeout` (seconds, default 3), `interval` (seconds, default 0.05), `alertPrefix`.
+
+See [ChromeNewWindow](/Functions/ChromeNewWindow.lua) and [ChromeTabToNewWindow](/Functions/ChromeTabToNewWindow.lua)
