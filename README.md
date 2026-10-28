@@ -1,4 +1,4 @@
-# Hammerspoon 
+# Hammerspoon
 
 ## Functions
 
@@ -13,9 +13,9 @@ require("Helpers.Extensions.WindowAxHotfix")
 ````
 
 See problem description and example code fix:
-  - https://github.com/Hammerspoon/hammerspoon/issues/3224#issuecomment-2155567633
- - https://github.com/Hammerspoon/hammerspoon/issues/3277
 
+- https://github.com/Hammerspoon/hammerspoon/issues/3224#issuecomment-2155567633
+- https://github.com/Hammerspoon/hammerspoon/issues/3277
 
 ### [MailMateFocus](/Functions/MailMateFocus.lua)
 
@@ -31,20 +31,20 @@ It uses my helper `hs.hotkey.when(...).block(...)` with app/tab targets (see bel
 Enabling the original MacZoom to my Hyper key would be a better shortcut for my hand. I have set my Hyper key to the `fn` key and the `cmd_right` key.
 
 Shortcuts:
+
 - hyper + 0 -> Zoom In/Zoom out
 - hyper + - -> Decrease Zoom
 - hyper + + -> Increase Zoom
 
 ### [PlayerGlobalControl](/Functions/PlayerGlobalControl.lua)
 
-This feature enables the user to control a media player with a standardized set of keyboard shortcuts, regardless of whether the player is the currently active application or not. 
+This feature enables the user to control a media player with a standardized set of keyboard shortcuts, regardless of whether the player is the currently active application or not.
 
 This is particularly useful when working on a tutorial or coding in an IDE, where the user may need to switch between the player and the IDE frequently. But with this there is no need to switch the focus to chrome because it sends commands via JXA to chrome and no switch is needed.
 
 Set the focus to a specific window with hyper + o - then it switches also between tabs when you have a localhost open (currently it sends JXA to the current active tab when you not set the focus).
 
 This feature currently supports controlling the IINA and Chrome media players, as well as providing special shortcuts for certain websites.
-
 
 Shortcuts:
 
@@ -61,18 +61,20 @@ Shortcuts:
 > Note 1: on some places it needs this special start: on youtube when you use a plugin which autostop the playing (YouTube™ No Buffer - Stop Auto-playing 0.4.6), or in Udemy to start a section) - see it as the start as a first command. If you click on youtube page on links to other videos which not complete refresh the page: then you need manualy refresh the page to have the play button detected.
 
 > Note 2: the button click not works out of the box - you need install some Chrome Plugin so that it works again (
-YouTube Ad Auto-skipper
-2.2.0)
+> YouTube Ad Auto-skipper
+> 2.2.0)
 
 > Note 3: currently not used so much, because I can set this with a Chrome TamperMonkey Script: [Nova YouTube (Plugin for TamperMonkey)](https://github.com/raingart/Nova-YouTube-extension)
 
 Supported Apps:
+
 - [IINA](https://iina.io/)
 - [LosslessCut](https://losslesscut.app/)
 - Google Chrome
 - Safari
 
 Shortcuts available for this websites:
+
 - Gerneric Video (mostly this works)
 - https://youtube.com (disabled - I now use GenericVideo)
 - https://twitch.tv
@@ -90,15 +92,15 @@ Shortcuts available for this websites:
 Resize all child windows of an app to the current shild's window size. This command will adjust the size of all child windows within an application to match the dimensions of the active child window.
 
 Shortcuts:
+
 - hyper + r -> Resize all child windows
-
-
 
 ### [WindowPlacer](/Functions/WindowPlacer.lua)
 
 This functionality allows the user to move windows to pre-defined locations on either their MacBook or an external monitor in portrait orientation. Specifically, there are three designated locations: the upper half of the monitor (designated as hyper+1), the lower half of the monitor (designated as hyper+2), and the MacBook itself (designated as hyper+3). By using this feature, users can more quickly and easily arrange their windows to best suit their workflow and preferences. The Modal mode allow also place the windows in different columns.
 
 Shortcuts:
+
 - hyper + 1 -> External Monitor Top
 - hyper + 2 -> External Monitor Bottom
 - hyper + 3 -> Main Monitor
@@ -108,20 +110,20 @@ Shortcuts:
 
 ```text
 Layout: 
- key 1:  ==1==             
- key 2:        ==2==       
+ key 1:  ==1==           
+ key 2:        ==2==     
  key 3:              ==3== 
  key 4:  ========4======== 
- key 5:  =====5=====       
- key 6:        =====6==    
+ key 5:  =====5=====     
+ key 6:        =====6==  
  key 7:        =====7===== 
  key 8:           ==8===== 
- key a:  =====a==          
- key b:           ==b==    
+ key a:  =====a==        
+ key b:           ==b==  
  key c:                =c= 
  key d:  =======d======
- key e:           =b=    
- key f:               f    
+ key e:           =b=  
+ key f:               f  
 ```
 
 ### [MultiDisplayBlack](/Functions/MultiDisplayBlack.lua)
@@ -129,21 +131,25 @@ Layout:
 Switch display to black.
 
 Shortcuts:
+
 - hyper + 5 -> toggle other display black
 - hyper + 6 -> toggle all displays black
- 
+
 ### [AudioSwitcher](/Functions/AudioSwitcher.lua)
 
 Select audio out device
 
 Shortcuts:
+
 - hyper + 7 -> open audio out device selector
-- 
+-
+
 ### [hs_select_window](/Spoons/hs_select_window/init.lua)
 
 Select child windows
 
 Shortcuts:
+
 - opt + g -> open all child window selector
 - opt + shift + g -> open current app child window selector
 
@@ -168,6 +174,7 @@ Clicked the docker menu bar item:
 ![selection m](/assets/readme/MenuBarChooser-docker-clicked.png)
 
 Shortcuts:
+
 - hyper + b
 
 ### [AppBorders](/Functions/AppBorders.lua)
@@ -191,6 +198,7 @@ Copies the current Chrome tab's title and URL as formatted Markdown text to the 
 The Markdown format for single tab is: `domain: [title](url)`
 
 The Markdown format for all tabs is:
+
 ```
 Tabs (X total):
 - domain: [title](url)
@@ -198,6 +206,7 @@ Tabs (X total):
 ```
 
 Shortcuts:
+
 - hyper + c -> Copy ChromeTab URL to clipboard
 - shift + ctrl + v -> Fetch and paste ChromeTab URL directly
 - cmd + shift + ctrl + v -> Fetch and paste all ChromeTabs from current window
@@ -207,6 +216,7 @@ Shortcuts:
 This feature allows the user to detach the current tab from a browser window and move it into a new window. Please note that users may need to customize the menu command to match their current language settings. For those interested in contributing to a language-independent solution, pull requests are welcome. One possible solution could be to search all menus for specific keywords (similar to the approach used in [KSheet](/Spoons/KSheet.spoon/init.lua), although the exact keywords would need to be determined).
 
 Shortcuts:
+
 - hyper + t -> show current tab in new window
 
 ### [ChromeTabAudioActive](/Functions/ChromeTabAudioActivate.lua)
@@ -241,6 +251,7 @@ Note to me: I should close more tabs.
 This feature allows the user to insert the current date in the format `yyyy-mm-dd`:
 
 Shortcuts:
+
 - hyper + d -> insert current date
 
 ### [HighLight](/Functions/Highlight.lua)
@@ -248,12 +259,14 @@ Shortcuts:
 This feature allows the user to  highlight current mouse position
 
 Shortcuts:
+
 - hyper + g -> highlight current mouse position
 - hyper + h -> highlight current app
 
 ### [Umlauts.lua](/Functions/Umlauts.lua)
 
 - Mapping german umlauts to `opt`+`key` are in:
+
 ```lua
 local umlauts = {
     -- note: leave the space before ä Ä - otherwise it not work
@@ -274,7 +287,6 @@ replacement for `hs.hotkey.showHotkeys`
 if you add a scriptname to the description then it is grouped by scriptname. Example: `MaximizeApp: Maximize App`
 
 ![ScreenShot HotKeySheet](./assets/readme/HotKeySheet.png)
-
 
 ### EmmyLua.spoon
 
@@ -317,6 +329,7 @@ hs.hotkey.blockWhen(HotkeyTargetInput, modifier, key, message, debugMessage)
 ```
 
 - where `HotkeyTargetInput` :=
+
   - `appName`
   - `{ app = appName }`
   - `{ app = appName, tab = tabPattern }`
@@ -325,13 +338,13 @@ hs.hotkey.blockWhen(HotkeyTargetInput, modifier, key, message, debugMessage)
   - `at.appTab(appName, tabPattern)`
   - `condition`
   - `{ targetOrCondition, ... }`
-
 - condition combinators:
+
   - `conditions.allApps`
   - `conditions.anyOf(targetOrCondition, ...)`
   - `conditions.noneOf(targetOrCondition, ...)`
-
 - and where:
+
   - `appName` := app name pattern, for example `"Google Chrome"`
   - `tabPattern` := focused window title pattern, for example `"essages%)$"`
   - `condition` := `fun(currentAppName: string, currentTab: string): boolean`
@@ -370,19 +383,18 @@ hs.hotkey.when(conditions.allApps).bind({"cmd"}, "n", nil, pressedfn)
 for patterns see:
 https://www.lua.org/manual/5.1/manual.html#5.4.1
 
-
 ### [RetryWhile](/Helpers/RetryWhile.lua)
 
-This helper function allows you to retry a function until it returns true or the maximum number of retries is reached. It is useful for situations where you need to wait for a condition to be met before proceeding with your script. 
+This helper function allows you to retry a function until it returns true or the maximum number of retries is reached. It is useful for situations where you need to wait for a condition to be met before proceeding with your script.
 
 When you need an onComplete function, you can use [RetryWhileOnComplete](/Helpers/RetryWhileOnComplete.lua) the `onComplete` parameter to specify a function that will be called when the retry is complete or `maxTries` is reached.
-
 
 ### DebugFunction
 
 - [debugFunction](/Helpers/DebugFunction.lua) show source code of a function in console
 
 for example:
+
 ```lua
 debugFunction(hs.hotkey.getHotkeys)
 ```
