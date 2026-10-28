@@ -475,3 +475,10 @@ Uses [HotkeySilence](/Helpers/HotkeySilence.lua) to disable/enable the hotkey wi
 
 - `hotkeySilence(fn)` runs `fn` with the `hs.hotkey` log level set to 0
 - `hotkeyDisableSilent(hotkeyHandler)` / `hotkeyEnableSilent(hotkeyHandler)`
+
+### [Enum](/Helpers/Enum.lua)
+
+- `enum({"a", "b"})` creates a 2-way enum: `{ [1] = "a", [2] = "b", a = 1, b = 2 }`
+- `enumString({"a", "b"})` creates a named map: `{ a = "a", b = "b" }`
+
+See the `actions` in [PlayerGlobalControl](/Functions/PlayerGlobalControl.lua)
