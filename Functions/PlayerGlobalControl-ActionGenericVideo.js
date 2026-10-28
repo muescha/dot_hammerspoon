@@ -416,9 +416,6 @@
                     YouTubePostMessageAdapter.removeOverlay(
                         readyIframe
                     );
-                    YouTubePostMessageAdapter.finishWarmup(
-                        readyIframe
-                    );
                 }
             });
 
@@ -438,46 +435,18 @@
             );
         }
 
-        static sendCommand(iframe, func, args = []) {
-            iframe.contentWindow.postMessage(
-                JSON.stringify({
-                    event: "command",
-                    func: func,
-                    args: args
-                }),
-                "*"
-            );
-        }
-
-        // Force the player to actually start so YouTube begins emitting
-        // infoDelivery. currentTime/duration are only reported once playback
-        // has begun -- until then the cache stays empty and every command sees
-        // "connecting…". Chrome blocks unmuted, script-initiated playback
-        // because Hammerspoon key events are not a page user-gesture, but MUTED
-        // playback is allowed, so we start it muted just to fill the cache.
-        static nudgePlayback(iframe) {
-            log("nudgePlayback: mute + playVideo");
-            document.documentElement.dataset.pgcYtWarmup = "1";
-            // Remember that WE muted the player just for warmup, so the first
-            // real user play() can undo it and give sound. This flag outlives
-            // finishWarmup (which clears pgcYtWarmup but leaves the mute).
-            document.documentElement.dataset.pgcYtMuted = "1";
-            this.sendCommand(iframe, "mute");
-            this.sendCommand(iframe, "playVideo");
-        }
-
-        // The player may already be autoplaying on its own (mini.html sets
-        // autoplay). sendListening() then makes it report and fill the cache
-        // within a moment. So only nudge -- which mutes + plays and later leads
-        // to a finishWarmup pause -- when the cache is STILL empty after a short
-        // grace period, i.e. the video is genuinely not playing. This stops us
-        // from muting/pausing a video that is already running.
-        static scheduleWarmupNudge(iframe, delayMs = 400) {
+        // After sendListening() the player may report on its own (mini.html
+        // autoplays; a player the user has started keeps streaming). Give it a
+        // short grace period, then react to what we heard -- we never force a
+        // muted warmup start, because a muted start cannot be un-muted without a
+        // real page gesture (Hammerspoon keys don't count) and would leave the
+        // video stuck muted. If it is silent, we simply wait for the user to
+        // press play once (with sound); then it reports and becomes controllable.
+        static scheduleStateProbe(iframe, delayMs = 400) {
             setTimeout(() => {
                 const state = this.readState();
 
                 if (state) {
-                    log("scheduleWarmupNudge: already reporting -> skip nudge");
                     // We joined mid-playback: the ongoing infoDelivery stream
                     // carries currentTime but usually NOT playerState (that only
                     // comes on state CHANGES, which happened before our listener
@@ -485,34 +454,15 @@
                     // playing state -- otherwise isPaused() stays wrongly true and
                     // doPause() only ever calls play(). Real pause/play commands
                     // emit a fresh playerState afterwards and keep it in sync.
+                    log("scheduleStateProbe: reporting -> seed playerState");
                     if (state.playerState === undefined) {
                         this.mergeState({ playerState: 1 });
                     }
-                    this.removeOverlay(iframe);
-                    return;
+                } else {
+                    log("scheduleStateProbe: still silent -> wait for user play");
                 }
-                log("scheduleWarmupNudge: still silent -> nudgePlayback");
-                this.nudgePlayback(iframe);
+                this.removeOverlay(iframe);
             }, delayMs);
-        }
-
-        // Finish warmup exactly once, as soon as state is flowing: pause the
-        // video again so it sits still at the start position instead of running
-        // on. We deliberately do NOT unMute -- Chrome rejects a script-initiated
-        // unmute without a real page click and PAUSES the element instead
-        // ("Unmuting failed and the element was paused instead"), which is more
-        // confusing than helpful here. Sound is instead attempted on the first
-        // real user-initiated start (see ensureUnmute(), called from play()); if
-        // Chrome still rejects that without a page gesture, playback continues
-        // muted and one manual page click per load is needed for sound.
-        static finishWarmup(iframe) {
-            if (
-                document.documentElement.dataset.pgcYtWarmup === "1"
-            ) {
-                log("finishWarmup: pauseVideo");
-                this.sendCommand(iframe, "pauseVideo");
-                delete document.documentElement.dataset.pgcYtWarmup;
-            }
         }
 
         static showOverlay(iframe, message) {
@@ -709,7 +659,6 @@
                 log("readState:ok");
                 log("removeOverlay: readstate");
                 this.removeOverlay(iframe);
-                this.finishWarmup(iframe);
 
                 return {
                     mediaAdapter:
@@ -721,10 +670,10 @@
             // Cache still empty. The player might already be autoplaying on its
             // own (mini.html sets autoplay) -- sendListening() above makes it
             // report within a moment. Show the overlay and give it a short grace
-            // period: only if NO infoDelivery has populated the cache by then do
-            // we actively nudge. That avoids muting/pausing a running video.
+            // period to hear back (see scheduleStateProbe). If it stays silent
+            // the user just needs to press play once (with sound).
             this.showOverlay(iframe, "YouTube connecting…");
-            this.scheduleWarmupNudge(iframe);
+            this.scheduleStateProbe(iframe);
 
             return {
                 mediaAdapter: null,
@@ -758,27 +707,7 @@
             return !state || state.playerState !== 1;
         }
 
-        // Undo the warmup mute exactly once, on the first real user-initiated
-        // start. Shared by every start path -- direct play() and the doPause
-        // toggle (which routes through play() when it resumes). The user wants
-        // to hear now, so we unmute before playing. Order matters at the call
-        // site -- unMute first, playVideo second: if Chrome rejects the script
-        // unmute without a page gesture it pauses the element, and the following
-        // playVideo resumes it (muted). Worst case: muted playback continues;
-        // best case: sound.
-        ensureUnmute() {
-            if (
-                document.documentElement.dataset.pgcYtMuted === "1"
-            ) {
-                log("ensureUnmute: undo warmup mute -> unMute");
-                this.postCommand("unMute");
-                delete document.documentElement.dataset.pgcYtMuted;
-            }
-        }
-
         play() {
-            this.ensureUnmute();
-
             return this.postCommand("playVideo");
         }
 
