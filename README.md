@@ -419,3 +419,21 @@ function hotkey.getHotkeys()
   return t
 end
 ```
+
+### HotkeyBindCycle
+
+[hotkeybindcycle](/Helpers/HotkeyBindCycle.lua)
+
+Cycle to a map of functions on each key press.
+
+```lua
+hotkeybindcycle(hyper, "b", keyInfo("Cycle defg: print"), {
+    function() print("d") end,
+    function() print("e") end,
+    function() print("f") end,
+    function() print("g") end,
+    function() print("h") end,
+})
+```
+
+See [HotkeybindCycleTest.lua](/Functions/HotkeybindCycleTest.lua)
