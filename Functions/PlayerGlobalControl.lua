@@ -286,6 +286,10 @@ function PlayerTarget.getWindow()
     return PlayerTarget.window
 end
 
+function PlayerTarget.hasTarget()
+    return PlayerTarget.getBundleId() ~= nil
+end
+
 function PlayerTarget.getBundleId()
     return PlayerTarget.bundleId
 end
@@ -532,6 +536,108 @@ end
 
 local function copyCommandQueue(command)
     return type(command) == 'table' and { table.unpack(command) } or { command }
+end
+
+local function getErrorText(err)
+    if type(err) == "table" then
+        return err.NSLocalizedDescription
+                or err.OSAScriptErrorMessageKey
+                or err.OSAScriptErrorBriefMessageKey
+                or hs.inspect(err)
+    end
+
+    return tostring(err)
+end
+
+local function wrapText(text, maxWidth)
+    local width = maxWidth or 72
+    local wrapped = {}
+
+    for line in tostring(text):gmatch("([^\n]*)\n?") do
+        if line == "" then
+            table.insert(wrapped, line)
+        else
+            local current = ""
+            for word in line:gmatch("%S+") do
+                if #current == 0 then
+                    current = word
+                elseif #current + 1 + #word <= width then
+                    current = current .. " " .. word
+                else
+                    table.insert(wrapped, current)
+                    current = word
+                end
+            end
+
+            if #current > 0 then
+                table.insert(wrapped, current)
+            end
+        end
+    end
+
+    return table.concat(wrapped, "\n")
+end
+
+local function isJavaScriptFromAppleEventsDisabled(text)
+    return text:match("Allow JavaScript from Apple Events")
+            or text:match("JavaScript von Apple Events")
+            or text:match("JavaScript .*AppleScript.*deaktiviert")
+            or text:match("support%.google%.com/chrome/%?p=applescript")
+end
+
+local function getJavaScriptFromAppleEventsDisabledText()
+    local adapter = PlayerTarget.getBrowserAdapter()
+    local browserName = (adapter and adapter.applicationName) or "Browser"
+    local enablePath = (adapter and adapter.enableJavaScriptFromAppleEventsPath)
+            or "Allow JavaScript from Apple Events"
+
+    return table.concat({
+        browserName .. " JavaScript control is disabled.",
+        "Enable:",
+        enablePath,
+        "See debug console for the full error message.",
+    }, "\n\n")
+end
+
+local function getAlertErrorText(err)
+    local text = getErrorText(err)
+
+    if isJavaScriptFromAppleEventsDisabled(text) then
+        return getJavaScriptFromAppleEventsDisabledText()
+    end
+
+    return wrapText(text)
+end
+
+local function showErrorAlert(message)
+    local style = {
+        padding = 28,
+        textSize = 24,
+    }
+    local icon = hs.image.imageFromName("NSCaution")
+
+    if icon then
+        hs.alert.showWithImage(message, icon:setSize({ w = 64, h = 64 }), style)
+    else
+        hs.alert.show(message, style)
+    end
+end
+
+local function getSupportedPlayerNames()
+    local names = {}
+
+    for _, adapter in pairs(BrowserAdapters) do
+        table.insert(names, adapter.applicationName)
+    end
+
+    for _, appActions in pairs(PlayerActions.appActions) do
+        local name = appActions.info or "App"
+        name = name:gsub("%s*Player$", "")
+        table.insert(names, name)
+    end
+
+    table.sort(names)
+    return "- " .. table.concat(names, "\n- ")
 end
 
 local function failCommand(callback, message, details)
@@ -975,6 +1081,7 @@ local function checkSwitch()
 
     local returnSwitchBacks = { win }
 
+    if not PlayerTarget.hasTarget() then debugInfo("checkSwitch: no player target selected") return end
     if not PlayerTarget.isBrowser() then debugInfo("checkSwitch: saved window is not browser") return end
     local savedWindow = PlayerTarget.getWindow()
     if savedWindow==nil then debugInfo("checkSwitch: no window saved") return end
@@ -1054,6 +1161,13 @@ local function createHotkey(sourceKey, action, description)
         print(collectgarbage("count"))
         --         collectgarbage("collect")
 
+        if not PlayerTarget.hasTarget() then
+            local msg = "No player selected.\n\nFocus one of these apps and press Set active App first:\n" .. getSupportedPlayerNames()
+            debugInfo(msg)
+            showErrorAlert(msg)
+            return
+        end
+
         local switchBackToWindow = checkSwitch()
 
         PlayerTarget.getActions(function(appActions, domain)
@@ -1068,9 +1182,10 @@ local function createHotkey(sourceKey, action, description)
                 checkSwitchBack(switchBackToWindow)
 
                 if not ok then
-                    local msg = "HotKey action failed: " .. action .. "\n" .. tostring(message)
-                    debugInfo(msg)
-                    hs.alert.show(msg)
+                    local logMessage = "HotKey action failed: " .. action .. "\n\n" .. getErrorText(message)
+                    local alertMessage = "HotKey action failed: " .. action .. "\n\n" .. getAlertErrorText(message)
+                    debugInfo(logMessage)
+                    showErrorAlert(alertMessage)
                     return
                 end
 
