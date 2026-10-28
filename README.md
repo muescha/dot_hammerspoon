@@ -70,6 +70,7 @@ Supported Apps:
 - [IINA](https://iina.io/)
 - [LosslessCut](https://losslesscut.app/)
 - Google Chrome
+- Safari
 
 Shortcuts available for this websites:
 - Gerneric Video (mostly this works)

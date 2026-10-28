@@ -36,6 +36,7 @@ local cache = {}
 local bundleIdIINA = "com.colliderli.iina"
 local bundleIdLosslessCut = "no.mifi.losslesscut-mac"
 local bundleIdChrome = "com.google.Chrome"
+local bundleIdSafari = "com.apple.Safari"
 local browserGoogleChrome = "Google Chrome"
 local browserGoogleDevTools = "Google DevTools"
 local browserJavaScriptRunner = browserGoogleChrome
@@ -117,15 +118,64 @@ function PlayerActions.extendDomainActions(targetDomain, sourceDomain, overrides
     PlayerActions.browserActions[targetDomain] = helper.table.assigned(PlayerActions.browserActions[sourceDomain], overrides)
 end
 
+local function getChromeUrl()
+    --local _,url = hs.osascript.applescript('tell application "Google Chrome" to return URL of active tab of front window')
+    --_, title, _ = hs.osascript.javascript("Application('Google Chrome').windows[0].activeTab().title()")
+    --_, url, _ = hs.osascript.javascript("Application('Google Chrome').windows[0].activeTab().url()")
+    local ok, url, err = hs.osascript.javascript("Application('Google Chrome').windows[0].activeTab().url()")
+    if not ok then
+        debugInfo("getChromeUrl: AppleScript-JS call failed: ", err)
+        return nil
+    end
+    if type(url) ~= "string" or url == "" then
+        debugInfo("getChromeUrl: no URL for active tab (window missing or internal page).")
+        return nil
+    end
+    return url
+end
+
+local function getSafariUrl()
+    local ok, url, err = hs.osascript.javascript("Application('Safari').windows[0].currentTab().url()")
+    if not ok then
+        debugInfo("getSafariUrl: AppleScript-JS call failed: ", err)
+        return nil
+    end
+    if type(url) ~= "string" or url == "" then
+        debugInfo("getSafariUrl: no URL for active tab (window missing or internal page).")
+        return nil
+    end
+    return url
+end
+
+local BrowserAdapters = {
+    [bundleIdChrome] = {
+        bundleId = bundleIdChrome,
+        applicationName = browserGoogleChrome,
+        wrapper = "PlayerGlobalControl-BrowserWrapper-Chrome.js",
+        getUrl = getChromeUrl,
+        supportsDevTools = true,
+        enableJavaScriptFromAppleEventsPath = "View > Developer > Allow JavaScript from Apple Events",
+    },
+    [bundleIdSafari] = {
+        bundleId = bundleIdSafari,
+        applicationName = "Safari",
+        wrapper = "PlayerGlobalControl-BrowserWrapper-Safari.js",
+        getUrl = getSafariUrl,
+        supportsDevTools = false,
+        enableJavaScriptFromAppleEventsPath = "Safari Settings > Developer > Allow JavaScript from Apple Events",
+    },
+}
+
+local function getBrowserAdapter(bundleId)
+    return BrowserAdapters[bundleId]
+end
+
 local BrowserDriver = {
-    isBrowser = true,
-    bundleIds = {
-        [bundleIdChrome] = true
-    }
+    isBrowser = true
 }
 
 function BrowserDriver.detect(bundleId)
-    if BrowserDriver.bundleIds[bundleId] then
+    if getBrowserAdapter(bundleId) then
         return BrowserDriver
     end
 
@@ -139,14 +189,21 @@ end
 function BrowserDriver.getCurrentUrl(_target, callback)
     assert(callback, "BrowserDriver.getCurrentUrl requires callback")
 
-    local chromeApps = hs.application.applicationsForBundleID(bundleIdChrome)
-    if #chromeApps == 0 then
-        debugInfo("BrowserDriver.getCurrentUrl: Chrome is not running")
+    local adapter = getBrowserAdapter(_target.getBundleId())
+    if adapter == nil then
+        debugInfo("BrowserDriver.getCurrentUrl: no browser adapter for bundleId ", _target.getBundleId())
         callback(nil)
         return
     end
 
-    callback(getChromeUrl())
+    local browserApps = hs.application.applicationsForBundleID(adapter.bundleId)
+    if #browserApps == 0 then
+        debugInfo("BrowserDriver.getCurrentUrl: browser is not running: ", adapter.applicationName)
+        callback(nil)
+        return
+    end
+
+    callback(adapter.getUrl())
 end
 
 function BrowserDriver.getDomain(target, callback)
@@ -183,7 +240,7 @@ function BrowserDriver.getActions(target, callback)
 
     BrowserDriver.getDomain(target, function(domain)
         if domain == nil then
-            debugInfo("No domain detected for current Chrome tab (likely internal/blank page).")
+            debugInfo("No domain detected for current browser tab (likely internal/blank page).")
             callback(nil, nil)
             return
         end
@@ -280,6 +337,10 @@ function PlayerTarget.getReceiverApp()
     return hs.application.applicationsForBundleID(bundleId)[1]
 end
 
+function PlayerTarget.getBrowserAdapter()
+    return getBrowserAdapter(PlayerTarget.getBundleId())
+end
+
 -- Java Script Actions
 
 local function doCache(cacheKey, f)
@@ -318,10 +379,27 @@ local function getActionCode(templatePath, action, params)
 end
 
 local function runActionCode(code, callback)
-    local wrapper = path() .. "PlayerGlobalControl-BrowserWrapper.js"
-    local params = { code = code, application = browserGoogleChrome, path = wrapper, browser = browserJavaScriptRunner, debug = false }
+    local adapter = PlayerTarget.getBrowserAdapter()
+    if adapter == nil then
+        callback(false, nil, "No browser adapter selected")
+        return
+    end
 
-    if browserJavaScriptRunner == browserGoogleDevTools then
+    local browserApps = hs.application.applicationsForBundleID(adapter.bundleId)
+    if #browserApps == 0 then
+        callback(false, nil, "Browser is not running: " .. adapter.applicationName)
+        return
+    end
+
+    local runner = adapter.applicationName
+    if adapter.supportsDevTools then
+        runner = browserJavaScriptRunner
+    end
+
+    local wrapper = path() .. adapter.wrapper
+    local params = { code = code, application = adapter.applicationName, path = wrapper, browser = runner, debug = false }
+
+    if adapter.supportsDevTools and browserJavaScriptRunner == browserGoogleDevTools then
         params.path = nil
     end
 
@@ -778,22 +856,6 @@ PlayerActions.extendDomainActions("ardmediathek.de", "wdr.de", {
 -- https://www.arte.tv/de/
 -- https://www.zdf.de/dokus
 
-function getChromeUrl()
-    --local _,url = hs.osascript.applescript('tell application "Google Chrome" to return URL of active tab of front window')
-    --_, title, _ = hs.osascript.javascript("Application('Google Chrome').windows[0].activeTab().title()")
-    --_, url, _ = hs.osascript.javascript("Application('Google Chrome').windows[0].activeTab().url()")
-    local ok, url, err = hs.osascript.javascript("Application('Google Chrome').windows[0].activeTab().url()")
-    if not ok then
-        debugInfo("getChromeUrl: AppleScript-JS call failed: ", err)
-        return nil
-    end
-    if type(url) ~= "string" or url == "" then
-        debugInfo("getChromeUrl: no URL for active tab (window missing or internal page).")
-        return nil
-    end
-    return url
-end
-
 ---@param actionFunction function @function to be called
 ---@return void
 ---
@@ -1056,11 +1118,6 @@ local function getEnabledInfo(appActions)
 end
 
 local function setSavedWindow()
-    debugInfo("devtoolscheck: Start")
-    local devtoolscheck = helper.chrome.devtools.debugFrontmostChromeDetection()
-    debugInfo("devtoolscheck: Result:")
-    debugTable(devtoolscheck)
-    debugInfo("devtoolscheck: End")
     local win = hs.window.focusedWindow()
     if win == nil then
         debugInfo("setSavedWindow: no focused window available")
@@ -1073,6 +1130,14 @@ local function setSavedWindow()
     end
     local bundleId = app:bundleID()
     local title = app:title()
+
+    if bundleId == bundleIdChrome then
+        debugInfo("devtoolscheck: Start")
+        local devtoolscheck = helper.chrome.devtools.debugFrontmostChromeDetection()
+        debugInfo("devtoolscheck: Result:")
+        debugTable(devtoolscheck)
+        debugInfo("devtoolscheck: End")
+    end
 
     debugInfo("Cache Size:", helper.table.count(cache))
     debugInfo("reset cache")
