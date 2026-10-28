@@ -438,3 +438,23 @@ hotkeybindcycle(hyper, "b", keyInfo("Cycle defg: print"), {
 ```
 
 See [HotkeybindCycleTest.lua](/Functions/HotkeybindCycleTest.lua)
+
+### [HotkeyBindModal](/Helpers/HotkeyBindModal.lua)
+
+Create a modal hotkey with default exit keys: `esc` or the same `mod` + `key` again leaves the modal.
+
+```lua
+local hkbm = hotkeybindmodal(hyper, "w", keyInfo("place on Big Monitor "), startFn, exitFn)
+hkbm:bind({}, "1", move) -- move window, then hkbm:exit()
+```
+
+`hotkeybindmodalgroup(...)` adds a group: only one modal of the group can be active, entering one exits the others.
+
+```lua
+local modalGroup = {}
+
+hotkeybindmodalgroup(hyper, "5", keyInfo("toggle other display black"), blackOn, blackOff, modalGroup)
+hotkeybindmodalgroup(hyper, "6", keyInfo("toggle all displays black"), blackOnAll, blackOff, modalGroup)
+```
+
+See [WindowPlacer](/Functions/WindowPlacer.lua) and [MultiDisplayBlack](/Functions/MultiDisplayBlack.lua)
