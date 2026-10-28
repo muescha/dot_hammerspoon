@@ -457,7 +457,8 @@ local function copyCommandQueue(command)
 end
 
 local function failCommand(callback, message, details)
-    debugInfo(message, details)
+    debugInfo("")
+    debugInfo("--> failcommand(", "callback, ", message, ", ", details, ")")
     callback(false, details or message)
 end
 
@@ -799,6 +800,7 @@ end
 local function doFunction(actionFunction, callback)
     assert(callback, "doFunction requires callback")
 
+    debugInfo("")
     debugInfo("--> doFunction(", getFunctionSignature(actionFunction), ")")
     debugInfo("Memory: ", functionMemory)
     debugInfo("debugFunction(actionFunction)")
@@ -835,9 +837,12 @@ local function doCommand(appActions, actionQueue, callback)
         return
     end
 
+    debugInfo("")
     debugInfo("--> doCommand(", "appActions", ",", actionQueue, ")")
 
     local command = table.remove(actionQueue, 1)
+
+    debugInfo("--> process first command in queue: ", command )
 
     local function continueQueue(ok, message)
         if not ok then
@@ -849,7 +854,7 @@ local function doCommand(appActions, actionQueue, callback)
     end
 
     if type(command) == 'string' then
-
+        debugInfo("--> command is a string: unwrap command: ", command )
         local actionCommands = appActions[command]
         if actionCommands == nil then
             failCommand(callback, "No command defined for action: " .. command)
@@ -859,9 +864,11 @@ local function doCommand(appActions, actionQueue, callback)
         doCommand(appActions, copyCommandQueue(actionCommands), continueQueue)
 
     elseif type(command) == 'function' then
+        debugInfo("--> command is a function: execute doFunction ")
         doFunction(command, continueQueue)
 
     elseif type(command) == 'table' then
+        debugInfo("--> command is a sub queue: unwrap commands")
         doCommand(appActions, copyCommandQueue(command), continueQueue)
 
     else
