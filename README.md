@@ -458,3 +458,20 @@ hotkeybindmodalgroup(hyper, "6", keyInfo("toggle all displays black"), blackOnAl
 ```
 
 See [WindowPlacer](/Functions/WindowPlacer.lua) and [MultiDisplayBlack](/Functions/MultiDisplayBlack.lua)
+
+### [HotkeyBindSafe](/Helpers/HotkeyBindSafe.lua)
+
+If a hotkey sends keystrokes, the still pressed hyper modifiers can interfere and the keystroke does not work. `HotkeyBindSafe` has the same parameters as `hs.hotkey.bind`, but disables its own hotkey while the callback runs and enables it again afterwards.
+
+```lua
+HotkeyBindSafe(hyper, '[', keyInfo("CMD + ["), function()
+    hs.eventtap.keyStroke({"cmd"}, "[")
+end)
+```
+
+See [KeyMapping](/Functions/KeyMapping.lua)
+
+Uses [HotkeySilence](/Helpers/HotkeySilence.lua) to disable/enable the hotkey without log output:
+
+- `hotkeySilence(fn)` runs `fn` with the `hs.hotkey` log level set to 0
+- `hotkeyDisableSilent(hotkeyHandler)` / `hotkeyEnableSilent(hotkeyHandler)`
