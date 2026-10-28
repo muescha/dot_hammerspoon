@@ -44,7 +44,13 @@ This is particularly useful when working on a tutorial or coding in an IDE, wher
 
 Set the focus to a specific window with hyper + o - then it switches also between tabs when you have a localhost open (currently it sends JXA to the current active tab when you not set the focus).
 
-This feature currently supports controlling the IINA and Chrome media players, as well as providing special shortcuts for certain websites.
+This feature currently supports controlling these players, as well as providing special shortcuts for certain websites:
+
+- [IINA](https://iina.io/)
+- [LosslessCut](https://losslesscut.app/)
+- Google Chrome (via JXA, needs *View > Developer > Allow JavaScript from Apple Events*)
+- Google Chrome via Chrome DevTools Protocol (CDP), toggle with hyper + z (needs Chrome started with `--remote-debugging-port=9222`, see [ChromeDevTools](/Helpers/ChromeDevTools.lua))
+- Safari (via JXA, needs *Safari Settings > Developer > Allow JavaScript from Apple Events*)
 
 Shortcuts:
 
@@ -57,6 +63,8 @@ Shortcuts:
 - hyper + ' -> Jump Backward
 - hyper + \ -> Jump Forward
 - hyper + j -> Max Quality (1080)  (see Note 3)
+- hyper + o -> Set active App (player target)
+- hyper + z -> Toggle Chrome JS runner: JXA / Chrome DevTools (CDP)
 
 > Note 1: on some places it needs this special start: on youtube when you use a plugin which autostop the playing (YouTube™ No Buffer - Stop Auto-playing 0.4.6), or in Udemy to start a section) - see it as the start as a first command. If you click on youtube page on links to other videos which not complete refresh the page: then you need manualy refresh the page to have the play button detected.
 
@@ -65,13 +73,6 @@ Shortcuts:
 > 2.2.0)
 
 > Note 3: currently not used so much, because I can set this with a Chrome TamperMonkey Script: [Nova YouTube (Plugin for TamperMonkey)](https://github.com/raingart/Nova-YouTube-extension)
-
-Supported Apps:
-
-- [IINA](https://iina.io/)
-- [LosslessCut](https://losslesscut.app/)
-- Google Chrome
-- Safari
 
 Shortcuts available for this websites:
 
