@@ -59,6 +59,13 @@ local actions = enumString {
 --   https://github.com/igrigorik/videospeed/blob/master/inject.js
 -- since i don't know the current speed:
 
+function actionRepeat(count, action)
+    local result = {}
+    for _=1,count do
+        table.insert(result, action)
+    end
+    return result
+end
 
 -- just tune down to minimum (7 keyStrokes from max 2x speed)
 -- and then up to 1
@@ -853,6 +860,9 @@ local function doCommand(appActions, actionQueue, callback)
 
     elseif type(command) == 'function' then
         doFunction(command, continueQueue)
+
+    elseif type(command) == 'table' then
+        doCommand(appActions, copyCommandQueue(command), continueQueue)
 
     else
         failCommand(callback, "Unknown command: " .. tostring(command))
