@@ -494,3 +494,22 @@ applicationSelectMenuItemApplySameFrame({ "Neues Fenster", "New Window" }, { ale
 Options: `timeout` (seconds, default 3), `interval` (seconds, default 0.05), `alertPrefix`.
 
 See [ChromeNewWindow](/Functions/ChromeNewWindow.lua) and [ChromeTabToNewWindow](/Functions/ChromeTabToNewWindow.lua)
+
+### [ChromeDevTools](/Helpers/ChromeDevTools.lua)
+
+Run JavaScript in Chrome via the Chrome DevTools Protocol (CDP) instead of JXA. Available as `helper.chrome.devtools`. Used by [PlayerGlobalControl](/Functions/PlayerGlobalControl.lua) when the JS runner is switched to Chrome DevTools (hyper + z).
+
+Start a dedicated Chrome instance with remote debugging enabled (a separate profile avoids interfering with the normal browsing session):
+
+```bash
+open -na "Google Chrome" --args --remote-debugging-port=9222 --user-data-dir="$HOME/.chrome-hammerspoon-profile"
+```
+
+Check that CDP is available:
+
+```bash
+curl http://127.0.0.1:9222/json/version
+curl http://127.0.0.1:9222/json/list
+```
+
+Main functions: `getPages`, `findPagesByUrl`, `getActivePage`, `evaluate`, `executeJavascript`, `sendCommand`.
