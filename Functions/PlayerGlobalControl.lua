@@ -461,6 +461,7 @@ PlayerActions.setAppActions(bundleIdIINA, {
         speedDec = Key({}, "["), -- 0,5
         moveForward = Key({}, "right"),
         moveBackward = Key({}, "left"),
+        maxSpeed = { actions.pause, actions.speedReset, actionRepeat(7, actions.speedInc), actions.pause},
         info = "IINA Player"
     })
 
