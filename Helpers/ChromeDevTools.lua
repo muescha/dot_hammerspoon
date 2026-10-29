@@ -60,6 +60,120 @@ local function createConnectionId()
     )
 end
 
+local function trim(value)
+    return tostring(value or ""):match("^%s*(.-)%s*$")
+end
+
+local function debug(...)
+    if debugInfo then
+        debugInfo(...)
+    else
+        print(...)
+    end
+end
+
+-- Variante 1: Welche PID lauscht auf dem CDP-Port?
+function ChromeCDP.getListeningPid(port)
+    port = tonumber(port or ChromeCDP.port)
+    if not port then return nil end
+
+    local command = string.format(
+        "lsof -nP -iTCP:%d -sTCP:LISTEN -t",
+        port
+    )
+    local output, ok = hs.execute(command, true)
+    local pid = tonumber((output or ""):match("(%d+)"))
+
+    debug("ChromeCDP.getListeningPid command: ", command)
+    debug("ChromeCDP.getListeningPid ok: ", ok)
+    debug("ChromeCDP.getListeningPid output: ", trim(output))
+    debug("ChromeCDP.getListeningPid pid: ", pid)
+
+    return pid
+end
+
+-- Variante 2: Welche Commandline hat der App-Prozess?
+function ChromeCDP.getProcessCommand(pid)
+    pid = tonumber(pid)
+    if not pid then return nil end
+
+    local command = string.format(
+        "ps -ww -p %d -o command=",
+        pid
+    )
+    local output, ok = hs.execute(command, true)
+    output = trim(output)
+
+    debug("ChromeCDP.getProcessCommand command: ", command)
+    debug("ChromeCDP.getProcessCommand ok: ", ok)
+    debug("ChromeCDP.getProcessCommand output: ", output)
+
+    if not ok or output == "" then
+        return nil
+    end
+
+    return output
+end
+
+function ChromeCDP.isAppListeningOnPort(app, port)
+    if not app then return false end
+
+    local appPid = app:pid()
+    local listeningPid = ChromeCDP.getListeningPid(port)
+    local result = appPid ~= nil and listeningPid ~= nil and appPid == listeningPid
+
+    debug("ChromeCDP.isAppListeningOnPort app pid: ", appPid)
+    debug("ChromeCDP.isAppListeningOnPort listening pid: ", listeningPid)
+    debug("ChromeCDP.isAppListeningOnPort result: ", result)
+
+    return result
+end
+
+function ChromeCDP.isAppRemoteDebuggingByCommand(app, port)
+    if not app then return false end
+
+    port = tonumber(port or ChromeCDP.port)
+    local processCommand = ChromeCDP.getProcessCommand(app:pid()) or ""
+    local result = processCommand:find(
+        "%-%-remote%-debugging%-port=" .. tostring(port)
+    ) ~= nil
+
+    debug("ChromeCDP.isAppRemoteDebuggingByCommand app pid: ", app:pid())
+    debug("ChromeCDP.isAppRemoteDebuggingByCommand port: ", port)
+    debug("ChromeCDP.isAppRemoteDebuggingByCommand result: ", result)
+
+    return result
+end
+
+function ChromeCDP.debugFrontmostChromeDetection()
+    local app = hs.application.frontmostApplication()
+
+    if not app then
+        debug("ChromeCDP.debugFrontmostChromeDetection: no frontmost app")
+        return nil
+    end
+
+    debug("ChromeCDP.debugFrontmostChromeDetection app name: ", app:name())
+    debug("ChromeCDP.debugFrontmostChromeDetection bundleID: ", app:bundleID())
+    debug("ChromeCDP.debugFrontmostChromeDetection pid: ", app:pid())
+    debug("ChromeCDP.debugFrontmostChromeDetection path: ", app:path())
+
+    local isListening = ChromeCDP.isAppListeningOnPort(app, ChromeCDP.port)
+    local isCommand = ChromeCDP.isAppRemoteDebuggingByCommand(app, ChromeCDP.port)
+
+    debug("ChromeCDP.debugFrontmostChromeDetection lsof result: ", isListening)
+    debug("ChromeCDP.debugFrontmostChromeDetection ps result: ", isCommand)
+
+    return {
+        app = app,
+        pid = app:pid(),
+        bundleID = app:bundleID(),
+        path = app:path(),
+        isListeningOnPort = isListening,
+        isRemoteDebuggingByCommand = isCommand
+    }
+end
+
 -- Lädt alle CDP-Targets von /json/list.
 function ChromeCDP.getTargets(callback)
     hs.http.asyncGet(
