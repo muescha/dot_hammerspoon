@@ -1,3 +1,19 @@
+--------------------------------------------------------------------------------
+-- Chrome DevTools Protocol (CDP)
+--
+-- Start a dedicated Chrome instance with remote debugging enabled:
+--
+-- open -na "Google Chrome" --args --remote-debugging-port=9222 --user-data-dir="$HOME/.chrome-hammerspoon-profile"
+--
+-- Verify that CDP is available:
+--
+--   curl http://127.0.0.1:9222/json/version
+--   curl http://127.0.0.1:9222/json/list
+--
+-- A separate Chrome profile is recommended to avoid interfering with the
+-- user's normal browsing session.
+--------------------------------------------------------------------------------
+
 local ChromeCDP = {}
 
 ChromeCDP.host = "127.0.0.1"
