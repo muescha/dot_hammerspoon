@@ -218,6 +218,8 @@ function ChromeCDP.getPages(callback)
             if
                 target.type == "page"
                 and target.webSocketDebuggerUrl
+                and not target.parentId
+                and not string.match(target.url or "", "^devtools://")
             then
                 table.insert(pages, target)
             end
