@@ -127,6 +127,37 @@ Layout:
  key f:               f  
 ```
 
+#### Window Carousel
+
+The modal also keeps a list of windows ([WindowCarousel](/Helpers/WindowCarousel.lua)) and places them side by side in equal columns on the big monitor. With 1-5 windows the width of key `c` stays free, from 6 windows on the full width is used.
+
+Keys in the hyper + w modal, with or without hyper:
+
+- k -> Add the focused window at the end of the list (or move it there)
+- l -> Place all windows at full height and bring them to the front
+- h -> Same as `l`, but only in the bottom third, so that windows behind stay reachable (until the next `l`)
+- r -> Remove the focused window from the list, it stays open
+- x -> Send `Cmd+W` to the focused window and remove it from the list
+
+The modal shows the current columns and the result of each key. `●` marks the focused window:
+
+```text
+Carousel:   ╞────────╡╞───●────╡╞────────╡ ·c·
+key k:      ╞────────╡╞────────╡╞───k────╡ ·c·
+key l:      ╞───↻────╡╞───↻────╡╞───↻────╡ ·c·
+key h:      ╞───▁────╡╞───▁────╡╞───▁────╡ ·c·
+key r:      ╞────────╡╞───r────╡╞────────╡ ·c·
+key x:      ╞────────╡╞───x────╡╞────────╡ ·c·    (Cmd+W)
+```
+
+Good to know:
+
+- The list is only kept in memory and is empty after a reload.
+- There is no background tracking: closed windows and the remembered Chrome tabs are only checked when the modal opens or a carousel key is used. After closing a window, `l` closes the gap.
+- Placing a window with another WindowPlacer key takes it out of the list. The other windows close the gap, nothing is brought to the front and the focus stays.
+
+See the [concept](/docs/2026-10-31-window-carousel-concept.md).
+
 ### [MultiDisplayBlack](/Functions/MultiDisplayBlack.lua)
 
 Switch display to black.
