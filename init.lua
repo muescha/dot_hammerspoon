@@ -79,6 +79,7 @@ require('Functions.ChromeNewWindow')
 require('Functions.ChromeTabAudioActivate')
 require('Functions.ChromeTabCopyLink')
 require('Functions.ChromeTabToNewWindow')
+require('Functions.ChromeTabLitePlayer') -- hyper+g: toggle YouTube <-> liteplayer
 require('Functions.ChromeTabDomainCounter')
 require('Functions.CheatSheet')
 require('Functions.DateString')
