@@ -251,6 +251,19 @@ Shortcuts:
 
 - hyper + t -> show current tab in new window
 
+### [ChromeTabLitePlayer](/Functions/ChromeTabLitePlayer.lua)
+
+Toggle the active Chrome tab between YouTube and [liteplayer](https://liteplayer.pages.dev) and keep the current playback position:
+
+- `youtube.com/watch` and `youtube.com/live/<id>` -> `liteplayer.pages.dev/watch`
+- `liteplayer.pages.dev` -> `youtube.com/watch`
+
+On any other page the hotkey does nothing. It needs *View > Developer > Allow JavaScript from Apple Events* in Chrome.
+
+Shortcuts:
+
+- hyper + g -> toggle YouTube / liteplayer (only in Chrome)
+
 ### [ChromeTabAudioActive](/Functions/ChromeTabAudioActivate.lua)
 
 WIP: I try to activate the first tab of an audio playing tab - not working :/
@@ -292,7 +305,7 @@ This feature allows the user to  highlight current mouse position
 
 Shortcuts:
 
-- hyper + g -> highlight current mouse position
+- hyper + g -> highlight current mouse position (disabled, hyper + g is now used by [ChromeTabLitePlayer](/Functions/ChromeTabLitePlayer.lua))
 - hyper + h -> highlight current app
 
 ### [Umlauts.lua](/Functions/Umlauts.lua)
