@@ -299,7 +299,7 @@ Shortcuts:
 
 - hyper + d -> insert current date
 
-### [HighLight](/Functions/Highlight.lua)
+### [HighLight](/Functions/HighLight.lua)
 
 This feature allows the user to  highlight current mouse position
 
