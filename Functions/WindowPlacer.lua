@@ -140,18 +140,7 @@ local function windowMoveToUnit(window, screen, newUnit)
     return true
 end
 
-local function windowMoveToKey(screenId, key)
-    local screen = hs.screen.find(screenId)
-
-    if screen == nil then
-        hs.alert.show("No screen available for keyword: " .. screenId)
-        return
-    end
-
-    local window = hs.window.focusedWindow()
-    local direction = screen:rotate() == 0 and "landscape" or "portrait"
-    local newUnit = layout[direction][key]
-
+local function windowPlace(window, screen, newUnit)
     window:moveToScreen(screen)
 
     -- retryWhile(function() return windowMoveToUnit(window, screen, newUnit) end)
@@ -165,10 +154,39 @@ local function windowMoveToKey(screenId, key)
     )
 end
 
+-- Window carousel, see docs/2026-10-31-window-carousel-concept.md
+local carousel_keys = {
+    add = "k",    -- Carousel
+    layout = "l", -- Layout
+    hide = "h",   -- Hide
+    remove = "r", -- Remove
+    unload = "x", -- Close
+}
+
+local carousel = require("Helpers.WindowCarousel").new({
+    screen = function() return hs.screen.find(screens.monitor_2) end,
+    place = windowPlace,
+    keys = carousel_keys,
+})
+
+local function windowMoveToKey(screenId, key)
+    local screen = hs.screen.find(screenId)
+
+    if screen == nil then
+        hs.alert.show("No screen available for keyword: " .. screenId)
+        return
+    end
+
+    local window = hs.window.focusedWindow()
+    local direction = screen:rotate() == 0 and "landscape" or "portrait"
+
+    carousel:forget(window)
+    windowPlace(window, screen, layout[direction][key])
+end
 
 local function startFn()
     local window = hs.window.frontmostWindow()
-    local layout_info = createLayoutInfo(layout_setup)
+    local layout_info = createLayoutInfo(layout_setup) .. "\n\n" .. carousel:info(hs.window.focusedWindow())
     debugInfo(layout_info)
     hs.alert.show(layout_info, { textFont = "Menlo" }, window, "do-not-close")
 end
@@ -189,6 +207,24 @@ for _, v in ipairs(layout_setup) do
 
     hkbm:bind({}, key, move)
     hkbm:bind(hyper, key, move)
+end
+
+local carousel_actions = {
+    [carousel_keys.add] = function(window) carousel:add(window) end,
+    [carousel_keys.layout] = function() carousel:show() end,
+    [carousel_keys.hide] = function() carousel:hide() end,
+    [carousel_keys.remove] = function(window) carousel:remove(window) end,
+    [carousel_keys.unload] = function(window) carousel:unload(window) end,
+}
+
+for key, action in pairs(carousel_actions) do
+    local run = function()
+        hkbm:exit()
+        action(hs.window.focusedWindow())
+    end
+
+    hkbm:bind({}, key, run)
+    hkbm:bind(hyper, key, run)
 end
 
 local opts_keys = {
